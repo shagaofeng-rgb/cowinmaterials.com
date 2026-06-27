@@ -8,7 +8,7 @@ export function Footer() {
       <div className="footer-grid">
         <div>
           <div className="footer-brand">
-            <span className="brand-mark">RT</span>
+            <span className="brand-mark">CM</span>
             <span>
               <strong>{site.legalName}</strong>
               <em>{site.tagline}</em>

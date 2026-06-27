@@ -8,7 +8,7 @@ import { createPageMetadata } from "@/lib/seo";
 export const metadata = createPageMetadata({
   title: "Aerogel Coating Installation Systems | Primer, Film Thickness and Curing Guidance",
   description:
-    "Installation guidance for Ruitai Jiuhe aerogel insulation coatings, industrial coatings, fireproof coatings and penetrating water repellents.",
+    "Installation guidance for Cowin Materials aerogel insulation coatings, industrial coatings, fireproof coatings and penetrating water repellents.",
   path: "/construction",
   keywords: ["aerogel coating installation", "aerogel coating film thickness", "fireproof coating curing", "industrial insulation coating system"],
 });

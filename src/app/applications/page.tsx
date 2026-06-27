@@ -7,7 +7,7 @@ import { createPageMetadata } from "@/lib/seo";
 export const metadata = createPageMetadata({
   title: "Aerogel Applications | Building Retrofit, Industrial Insulation, EV Batteries and Fire Protection",
   description:
-    "Explore Ruitai Jiuhe aerogel applications for building energy retrofit, industrial pipes, EV battery thermal barriers, LNG cold chain, steel fire protection and concrete waterproofing.",
+    "Explore Cowin Materials aerogel applications for building energy retrofit, industrial pipes, EV battery thermal barriers, LNG cold chain, steel fire protection and concrete waterproofing.",
   path: "/applications",
   keywords: ["aerogel applications", "EV battery thermal barrier", "industrial aerogel insulation", "building insulation coating"],
 });

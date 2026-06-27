@@ -15,13 +15,13 @@ import {
 } from "lucide-react";
 
 export const site = {
-  name: "Ruitai Jiuhe",
-  legalName: "Shanghai Ruitai Jiuhe High-tech Materials Co., Ltd.",
+  name: "Cowin Materials",
+  legalName: "Quzhou Qiying Import & Export Co., Ltd.",
   tagline: "Silica Aerogel Material Systems",
-  phone: "+86 150 0060 8886",
-  phoneHref: "+8615000608886",
-  email: "Market@rt-joy.com",
-  address: "No. 777 Xinwei Road, Fusheng Industrial Park, Chongming District, Shanghai, China",
+  phone: "+86 176 0125 2505",
+  phoneHref: "+8617601252505",
+  email: "davidsha@cowinmaterials.com",
+  address: "Room 110, 1st Floor, Building 2, Qushidai Future Building, Kecheng District, Quzhou City, Zhejiang Province, China",
   domain: "cowinmaterials.com",
 };
 
@@ -53,7 +53,7 @@ export const megaMenus = {
   Resources: [
     { href: "/technology", label: "Test reports and data", note: "Thermal, VOC, water-repellent and FTO notes" },
     { href: "/construction", label: "Installation systems", note: "Primer, coating, topcoat and curing windows" },
-    { href: "/comparison", label: "Cabot, Aspen, JIOS benchmark", note: "How Ruitai Jiuhe should position overseas" },
+    { href: "/comparison", label: "Cabot, Aspen, JIOS benchmark", note: "How Cowin Materials should position overseas" },
   ],
 };
 
@@ -85,7 +85,7 @@ export type Product = {
 export const products: Product[] = [
   {
     name: "Hydrophobic Silica Aerogel Powder and Particles",
-    code: "RT-AP",
+    code: "CW-AP",
     slug: "aerogel-powder-and-slurry",
     category: "Aerogel Raw Materials",
     summary:
@@ -96,20 +96,20 @@ export const products: Product[] = [
     image: "/images/waterproof-section-test.png",
     seoTitle: "Hydrophobic Silica Aerogel Powder and Waterborne Aerogel Slurry",
     seoDescription:
-      "RT-AP silica aerogel powder and RT-AP-W waterborne slurry for aerogel coating, composite filler and thermal insulation formulations.",
+      "CW-AP silica aerogel powder and CW-AP-W waterborne slurry for aerogel coating, composite filler and thermal insulation formulations.",
     detail: [
-      "RT-AP provides a low-density nanoporous silica aerogel platform for formulators who need thermal resistance, hydrophobicity and lightweight filler performance.",
-      "RT-AP-W is a waterborne pre-dispersed aerogel slurry with 20-25% solids and 0.020-0.025 W/(m·K) thermal conductivity after drying.",
+      "CW-AP provides a low-density nanoporous silica aerogel platform for formulators who need thermal resistance, hydrophobicity and lightweight filler performance.",
+      "CW-AP-W is a waterborne pre-dispersed aerogel slurry with 20-25% solids and 0.020-0.025 W/(m·K) thermal conductivity after drying.",
     ],
   },
   {
     name: "Aerogel Blanket for Industrial Insulation",
-    code: "RT-AT-H / RT-AT-L",
+    code: "CW-AT-H / CW-AT-L",
     slug: "aerogel-blanket-and-thermal-pads",
     category: "Blankets & Thermal Pads",
     summary:
       "Flexible aerogel blankets for medium-high temperature insulation, cryogenic service, tanks, pipelines and constrained spaces.",
-    metrics: ["0.020 W/(m·K) at 25C", "Up to 650C service for RT-AT-H", "-200C to 125C for RT-AT-L", "Hydrophobicity up to 99.9%"],
+    metrics: ["0.020 W/(m·K) at 25C", "Up to 650C service for CW-AT-H", "-200C to 125C for CW-AT-L", "Hydrophobicity up to 99.9%"],
     applications: ["Steam pipelines", "Process equipment", "LNG logistics", "Cold chain"],
     proof: "Product quality aligned with GB/T 34336-2017 nanoporous aerogel composite insulation products.",
     image: "/images/industrial-coating-system.jpeg",
@@ -123,7 +123,7 @@ export const products: Product[] = [
   },
   {
     name: "Building Aerogel Thermal Insulation Coating",
-    code: "RT-AC-01/02",
+    code: "CW-AC-01/02",
     slug: "aerogel-insulation-coating",
     category: "Insulation Coatings",
     summary:
@@ -134,7 +134,7 @@ export const products: Product[] = [
     image: "/images/fire-test-lab.jpg",
     seoTitle: "Waterborne Aerogel Insulation Coating for Building Energy Retrofit",
     seoDescription:
-      "RT-AC aerogel insulation coating for building envelope retrofit, thin thermal insulation layers, exterior walls and roofs with tested 0.040 W/(m·K) conductivity.",
+      "CW-AC aerogel insulation coating for building envelope retrofit, thin thermal insulation layers, exterior walls and roofs with tested 0.040 W/(m·K) conductivity.",
     detail: [
       "The coating is designed as a system: substrate preparation, primer, two aerogel insulation coats and two topcoat layers.",
       "It is best positioned for retrofit projects where conventional insulation boards are difficult because of thickness, shape, weight or shutdown constraints.",
@@ -142,7 +142,7 @@ export const products: Product[] = [
   },
   {
     name: "Industrial Aerogel Insulation Coating",
-    code: "RT-AC-14/15/16",
+    code: "CW-AC-14/15/16",
     slug: "industrial-aerogel-insulation-coating",
     category: "Insulation Coatings",
     summary:
@@ -153,7 +153,7 @@ export const products: Product[] = [
     image: "/images/fire-test-lab.jpg",
     seoTitle: "Industrial Aerogel Insulation Coating for Pipes and Complex Equipment",
     seoDescription:
-      "RT-AC industrial aerogel coating system for pipes, valves, tanks, process equipment and complex thermal-insulation surfaces up to 180C.",
+      "CW-AC industrial aerogel coating system for pipes, valves, tanks, process equipment and complex thermal-insulation surfaces up to 180C.",
     detail: [
       "The industrial coating route is useful for geometry that is difficult to wrap with rigid insulation, especially valves, flanges, elbows and maintenance areas.",
       "The system requires surface temperature above dew point +3C and relative humidity control during application.",
@@ -161,7 +161,7 @@ export const products: Product[] = [
   },
   {
     name: "Aerogel Fireproof Coating for Steel Structures",
-    code: "RT-FTHL",
+    code: "CW-FTHL",
     slug: "aerogel-fireproof-coating",
     category: "Fire Protection Coatings",
     summary:
@@ -172,7 +172,7 @@ export const products: Product[] = [
     image: "/images/fire-char-layer.jpg",
     seoTitle: "Waterborne Aerogel Intumescent Fireproof Coating for Steel Structures",
     seoDescription:
-      "RT-FTHL ultra-thin waterborne intumescent aerogel fireproof coating for steel structures, industrial facilities and building fire protection.",
+      "CW-FTHL ultra-thin waterborne intumescent aerogel fireproof coating for steel structures, industrial facilities and building fire protection.",
     detail: [
       "The intumescent layer expands under heat to create a protective char barrier, while aerogel contributes thermal resistance inside the coating matrix.",
       "For overseas use, the website should present the product as a technical coating system and confirm local fire testing before project claims.",
@@ -199,7 +199,7 @@ export const products: Product[] = [
   },
   {
     name: "Silicon-Based Penetrating Water Repellent",
-    code: "RT-WP-01",
+    code: "CW-WP-01",
     slug: "silicon-penetrating-water-repellent",
     category: "Waterproofing",
     summary:
@@ -210,15 +210,15 @@ export const products: Product[] = [
     image: "/images/waterproof-droplets.png",
     seoTitle: "Silicon Penetrating Water Repellent for Concrete, Stone and Masonry",
     seoDescription:
-      "RT-WP-01 silicon-based penetrating water repellent for concrete, stone, mortar and masonry waterproofing while maintaining vapor permeability.",
+      "CW-WP-01 silicon-based penetrating water repellent for concrete, stone, mortar and masonry waterproofing while maintaining vapor permeability.",
     detail: [
-      "RT-WP-01 is not a surface film. It penetrates capillary pores and microcracks, then creates a hydrophobic interface while keeping the substrate breathable.",
+      "CW-WP-01 is not a surface film. It penetrates capillary pores and microcracks, then creates a hydrophobic interface while keeping the substrate breathable.",
       "It is designed for concrete durability, masonry retrofit, stone protection and water-repellent treatment on porous mineral substrates.",
     ],
   },
   {
     name: "Aerogel Paste and Sealant Compound",
-    code: "RT-AJ",
+    code: "CW-AJ",
     slug: "aerogel-paste-compound",
     category: "Aerogel Paste",
     summary:
@@ -229,7 +229,7 @@ export const products: Product[] = [
     image: "/images/waterproof-tank.png",
     seoTitle: "Aerogel Paste Compound for Local Thermal Insulation and Sealing",
     seoDescription:
-      "RT-AJ aerogel paste compound for flexible sealing, local thermal insulation, aerogel blanket surface treatment and thin protective coatings.",
+      "CW-AJ aerogel paste compound for flexible sealing, local thermal insulation, aerogel blanket surface treatment and thin protective coatings.",
     detail: [
       "The paste gives product engineers a processable aerogel compound for small areas, interfaces and shaped parts where blankets or coatings are not ideal.",
       "It can support sealing, damping, thermal isolation and surface finish improvement in composite systems.",
@@ -245,7 +245,7 @@ export const applications = [
     image: "/images/fire-waterproof-deck.jpg",
     summary:
       "Thin aerogel thermal coating and penetrating waterproofing for walls, roofs and renovation projects where board insulation is difficult.",
-    fit: ["RT-AC-01/02 building aerogel insulation coating", "RT-WP-01 penetrating water repellent"],
+    fit: ["CW-AC-01/02 building aerogel insulation coating", "CW-WP-01 penetrating water repellent"],
     metrics: ["0.040 W/(m·K)", "0.26 added thermal resistance", "35 g/L VOC", "Formaldehyde and benzene series not detected"],
   },
   {
@@ -255,7 +255,7 @@ export const applications = [
     image: "/images/industrial-coating-system.jpeg",
     summary:
       "Sprayable or trowel-applied aerogel coating systems for elbows, valves, flanges, tanks and surfaces that are hard to wrap.",
-    fit: ["RT-AC-14/15/16 industrial aerogel insulation coating", "RT-AT-H aerogel blanket"],
+    fit: ["CW-AC-14/15/16 industrial aerogel insulation coating", "CW-AT-H aerogel blanket"],
     metrics: ["-40C to 180C coating range", "≤1.5 mm single wet film", "Dew point +3C application rule", "Primer-coating-topcoat system"],
   },
   {
@@ -265,7 +265,7 @@ export const applications = [
     image: "/images/ev-thermal-sheet.jpg",
     summary:
       "Thin aerogel pads and compounds for cell spacing, module protection and local thermal barriers in battery packs and energy storage systems.",
-    fit: ["RT-AT-G/Y/ST thin aerogel thermal pads", "RT-AJ aerogel paste compound"],
+    fit: ["CW-AT-G/Y/ST thin aerogel thermal pads", "CW-AJ aerogel paste compound"],
     metrics: ["0.3-5 mm thickness", "UL94-V0", "≥500 MΩ insulation", "0.1% volume moisture absorption"],
   },
   {
@@ -275,7 +275,7 @@ export const applications = [
     image: "/images/fire-test-lab.jpg",
     summary:
       "Cryogenic aerogel blankets for low-temperature transport, cold-chain facilities and piping systems where thickness and CUI risk matter.",
-    fit: ["RT-AT-L cryogenic aerogel blanket"],
+    fit: ["CW-AT-L cryogenic aerogel blanket"],
     metrics: ["0.0125 W/(m·K) at -159C", "-200C to 125C service", "≥98% hydrophobicity", "6 mm / 10 mm thickness"],
   },
   {
@@ -285,7 +285,7 @@ export const applications = [
     image: "/images/fire-char-layer.jpg",
     summary:
       "Intumescent and non-intumescent coating systems for steel structures, industrial plants and commercial buildings.",
-    fit: ["RT-FTHL intumescent aerogel fireproof coating", "Indoor/outdoor non-intumescent systems"],
+    fit: ["CW-FTHL intumescent aerogel fireproof coating", "Indoor/outdoor non-intumescent systems"],
     metrics: ["66±3% solids for intumescent coating", "24 mm / 2.5 h reference thick system", "28-day full cure", "GB14907-2018 basis"],
   },
   {
@@ -295,7 +295,7 @@ export const applications = [
     image: "/images/waterproof-droplets.png",
     summary:
       "Penetrating hydrophobic treatment for porous concrete, stone, mortar and gypsum-based substrates while maintaining breathability.",
-    fit: ["RT-WP-01 silicon-based penetrating water repellent"],
+    fit: ["CW-WP-01 silicon-based penetrating water repellent"],
     metrics: ["19% water absorption ratio", "0 mm permeability", "Undiluted application", "Breathable substrate protection"],
   },
 ];
@@ -323,14 +323,14 @@ export const proofItems = [
     value: "19%",
     unit: "",
     label: "Water absorption ratio",
-    note: "RT-WP-01 report 2024W06363",
+    note: "CW-WP-01 report 2024W06363",
   },
 ];
 
 export const constructionSystems = [
   {
     title: "Building Aerogel Insulation Coating System",
-    code: "RT-AC-01/02",
+    code: "CW-AC-01/02",
     image: "/images/building-coating-system.jpeg",
     steps: [
       "Substrate check: moisture ≤8%, pH <10 and flatness ≤4 mm / 2 m.",
@@ -342,7 +342,7 @@ export const constructionSystems = [
   },
   {
     title: "Industrial Aerogel Coating System",
-    code: "RT-AC-14/15/16",
+    code: "CW-AC-14/15/16",
     image: "/images/industrial-coating-system.jpeg",
     steps: [
       "Stop equipment and cool the surface before coating work.",
@@ -354,7 +354,7 @@ export const constructionSystems = [
   },
   {
     title: "Steel Fire Protection Coating System",
-    code: "RT-FTHL / Non-intumescent",
+    code: "CW-FTHL / Non-intumescent",
     image: "/images/fire-char-layer.jpg",
     steps: [
       "Prepare steel to St3 or Sa2.5 depending on project specification.",
@@ -366,7 +366,7 @@ export const constructionSystems = [
   },
   {
     title: "Penetrating Water Repellent System",
-    code: "RT-WP-01",
+    code: "CW-WP-01",
     image: "/images/silicon-waterproof-deck.jpg",
     steps: [
       "Clean porous mineral substrate and remove dust, oil, loose particles and laitance.",
@@ -406,7 +406,7 @@ export const advantageCards = [
   {
     icon: FlaskConical,
     title: "From aerogel powder to engineered coating systems",
-    text: "Ruitai Jiuhe can present a full SiO2 aerogel material platform rather than only one blanket or battery pad product.",
+    text: "Cowin Materials can present a full SiO2 aerogel material platform rather than only one blanket or battery pad product.",
   },
   {
     icon: FileCheck2,

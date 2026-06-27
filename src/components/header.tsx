@@ -16,7 +16,7 @@ export function Header() {
   return (
     <header className="site-header">
       <div className="top-strip">
-        <span>Global aerogel material systems from Shanghai, China</span>
+        <span>Global aerogel material systems from Quzhou, Zhejiang, China</span>
         <a href={`mailto:${site.email}`}>
           <Mail size={14} />
           {site.email}
@@ -24,8 +24,8 @@ export function Header() {
       </div>
 
       <div className="nav-shell">
-        <Link className="brand" href="/" aria-label="Ruitai Jiuhe homepage">
-          <span className="brand-mark">RT</span>
+        <Link className="brand" href="/" aria-label="Cowin Materials homepage">
+          <span className="brand-mark">CM</span>
           <span>
             <strong>{site.name}</strong>
             <em>{site.tagline}</em>

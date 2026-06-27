@@ -8,9 +8,9 @@ import { applications, proofItems, products, site } from "@/lib/data";
 import { createPageMetadata } from "@/lib/seo";
 
 export const metadata = createPageMetadata({
-  title: "Silica Aerogel Insulation Coating, Fireproof Coating and Water Repellent | Ruitai Jiuhe",
+  title: "Silica Aerogel Insulation Coating, Fireproof Coating and Water Repellent | Cowin Materials",
   description:
-    "Ruitai Jiuhe supplies silica aerogel insulation coatings, fireproof coatings, aerogel blankets, EV battery thermal barriers and penetrating water repellents for global B2B projects.",
+    "Cowin Materials supplies silica aerogel insulation coatings, fireproof coatings, aerogel blankets, EV battery thermal barriers and penetrating water repellents for global B2B projects.",
   path: "/",
   keywords: [
     "silica aerogel insulation coating",
@@ -22,7 +22,7 @@ export const metadata = createPageMetadata({
 
 export default function Home() {
   const featuredProducts = products.filter((product) =>
-    ["RT-AC-01/02", "RT-FTHL", "RT-WP-01", "RT-AT-H / RT-AT-L"].includes(product.code),
+    ["CW-AC-01/02", "CW-FTHL", "CW-WP-01", "CW-AT-H / CW-AT-L"].includes(product.code),
   );
 
   return (
@@ -34,7 +34,7 @@ export default function Home() {
             <span className="eyebrow">Silica Aerogel Material Systems</span>
             <h1>Advanced Aerogel Coatings and Insulation Materials for Global Engineering Projects</h1>
             <p>
-              {site.legalName} develops silica aerogel materials for thermal insulation,
+              {site.legalName} supplies silica aerogel materials for thermal insulation,
               steel fire protection, penetrating waterproofing and battery thermal barriers.
               The portfolio is built for buyers who need technical data, installation guidance
               and project-ready material systems.
@@ -78,7 +78,7 @@ export default function Home() {
           <SectionHeading
             eyebrow="Product Platform"
             title="A portfolio built around one aerogel core"
-            intro="Ruitai Jiuhe is positioned as a practical aerogel system supplier: powder, slurry, blankets, thermal pads, coatings, fire protection and penetrating waterproofing."
+            intro="Cowin Materials is positioned as a practical aerogel system supplier: powder, slurry, blankets, thermal pads, coatings, fire protection and penetrating waterproofing."
           />
           <div className="feature-grid">
             {featuredProducts.map((product) => (
@@ -115,9 +115,9 @@ export default function Home() {
         <section className="section split">
           <div>
             <SectionHeading
-              eyebrow="Why Ruitai Jiuhe"
+              eyebrow="Why Cowin Materials"
               title="A different position from Cabot, Aspen and JIOS"
-              intro="Cabot is strong in aerogel particles, Aspen is strong in battery and blanket systems, and JIOS has a strong East Asian thermal-management supply chain. Ruitai Jiuhe should win overseas with system delivery, local engineering cost advantages and documented installation data."
+              intro="Cabot is strong in aerogel particles, Aspen is strong in battery and blanket systems, and JIOS has a strong East Asian thermal-management supply chain. Cowin Materials should win overseas with system delivery, local engineering cost advantages and documented installation data."
             />
             <div className="evidence-list">
               <div>

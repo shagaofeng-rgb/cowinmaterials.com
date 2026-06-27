@@ -12,9 +12,9 @@ const sources = [
 ];
 
 export const metadata = createPageMetadata({
-  title: "Aerogel Competitor Benchmark | Cabot, Aspen Aerogels, JIOS and Ruitai Jiuhe",
+  title: "Aerogel Competitor Benchmark | Cabot, Aspen Aerogels, JIOS and Cowin Materials",
   description:
-    "A practical overseas positioning benchmark comparing Cabot, Aspen Aerogels, JIOS and Ruitai Jiuhe across aerogel particles, blankets, EV thermal barriers and coating systems.",
+    "A practical overseas positioning benchmark comparing Cabot, Aspen Aerogels, JIOS and Cowin Materials across aerogel particles, blankets, EV thermal barriers and coating systems.",
   path: "/comparison",
   keywords: ["Cabot aerogel competitor", "Aspen Aerogels alternative", "JIOS Aerogel comparison", "China aerogel supplier"],
 });
@@ -27,8 +27,8 @@ export default function ComparisonPage() {
         <section className="page-hero compact">
           <SectionHeading
             eyebrow="Competitive Benchmark"
-            title="How Ruitai Jiuhe Should Position Against Cabot, Aspen and JIOS"
-            intro="The overseas site should not copy a single leader. It should use competitor context to make Ruitai Jiuhe easier to understand, evaluate and contact."
+            title="How Cowin Materials Should Position Against Cabot, Aspen and JIOS"
+            intro="The overseas site should not copy a single leader. It should use competitor context to make Cowin Materials easier to understand, evaluate and contact."
           />
         </section>
 
@@ -56,7 +56,7 @@ export default function ComparisonPage() {
           <SectionHeading
             eyebrow="Positioning Strategy"
             title="A more credible export story"
-            intro="Ruitai Jiuhe should lead with system-level engineering, not only raw material supply. This is more convincing for global distributors, contractors and industrial buyers."
+            intro="Cowin Materials should lead with system-level engineering, not only raw material supply. This is more convincing for global distributors, contractors and industrial buyers."
           />
           <div className="positioning-table">
             <div>
@@ -75,7 +75,7 @@ export default function ComparisonPage() {
               <p>Show flexibility for East Asian and international engineered aerogel components.</p>
             </div>
             <div>
-              <span>Ruitai Jiuhe angle</span>
+              <span>Cowin Materials angle</span>
               <strong>Aerogel engineering material systems</strong>
               <p>Combine coatings, construction guidance, third-party data and project-level support.</p>
             </div>

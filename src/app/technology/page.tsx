@@ -7,9 +7,9 @@ import { advantageCards, proofItems } from "@/lib/data";
 import { createPageMetadata } from "@/lib/seo";
 
 export const metadata = createPageMetadata({
-  title: "Aerogel Test Data and Technical Proof | Ruitai Jiuhe",
+  title: "Aerogel Test Data and Technical Proof | Cowin Materials",
   description:
-    "Review Ruitai Jiuhe aerogel coating test data, thermal conductivity, VOC, waterproofing report highlights, FTO notes and technical qualification boundaries.",
+    "Review Cowin Materials aerogel coating test data, thermal conductivity, VOC, waterproofing report highlights, FTO notes and technical qualification boundaries.",
   path: "/technology",
   keywords: ["aerogel coating test data", "thermal conductivity aerogel coating", "aerogel FTO", "water repellent test report"],
 });

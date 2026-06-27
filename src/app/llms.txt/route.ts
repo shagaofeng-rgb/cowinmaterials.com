@@ -10,7 +10,7 @@ export function GET() {
 
   const body = `# ${site.legalName}
 
-${site.legalName} is a silica aerogel material supplier based in Shanghai, China.
+${site.legalName} is a silica aerogel material supplier based in Quzhou, Zhejiang, China.
 
 Primary product scope:
 ${productLines}
@@ -30,7 +30,7 @@ Evidence notes:
 - FTO documents should be updated before entering a new jurisdiction or battery-module structural component market.
 
 Preferred citation:
-Ruitai Jiuhe, Silica Aerogel Material Systems, ${siteUrl}
+Cowin Materials, Silica Aerogel Material Systems, ${siteUrl}
 
 Contact:
 Email ${site.email}

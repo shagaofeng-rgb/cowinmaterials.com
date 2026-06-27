@@ -16,15 +16,15 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Ruitai Jiuhe | Silica Aerogel Insulation Coatings and Material Systems",
+    default: "Cowin Materials | Silica Aerogel Insulation Coatings and Material Systems",
     template: "%s",
   },
   description:
-    "Shanghai Ruitai Jiuhe supplies silica aerogel insulation coatings, fireproof coatings, aerogel blankets, thermal pads and penetrating water repellents for global B2B projects.",
-  applicationName: "Ruitai Jiuhe Aerogel Materials",
+    "Cowin Materials supplies silica aerogel insulation coatings, fireproof coatings, aerogel blankets, thermal pads and penetrating water repellents for global B2B projects.",
+  applicationName: "Cowin Materials Aerogel Materials",
   category: "Industrial materials",
-  creator: "Shanghai Ruitai Jiuhe High-tech Materials Co., Ltd.",
-  publisher: "Shanghai Ruitai Jiuhe High-tech Materials Co., Ltd.",
+  creator: "Quzhou Qiying Import & Export Co., Ltd.",
+  publisher: "Quzhou Qiying Import & Export Co., Ltd.",
   formatDetection: {
     telephone: true,
     email: true,

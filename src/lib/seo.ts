@@ -66,9 +66,9 @@ export const organizationJsonLd = {
   telephone: site.phone,
   address: {
     "@type": "PostalAddress",
-    streetAddress: "No. 777 Xinwei Road, Fusheng Industrial Park",
-    addressLocality: "Shanghai",
-    addressRegion: "Chongming District",
+    streetAddress: "Room 110, 1st Floor, Building 2, Qushidai Future Building, Kecheng District",
+    addressLocality: "Quzhou City",
+    addressRegion: "Zhejiang Province",
     addressCountry: "CN",
   },
   areaServed: ["Global", "Asia", "Europe", "North America", "Middle East"],
@@ -97,7 +97,7 @@ export const websiteJsonLd = {
 export const productListJsonLd = {
   "@context": "https://schema.org",
   "@type": "ItemList",
-  name: "Ruitai Jiuhe silica aerogel product portfolio",
+  name: "Cowin Materials silica aerogel product portfolio",
   itemListElement: products.map((product, index) => ({
     "@type": "ListItem",
     position: index + 1,

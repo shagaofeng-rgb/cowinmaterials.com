@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
-export const alt = "Ruitai Jiuhe silica aerogel material systems";
+export const alt = "Cowin Materials silica aerogel material systems";
 export const size = {
   width: 1200,
   height: 630,
@@ -39,10 +39,10 @@ export default function Image() {
               fontWeight: 800,
             }}
           >
-            RT
+            CM
           </div>
           <div style={{ display: "flex", flexDirection: "column" }}>
-            <span style={{ fontSize: 30, fontWeight: 800 }}>Ruitai Jiuhe</span>
+            <span style={{ fontSize: 30, fontWeight: 800 }}>Cowin Materials</span>
             <span style={{ fontSize: 18, color: "#5c6a63" }}>Silica Aerogel Material Systems</span>
           </div>
         </div>

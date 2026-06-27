@@ -7,9 +7,9 @@ import { site } from "@/lib/data";
 import { createPageMetadata } from "@/lib/seo";
 
 export const metadata = createPageMetadata({
-  title: "Contact Ruitai Jiuhe | Request Aerogel Coating and Insulation Technical Data",
+  title: "Contact Cowin Materials | Request Aerogel Coating and Insulation Technical Data",
   description:
-    "Contact Ruitai Jiuhe for silica aerogel coating data sheets, fireproof coating details, water-repellent samples, distributor cooperation and project selection support.",
+    "Contact Cowin Materials for silica aerogel coating data sheets, fireproof coating details, water-repellent samples, distributor cooperation and project selection support.",
   path: "/contact",
   keywords: ["contact aerogel supplier", "request aerogel coating data sheet", "China aerogel manufacturer"],
 });

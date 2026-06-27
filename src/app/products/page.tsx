@@ -7,7 +7,7 @@ import { productListJsonLd, createPageMetadata } from "@/lib/seo";
 export const metadata = createPageMetadata({
   title: "Silica Aerogel Products | Insulation Coatings, Fireproof Coatings, Blankets and Water Repellent",
   description:
-    "Browse Ruitai Jiuhe silica aerogel powder, aerogel blankets, thermal pads, insulation coatings, fireproof coatings, penetrating water repellents and aerogel paste.",
+    "Browse Cowin Materials silica aerogel powder, aerogel blankets, thermal pads, insulation coatings, fireproof coatings, penetrating water repellents and aerogel paste.",
   path: "/products",
   keywords: ["silica aerogel products", "aerogel coating supplier", "aerogel blanket", "aerogel thermal pad"],
 });

@@ -21,14 +21,14 @@ export async function generateMetadata({ params }: ProductPageProps) {
 
   if (!product) {
     return createPageMetadata({
-      title: "Aerogel Product Not Found | Ruitai Jiuhe",
+      title: "Aerogel Product Not Found | Cowin Materials",
       description: "The requested aerogel product profile was not found.",
       path: "/products",
     });
   }
 
   return createPageMetadata({
-    title: `${product.seoTitle} | Ruitai Jiuhe`,
+    title: `${product.seoTitle} | Cowin Materials`,
     description: product.seoDescription,
     path: `/products/${product.slug}`,
     keywords: [product.name, product.category, product.code, "silica aerogel supplier"],
@@ -53,11 +53,11 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     image: absoluteUrl(product.image),
     brand: {
       "@type": "Brand",
-      name: "Ruitai Jiuhe",
+      name: "Cowin Materials",
     },
     manufacturer: {
       "@type": "Organization",
-      name: "Shanghai Ruitai Jiuhe High-tech Materials Co., Ltd.",
+      name: "Quzhou Qiying Import & Export Co., Ltd.",
     },
   };
 
