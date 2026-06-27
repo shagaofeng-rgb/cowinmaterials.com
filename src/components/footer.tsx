@@ -69,7 +69,7 @@ export function Footer() {
 
       <div className="footer-bottom">
         <span>© 2026 {site.legalName}</span>
-        <span>Static Next.js preview prepared for Google indexing, AI crawling and overseas B2B lead generation.</span>
+        <span>Silica aerogel material systems for global technical buyers and engineering projects.</span>
       </div>
     </footer>
   );

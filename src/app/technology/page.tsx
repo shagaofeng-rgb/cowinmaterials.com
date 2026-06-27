@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { AlertTriangle, CheckCircle2, FileCheck2, ShieldCheck } from "lucide-react";
+import { BadgeCheck, CheckCircle2, FileCheck2, ShieldCheck } from "lucide-react";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { SectionHeading } from "@/components/section-heading";
@@ -9,9 +9,9 @@ import { createPageMetadata } from "@/lib/seo";
 export const metadata = createPageMetadata({
   title: "Aerogel Test Data and Technical Proof | Cowin Materials",
   description:
-    "Review Cowin Materials aerogel coating test data, thermal conductivity, VOC, waterproofing report highlights, FTO notes and technical qualification boundaries.",
+    "Review Cowin Materials aerogel coating test data, thermal conductivity, VOC, waterproofing report highlights and technical qualification information.",
   path: "/technology",
-  keywords: ["aerogel coating test data", "thermal conductivity aerogel coating", "aerogel FTO", "water repellent test report"],
+  keywords: ["aerogel coating test data", "thermal conductivity aerogel coating", "water repellent test report", "aerogel technical data"],
 });
 
 export default function TechnologyPage() {
@@ -23,7 +23,7 @@ export default function TechnologyPage() {
           <SectionHeading
             eyebrow="Testing & Data"
             title="Technical Evidence for Early Supplier Qualification"
-            intro="Overseas buyers need more than slogans. This section turns existing reports, installation parameters and FTO notes into a clear technical proof layer."
+            intro="Global buyers need more than slogans. This section presents report highlights, installation parameters and application boundaries in a clear technical proof layer."
           />
         </section>
 
@@ -67,15 +67,15 @@ export default function TechnologyPage() {
             </div>
           </div>
           <div className="report-frame">
-            <Image src="/images/waterproof-report.png" alt="Water-repellent test report page preview" width={720} height={980} />
+            <Image src="/images/waterproof-report.png" alt="Water-repellent test report page excerpt" width={720} height={980} />
           </div>
         </section>
 
         <section className="section muted">
           <SectionHeading
             eyebrow="Material Platform"
-            title="How the technology story should be framed"
-            intro="The overseas site should connect ambient-pressure aerogel processing, composite formulation, application systems and IP risk boundaries."
+            title="How the material platform supports project qualification"
+            intro="Cowin Materials connects aerogel raw materials, composite formulation, application systems and documentation support for practical supplier evaluation."
           />
           <div className="advantage-grid">
             {advantageCards.map((item) => {
@@ -93,30 +93,30 @@ export default function TechnologyPage() {
 
         <section className="section">
           <SectionHeading
-            eyebrow="FTO Boundary"
-            title="Make intellectual-property boundaries clear"
-            intro="The FTO documents indicate low overall risk for the reviewed patent route, but battery-module structures and specialized encapsulation designs still need dedicated review before market entry."
+            eyebrow="Qualification Notes"
+            title="Clear technical boundaries for project use"
+            intro="Final product selection depends on substrate condition, service temperature, target thickness, exposure environment, application method and applicable local standards."
           />
-          <div className="risk-grid">
+          <div className="qualification-grid">
             <article>
               <ShieldCheck size={22} />
-              <h2>Low-risk conclusion</h2>
-              <p>The reviewed implementation route was assessed as low infringement risk against the selected comparison documents.</p>
+              <h2>Report-based communication</h2>
+              <p>Published values are presented with referenced report conditions and suitable application contexts.</p>
             </article>
             <article>
               <FileCheck2 size={22} />
-              <h2>Strongest route</h2>
-              <p>Commodity silica powder modification and composite processes for building envelope and industrial pipe insulation.</p>
+              <h2>Strongest application routes</h2>
+              <p>Building envelope retrofit, industrial pipe insulation, steel fire protection and porous substrate waterproofing.</p>
             </article>
             <article>
-              <AlertTriangle size={22} />
-              <h2>Use caution</h2>
-              <p>Battery module support members, encapsulation layers, strict thickness deviation control and proprietary performance combinations.</p>
+              <BadgeCheck size={22} />
+              <h2>Project confirmation</h2>
+              <p>Fire ratings, thermal targets and durability requirements are confirmed according to project specifications and local standards.</p>
             </article>
             <article>
               <CheckCircle2 size={22} />
-              <h2>Update before launch</h2>
-              <p>Before entering the US, EU, Korea, battery storage or specialty marine markets, a market-specific FTO update is recommended.</p>
+              <h2>Documentation support</h2>
+              <p>Technical data sheets, installation guidance and report highlights can be prepared for distributor and project review.</p>
             </article>
           </div>
         </section>

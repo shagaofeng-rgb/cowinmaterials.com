@@ -500,9 +500,9 @@ select:focus-visible {
 .feature-grid,
 .application-cards,
 .advantage-grid,
-.risk-grid,
+.qualification-grid,
 .product-grid,
-.competitor-grid {
+.strength-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
@@ -510,21 +510,21 @@ select:focus-visible {
 }
 
 .product-grid,
-.competitor-grid,
+.strength-grid,
 .advantage-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.risk-grid {
+.qualification-grid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .feature-card,
 .application-card,
 .advantage-card,
-.risk-grid article,
+.qualification-grid article,
 .product-card,
-.competitor-card,
+.strength-card,
 .product-detail-grid article {
   display: grid;
   align-content: start;
@@ -539,13 +539,13 @@ select:focus-visible {
 .feature-card:hover,
 .application-card:hover,
 .product-card:hover,
-.competitor-card:hover {
+.strength-card:hover {
   border-color: var(--line-strong);
   box-shadow: 0 14px 28px rgba(17, 24, 21, 0.08);
 }
 
 .feature-card span,
-.competitor-card span,
+.strength-card span,
 .product-code {
   color: var(--green-dark);
   font-size: 12px;
@@ -557,9 +557,9 @@ select:focus-visible {
 .feature-card h2,
 .application-card h2,
 .advantage-card h2,
-.risk-grid h2,
+.qualification-grid h2,
 .product-card h2,
-.competitor-card h2,
+.strength-card h2,
 .product-detail-grid h2,
 .contact-panel h2,
 .system-content h2,
@@ -572,9 +572,9 @@ select:focus-visible {
 .feature-card p,
 .application-card p,
 .advantage-card p,
-.risk-grid p,
+.qualification-grid p,
 .product-card p,
-.competitor-card p,
+.strength-card p,
 .product-detail-grid p,
 .contact-note p {
   margin: 0;
@@ -590,7 +590,7 @@ select:focus-visible {
 
 .application-card svg,
 .advantage-card svg,
-.risk-grid svg {
+.qualification-grid svg {
   color: var(--green-dark);
 }
 
@@ -710,7 +710,7 @@ select:focus-visible {
 }
 
 .metric-list li,
-.competitor-card li,
+.strength-card li,
 .two-column-list li {
   display: flex;
   align-items: flex-start;
@@ -720,7 +720,7 @@ select:focus-visible {
 }
 
 .metric-list svg,
-.competitor-card svg,
+.strength-card svg,
 .two-column-list svg {
   flex: 0 0 auto;
   margin-top: 2px;
@@ -836,7 +836,7 @@ select:focus-visible {
 }
 
 .two-column-list ul,
-.competitor-card ul {
+.strength-card ul {
   display: grid;
   gap: 10px;
   margin: 0;
@@ -1234,9 +1234,9 @@ select:focus-visible {
 
   .feature-grid,
   .application-cards,
-  .risk-grid,
+  .qualification-grid,
   .product-grid,
-  .competitor-grid,
+  .strength-grid,
   .advantage-grid,
   .positioning-table,
   .product-detail-grid {
@@ -1352,9 +1352,9 @@ select:focus-visible {
   .feature-grid,
   .application-cards,
   .advantage-grid,
-  .risk-grid,
+  .qualification-grid,
   .product-grid,
-  .competitor-grid,
+  .strength-grid,
   .positioning-table,
   .product-detail-grid,
   .form-grid,

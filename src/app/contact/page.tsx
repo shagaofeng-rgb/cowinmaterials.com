@@ -23,7 +23,7 @@ export default function ContactPage() {
           <SectionHeading
             eyebrow="Contact"
             title="Request Technical Data or Project Selection Support"
-            intro="Share your substrate, operating temperature, target thickness, area, fire rating or waterproofing problem. The local preview form can later connect to email, CRM or a secured API."
+            intro="Share your substrate, operating temperature, target thickness, area, fire rating or waterproofing problem. Our team will review the request and reply by email."
           />
         </section>
 

@@ -1,22 +1,60 @@
-import { ArrowRight, ExternalLink } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, BadgeCheck, FileCheck2, Globe2, Layers3, ShieldCheck } from "lucide-react";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { SectionHeading } from "@/components/section-heading";
-import { competitors } from "@/lib/data";
 import { createPageMetadata } from "@/lib/seo";
 
-const sources = [
-  { label: "Cabot ENOVA aerogel particles", href: "https://www.cabotcorp.com/solutions/products-plus/aerogel/particles" },
-  { label: "Aspen Aerogels PyroThin", href: "https://www.aerogel.com/product/pyrothin/" },
-  { label: "JIOS Aerogel", href: "https://www.jiosaerogel.com/" },
+const strengths = [
+  {
+    icon: Layers3,
+    label: "Integrated product platform",
+    title: "From raw aerogel materials to applied systems",
+    text: "Cowin Materials supports powder, slurry, blankets, thermal pads, insulation coatings, fire protection coatings and penetrating water repellents.",
+  },
+  {
+    icon: FileCheck2,
+    label: "Qualification support",
+    title: "Technical data for early supplier screening",
+    text: "Report highlights, product parameters and installation guidance help buyers compare material fit before sampling or project testing.",
+  },
+  {
+    icon: ShieldCheck,
+    label: "Project-ready documentation",
+    title: "Clear boundaries for standards and applications",
+    text: "Performance information is presented with test conditions, recommended use cases and project-specific confirmation requirements.",
+  },
+];
+
+const buyerNeeds = [
+  {
+    need: "Thin thermal insulation",
+    title: "Coatings and blankets for limited-space construction",
+    support: "Waterborne aerogel coatings and flexible blankets help reduce insulation thickness where conventional materials are difficult to install.",
+  },
+  {
+    need: "Steel fire protection",
+    title: "Coating systems with installation parameters",
+    support: "Intumescent and non-intumescent options support steel structure projects that require defined application and curing guidance.",
+  },
+  {
+    need: "Concrete or masonry waterproofing",
+    title: "Penetrating treatment for porous substrates",
+    support: "Silicon-based water repellent systems protect concrete, stone, mortar and masonry while keeping mineral substrates breathable.",
+  },
+  {
+    need: "EV or ESS thermal barriers",
+    title: "Thin aerogel components for thermal management",
+    support: "Aerogel pads and compounds can support module-level thermal-management assemblies in battery and energy storage applications.",
+  },
 ];
 
 export const metadata = createPageMetadata({
-  title: "Aerogel Competitor Benchmark | Cabot, Aspen Aerogels, JIOS and Cowin Materials",
+  title: "Why Cowin Materials | Silica Aerogel System Supplier",
   description:
-    "A practical overseas positioning benchmark comparing Cabot, Aspen Aerogels, JIOS and Cowin Materials across aerogel particles, blankets, EV thermal barriers and coating systems.",
+    "Learn why global buyers choose Cowin Materials for silica aerogel insulation coatings, fireproof coatings, aerogel blankets, thermal pads and water-repellent systems.",
   path: "/comparison",
-  keywords: ["Cabot aerogel competitor", "Aspen Aerogels alternative", "JIOS Aerogel comparison", "China aerogel supplier"],
+  keywords: ["silica aerogel supplier", "aerogel coating manufacturer", "China aerogel material supplier", "aerogel insulation systems"],
 });
 
 export default function ComparisonPage() {
@@ -26,71 +64,77 @@ export default function ComparisonPage() {
       <main>
         <section className="page-hero compact">
           <SectionHeading
-            eyebrow="Competitive Benchmark"
-            title="How Cowin Materials Should Position Against Cabot, Aspen and JIOS"
-            intro="The overseas site should not copy a single leader. It should use competitor context to make Cowin Materials easier to understand, evaluate and contact."
+            eyebrow="Why Cowin Materials"
+            title="A Practical Aerogel System Supplier for Global Projects"
+            intro="Cowin Materials helps importers, distributors, contractors and engineering teams evaluate silica aerogel products with application-focused guidance and clear technical documentation."
           />
         </section>
 
         <section className="section">
-          <div className="competitor-grid">
-            {competitors.map((competitor) => (
-              <article className="competitor-card" key={competitor.name}>
-                <span>{competitor.position}</span>
-                <h2>{competitor.name}</h2>
-                <p>{competitor.focus}</p>
-                <ul>
-                  {competitor.strengths.map((strength) => (
-                    <li key={strength}>
-                      <ArrowRight size={15} />
-                      {strength}
-                    </li>
-                  ))}
-                </ul>
-              </article>
-            ))}
+          <div className="strength-grid">
+            {strengths.map((item) => {
+              const Icon = item.icon;
+              return (
+                <article className="strength-card" key={item.title}>
+                  <Icon size={22} />
+                  <span>{item.label}</span>
+                  <h2>{item.title}</h2>
+                  <p>{item.text}</p>
+                </article>
+              );
+            })}
           </div>
         </section>
 
         <section className="section muted">
           <SectionHeading
-            eyebrow="Positioning Strategy"
-            title="A more credible export story"
-            intro="Cowin Materials should lead with system-level engineering, not only raw material supply. This is more convincing for global distributors, contractors and industrial buyers."
+            eyebrow="Buyer Fit"
+            title="Built around how technical buyers select materials"
+            intro="The website and product documentation are organized around project conditions instead of only product names, making supplier evaluation faster for overseas buyers."
           />
           <div className="positioning-table">
-            <div>
-              <span>Cabot-like strength</span>
-              <strong>Powder and particle technology</strong>
-              <p>Keep the raw-material story, but connect it to coatings and project systems.</p>
-            </div>
-            <div>
-              <span>Aspen-like strength</span>
-              <strong>Application-specific product families</strong>
-              <p>Use application pathways for battery, LNG and industrial insulation qualification.</p>
-            </div>
-            <div>
-              <span>JIOS-like strength</span>
-              <strong>Thermal-management supply chain</strong>
-              <p>Show flexibility for East Asian and international engineered aerogel components.</p>
-            </div>
-            <div>
-              <span>Cowin Materials angle</span>
-              <strong>Aerogel engineering material systems</strong>
-              <p>Combine coatings, construction guidance, third-party data and project-level support.</p>
-            </div>
+            {buyerNeeds.map((item) => (
+              <div key={item.need}>
+                <span>{item.need}</span>
+                <strong>{item.title}</strong>
+                <p>{item.support}</p>
+              </div>
+            ))}
           </div>
         </section>
 
-        <section className="section">
-          <SectionHeading eyebrow="Reference Sources" title="Public competitor pages reviewed" />
-          <div className="source-links">
-            {sources.map((source) => (
-              <a href={source.href} key={source.href} target="_blank" rel="noreferrer">
-                {source.label}
-                <ExternalLink size={16} />
-              </a>
-            ))}
+        <section className="section split">
+          <div>
+            <SectionHeading
+              eyebrow="Supply Support"
+              title="Product selection, sampling and project discussion"
+              intro="Cowin Materials can provide product recommendations based on substrate, operating temperature, target thickness, fire rating, waterproofing requirement, application method and local standard needs."
+            />
+            <div className="evidence-list">
+              <div>
+                <BadgeCheck size={20} />
+                <span>Application-first product selection for buildings, industry, batteries, LNG and waterproofing</span>
+              </div>
+              <div>
+                <FileCheck2 size={20} />
+                <span>Technical data sheets, report highlights and construction guidance for buyer review</span>
+              </div>
+              <div>
+                <Globe2 size={20} />
+                <span>Export-oriented communication for distributors, contractors and project owners</span>
+              </div>
+            </div>
+          </div>
+          <div className="contact-panel">
+            <h2>Send a project condition for selection support.</h2>
+            <p>
+              Include the substrate, temperature range, target thickness, area, exposure
+              condition and required standard so the team can recommend a suitable product route.
+            </p>
+            <Link className="primary-button" href="/contact">
+              Request Support
+              <ArrowRight size={18} />
+            </Link>
           </div>
         </section>
       </main>

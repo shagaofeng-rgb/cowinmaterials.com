@@ -31,7 +31,7 @@ export const navItems = [
   { href: "/applications", label: "Applications" },
   { href: "/technology", label: "Testing & Data" },
   { href: "/construction", label: "Installation" },
-  { href: "/comparison", label: "Benchmark" },
+  { href: "/comparison", label: "Why Cowin" },
   { href: "/contact", label: "Contact" },
 ];
 
@@ -51,9 +51,9 @@ export const megaMenus = {
     { href: "/applications#fire", label: "Steel fire protection", note: "Coating systems for steel structures" },
   ],
   Resources: [
-    { href: "/technology", label: "Test reports and data", note: "Thermal, VOC, water-repellent and FTO notes" },
+    { href: "/technology", label: "Test reports and data", note: "Thermal, VOC and water-repellent report highlights" },
     { href: "/construction", label: "Installation systems", note: "Primer, coating, topcoat and curing windows" },
-    { href: "/comparison", label: "Cabot, Aspen, JIOS benchmark", note: "How Cowin Materials should position overseas" },
+    { href: "/comparison", label: "Why Cowin Materials", note: "Supplier strengths for global B2B projects" },
   ],
 };
 
@@ -175,7 +175,7 @@ export const products: Product[] = [
       "CW-FTHL ultra-thin waterborne intumescent aerogel fireproof coating for steel structures, industrial facilities and building fire protection.",
     detail: [
       "The intumescent layer expands under heat to create a protective char barrier, while aerogel contributes thermal resistance inside the coating matrix.",
-      "For overseas use, the website should present the product as a technical coating system and confirm local fire testing before project claims.",
+      "For international projects, final fire-resistance ratings are confirmed through project specifications, applicable local standards and supporting test documentation.",
     ],
   },
   {
@@ -378,30 +378,6 @@ export const constructionSystems = [
   },
 ];
 
-export const competitors = [
-  {
-    name: "Cabot Corporation",
-    position: "Specialty chemical group",
-    strengths: ["ENOVA aerogel particles", "Powder-scale manufacturing", "Global chemical customer base", "Carbon black and fumed silica synergies"],
-    focus: "Aerogel particles, industrial insulation, daylighting and specialty formulations.",
-    link: "https://www.cabotcorp.com/solutions/products-plus/aerogel/particles",
-  },
-  {
-    name: "Aspen Aerogels",
-    position: "Aerogel pure-play leader",
-    strengths: ["PyroThin battery barriers", "Cryogel and Pyrogel product families", "EV customer references", "Mature technical resource system"],
-    focus: "EV battery thermal barriers, LNG, oil and gas and high-performance insulation blankets.",
-    link: "https://www.aerogel.com/product/pyrothin/",
-  },
-  {
-    name: "JIOS Aerogel",
-    position: "Korean aerogel manufacturer",
-    strengths: ["EV and ESS thermal management", "East Asian supply chain", "Aerogel particles and composites", "Application breadth"],
-    focus: "Battery thermal protection, industrial insulation and application-specific aerogel components.",
-    link: "https://www.jiosaerogel.com/",
-  },
-];
-
 export const advantageCards = [
   {
     icon: FlaskConical,
@@ -411,7 +387,7 @@ export const advantageCards = [
   {
     icon: FileCheck2,
     title: "Test data supports early buyer qualification",
-    text: "Thermal conductivity, VOC, added thermal resistance, water-repellent and FTO materials help overseas buyers screen risk quickly.",
+    text: "Thermal conductivity, VOC, added thermal resistance and water-repellent report highlights help buyers evaluate material fit efficiently.",
   },
   {
     icon: Gauge,
@@ -420,8 +396,8 @@ export const advantageCards = [
   },
   {
     icon: Globe2,
-    title: "Better overseas positioning than a commodity supplier",
-    text: "The strongest story is a practical Chinese aerogel system supplier for building retrofit, industrial insulation, fire protection and waterproofing.",
+    title: "Global project support beyond commodity supply",
+    text: "The product portfolio supports building retrofit, industrial insulation, fire protection, waterproofing and thermal-management projects.",
   },
 ];
 
@@ -436,7 +412,7 @@ export const seoTopics = [
 ];
 
 export const processHighlights = [
-  { icon: ShieldCheck, title: "Risk-aware claims", text: "Fire-resistance and market-entry statements are written with test-report boundaries and FTO notes in mind." },
+  { icon: ShieldCheck, title: "Qualification-aware documentation", text: "Performance statements are supported with test-report boundaries, project conditions and applicable standard references." },
   { icon: Layers3, title: "System selling", text: "Each product is explained as primer, coating, blanket, topcoat or treatment system, not as isolated raw material." },
-  { icon: ThermometerSun, title: "Application-first navigation", text: "Foreign engineers can enter through temperature, substrate, geometry, fire rating or waterproofing problem." },
+  { icon: ThermometerSun, title: "Application-first navigation", text: "Engineers can enter through temperature, substrate, geometry, fire rating or waterproofing problem." },
 ];

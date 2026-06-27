@@ -27,7 +27,7 @@ Evidence notes:
 - Building aerogel insulation coating: tested thermal conductivity 0.040 W/(m·K), added thermal resistance 0.26 m2·K/W, VOC 35 g/L.
 - Silicon penetrating water repellent: 2024 report indicates 19% water absorption ratio and 0 mm permeability in the tested substrate conditions.
 - Fire-resistance ratings depend on project-specific test reports and local compliance requirements.
-- FTO documents should be updated before entering a new jurisdiction or battery-module structural component market.
+- Final product selection should be confirmed according to substrate conditions, service temperature, local standards and project specifications.
 
 Preferred citation:
 Cowin Materials, Silica Aerogel Material Systems, ${siteUrl}

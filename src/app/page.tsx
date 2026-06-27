@@ -95,8 +95,8 @@ export default function Home() {
         <section className="section muted">
           <SectionHeading
             eyebrow="Application Pathways"
-            title="Let overseas buyers enter by use case"
-            intro="The site architecture follows how engineers buy materials: substrate, temperature, geometry, fire rating, waterproofing problem and certification risk."
+            title="Choose materials by use case"
+            intro="Engineers can evaluate products by substrate, temperature, geometry, fire rating, waterproofing requirement and documentation needs."
           />
           <div className="application-cards">
             {applications.slice(0, 6).map((item) => {
@@ -116,8 +116,8 @@ export default function Home() {
           <div>
             <SectionHeading
               eyebrow="Why Cowin Materials"
-              title="A different position from Cabot, Aspen and JIOS"
-              intro="Cabot is strong in aerogel particles, Aspen is strong in battery and blanket systems, and JIOS has a strong East Asian thermal-management supply chain. Cowin Materials should win overseas with system delivery, local engineering cost advantages and documented installation data."
+              title="Aerogel material systems with project-ready support"
+              intro="Cowin Materials combines silica aerogel raw materials, coatings, blankets, fire protection and waterproofing into a practical supply platform for global engineering buyers."
             />
             <div className="evidence-list">
               <div>
@@ -126,11 +126,11 @@ export default function Home() {
               </div>
               <div>
                 <FileCheck2 size={20} />
-                <span>Thermal, VOC, waterproofing and FTO documents available for qualification</span>
+                <span>Thermal, VOC and waterproofing report highlights available for supplier qualification</span>
               </div>
               <div>
                 <ShieldCheck size={20} />
-                <span>Claims written with testing boundaries and market-entry risk in mind</span>
+                <span>Performance statements aligned with report conditions and project specifications</span>
               </div>
               <div>
                 <BadgeCheck size={20} />

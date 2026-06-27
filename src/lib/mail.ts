@@ -99,7 +99,7 @@ export async function sendInquiryEmail(payload: InquiryPayload) {
   });
 }
 
-export async function sendMonthlyTestEmail() {
+export async function sendMonthlyEmailHealthCheck() {
   const to = process.env.MAIL_TO || site.email;
   const from = process.env.MAIL_FROM || `${site.name} Website <${getEnv("SMTP_USER")}>`;
   const checkedAt = new Date().toISOString();
@@ -107,9 +107,9 @@ export async function sendMonthlyTestEmail() {
   await getTransporter().sendMail({
     from,
     to,
-    subject: `[${site.name}] Monthly website email test`,
+    subject: `[${site.name}] Monthly email delivery health check`,
     text: [
-      "Monthly email delivery test",
+      "Monthly email delivery health check",
       "",
       `Site: ${site.domain}`,
       `Recipient: ${to}`,
@@ -119,7 +119,7 @@ export async function sendMonthlyTestEmail() {
     ].join("\n"),
     html: `
       <div style="font-family:Arial,sans-serif;color:#17201d;line-height:1.5;">
-        <h2 style="margin:0 0 12px;">Monthly email delivery test</h2>
+        <h2 style="margin:0 0 12px;">Monthly email delivery health check</h2>
         <p>If this message arrived, the website SMTP configuration is working.</p>
         <ul>
           <li><strong>Site:</strong> ${escapeHtml(site.domain)}</li>
