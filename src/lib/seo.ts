@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { products, site } from "@/lib/data";
 
-export const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.rt-joy.com";
+export const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.cowinmaterials.com";
 
 export function absoluteUrl(path = "/") {
   return new URL(path, siteUrl).toString();

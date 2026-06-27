@@ -22,7 +22,7 @@ export const site = {
   phoneHref: "+8615000608886",
   email: "Market@rt-joy.com",
   address: "No. 777 Xinwei Road, Fusheng Industrial Park, Chongming District, Shanghai, China",
-  domain: "rt-joy.com",
+  domain: "cowinmaterials.com",
 };
 
 export const navItems = [
