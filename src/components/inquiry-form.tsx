@@ -14,16 +14,43 @@ const scenarioOptions = [
 ];
 
 export function InquiryForm() {
-  const [submitted, setSubmitted] = useState(false);
+  const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
 
   return (
     <form
       className="inquiry-form"
-      onSubmit={(event) => {
+      onSubmit={async (event) => {
         event.preventDefault();
-        setSubmitted(true);
+        setStatus("sending");
+
+        const form = event.currentTarget;
+        const formData = new FormData(form);
+
+        const response = await fetch("/api/inquiry", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: formData.get("name"),
+            email: formData.get("email"),
+            country: formData.get("country"),
+            scenario: formData.get("scenario"),
+            message: formData.get("message"),
+            website: formData.get("website"),
+            page: window.location.href,
+          }),
+        });
+
+        if (response.ok) {
+          form.reset();
+          setStatus("success");
+        } else {
+          setStatus("error");
+        }
       }}
     >
+      <input aria-hidden="true" className="honeypot" name="website" tabIndex={-1} type="text" />
       <div className="form-grid">
         <label>
           Name
@@ -56,13 +83,18 @@ export function InquiryForm() {
           placeholder="Tell us the substrate, temperature, target thickness, area, fire rating, test standard or delivery schedule."
         />
       </label>
-      <button className="primary-button" type="submit">
+      <button className="primary-button" disabled={status === "sending"} type="submit">
         <Send size={18} />
-        Submit Preview Inquiry
+        {status === "sending" ? "Sending..." : "Send Inquiry"}
       </button>
-      {submitted ? (
+      {status === "success" ? (
         <p className="form-success">
-          Your inquiry has been captured in this local preview. For launch, this form can be connected to email, CRM, database or an anti-spam protected API.
+          Thank you. Your inquiry has been sent to the Cowin Materials team.
+        </p>
+      ) : null}
+      {status === "error" ? (
+        <p className="form-error">
+          The message could not be sent right now. Please email davidsha@cowinmaterials.com directly.
         </p>
       ) : null}
     </form>
