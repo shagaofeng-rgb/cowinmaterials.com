@@ -6,11 +6,11 @@ import { constructionSystems } from "@/lib/data";
 import { createPageMetadata } from "@/lib/seo";
 
 export const metadata = createPageMetadata({
-  title: "Aerogel Coating Installation Systems | Primer, Film Thickness and Curing Guidance",
+  title: "Aerogel Coating Application Systems | Cowin Materials",
   description:
-    "Installation guidance for Cowin Materials aerogel insulation coatings, industrial coatings, fireproof coatings and penetrating water repellents.",
+    "Application system overview for Cowin Materials aerogel insulation coatings, fireproof coatings and penetrating water repellents.",
   path: "/construction",
-  keywords: ["aerogel coating installation", "aerogel coating film thickness", "fireproof coating curing", "industrial insulation coating system"],
+  keywords: ["aerogel coating application", "aerogel coating system", "fireproof coating system", "industrial insulation coating"],
 });
 
 export default function ConstructionPage() {
@@ -20,9 +20,9 @@ export default function ConstructionPage() {
       <main>
         <section className="page-hero compact">
           <SectionHeading
-            eyebrow="Installation"
-            title="From Material Supply to Project-Ready Coating Systems"
-            intro="Overseas B2B buyers need repeatable installation rules: substrate preparation, primer, coating thickness, topcoat, dew-point control and curing time."
+            eyebrow="Application Systems"
+            title="Clear Coating Systems Without Overloading the Page"
+            intro="A simple overview of how each product is normally used. Detailed method statements can be prepared after the project substrate, climate and standard are confirmed."
           />
         </section>
 

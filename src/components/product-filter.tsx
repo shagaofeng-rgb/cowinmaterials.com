@@ -38,7 +38,7 @@ export function ProductFilter() {
               <p>{product.summary}</p>
             </div>
             <ul className="metric-list">
-              {product.metrics.map((metric) => (
+              {product.metrics.slice(0, 3).map((metric) => (
                 <li key={metric}>
                   <CheckCircle2 size={16} />
                   <span>{metric}</span>
@@ -52,7 +52,6 @@ export function ProductFilter() {
                 </span>
               ))}
             </div>
-            <p className="proof-note">{product.proof}</p>
             <Link className="text-link" href={`/products/${product.slug}`}>
               View technical profile
               <ArrowRight size={16} />

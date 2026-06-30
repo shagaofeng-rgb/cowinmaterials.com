@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { BadgeCheck, CheckCircle2, FileCheck2, ShieldCheck } from "lucide-react";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
@@ -7,11 +6,11 @@ import { advantageCards, proofItems } from "@/lib/data";
 import { createPageMetadata } from "@/lib/seo";
 
 export const metadata = createPageMetadata({
-  title: "Aerogel Test Data and Technical Proof | Cowin Materials",
+  title: "Aerogel Performance Data | Cowin Materials",
   description:
-    "Review Cowin Materials aerogel coating test data, thermal conductivity, VOC, waterproofing report highlights and technical qualification information.",
+    "Review concise performance highlights for Cowin Materials aerogel insulation coatings, fireproof coatings and penetrating water-repellent systems.",
   path: "/technology",
-  keywords: ["aerogel coating test data", "thermal conductivity aerogel coating", "water repellent test report", "aerogel technical data"],
+  keywords: ["aerogel coating performance data", "thermal conductivity aerogel coating", "water repellent data", "aerogel technical data"],
 });
 
 export default function TechnologyPage() {
@@ -21,9 +20,9 @@ export default function TechnologyPage() {
       <main>
         <section className="page-hero compact">
           <SectionHeading
-            eyebrow="Testing & Data"
-            title="Technical Evidence for Early Supplier Qualification"
-            intro="Global buyers need more than slogans. This section presents report highlights, installation parameters and application boundaries in a clear technical proof layer."
+            eyebrow="Performance Data"
+            title="Concise Technical Highlights for Supplier Qualification"
+            intro="Global buyers can review the key performance indicators first, then request full data sheets and supporting documents for project qualification."
           />
         </section>
 
@@ -45,9 +44,9 @@ export default function TechnologyPage() {
         <section className="section split">
           <div>
             <SectionHeading
-              eyebrow="Inspection Report"
-              title="Building insulation coating data can be cited clearly"
-              intro="Shanghai Jianke report XT226-250016 shows the thermal-radiation barrier mid-coat passed evaluation under GB/T 25261-2018 and DG/TJ08-2200-2024."
+              eyebrow="Key Indicators"
+              title="Performance highlights for fast technical screening"
+              intro="The values below are presented as quick screening references. Detailed documents can be provided during distributor, contractor or project review."
             />
             <div className="data-table">
               {[
@@ -55,9 +54,8 @@ export default function TechnologyPage() {
                 ["Added thermal resistance", "0.26 m2·K/W"],
                 ["Bond strength", "0.63 MPa"],
                 ["Density", "0.5 g/mL"],
-                ["Vertical emissivity", "0.99"],
-                ["VOC content", "35 g/L"],
-                ["Formaldehyde / benzene / heavy metals", "Not detected"],
+                ["VOC content", "Low-VOC waterborne system"],
+                ["Water-repellent result", "Low absorption and 0 mm permeability"],
               ].map(([label, value]) => (
                 <div key={label}>
                   <span>{label}</span>
@@ -66,8 +64,19 @@ export default function TechnologyPage() {
               ))}
             </div>
           </div>
-          <div className="report-frame">
-            <Image src="/images/waterproof-report.png" alt="Water-repellent test report page excerpt" width={720} height={980} />
+          <div className="qualification-panel">
+            <h2>Documents available on request</h2>
+            <p>
+              Supporting reports, data sheets and application guidance are shared during
+              project evaluation so buyers receive the right file for the target
+              product, substrate and local standard.
+            </p>
+            <ul>
+              <li>Thermal insulation coating data</li>
+              <li>Water-repellent performance highlights</li>
+              <li>Fire protection coating qualification notes</li>
+              <li>Installation and curing guidance</li>
+            </ul>
           </div>
         </section>
 
@@ -100,8 +109,8 @@ export default function TechnologyPage() {
           <div className="qualification-grid">
             <article>
               <ShieldCheck size={22} />
-              <h2>Report-based communication</h2>
-              <p>Published values are presented with referenced report conditions and suitable application contexts.</p>
+              <h2>Data-based communication</h2>
+              <p>Published values are presented with clear conditions and suitable application contexts.</p>
             </article>
             <article>
               <FileCheck2 size={22} />
@@ -116,7 +125,7 @@ export default function TechnologyPage() {
             <article>
               <CheckCircle2 size={22} />
               <h2>Documentation support</h2>
-              <p>Technical data sheets, installation guidance and report highlights can be prepared for distributor and project review.</p>
+              <p>Technical data sheets, installation guidance and supporting documents can be prepared for distributor and project review.</p>
             </article>
           </div>
         </section>

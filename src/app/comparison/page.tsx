@@ -16,7 +16,7 @@ const strengths = [
     icon: FileCheck2,
     label: "Qualification support",
     title: "Technical data for early supplier screening",
-    text: "Report highlights, product parameters and installation guidance help buyers compare material fit before sampling or project testing.",
+    text: "Performance highlights, product parameters and installation guidance help buyers compare material fit before sampling or project testing.",
   },
   {
     icon: ShieldCheck,
@@ -117,7 +117,7 @@ export default function ComparisonPage() {
               </div>
               <div>
                 <FileCheck2 size={20} />
-                <span>Technical data sheets, report highlights and construction guidance for buyer review</span>
+                <span>Technical data sheets, supporting documents and construction guidance for buyer review</span>
               </div>
               <div>
                 <Globe2 size={20} />

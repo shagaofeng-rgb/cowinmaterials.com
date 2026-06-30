@@ -21,7 +21,7 @@ export default function ProductsPage() {
           <SectionHeading
             eyebrow="Products"
             title="Silica Aerogel Product Portfolio"
-            intro="Filter by material form and engineering use. Each product has a dedicated SEO-ready technical profile for Google and AI discovery."
+            intro="Filter by material form and engineering use. Each product profile gives overseas buyers a concise view of fit, performance and typical applications."
           />
         </section>
         <section className="section">

@@ -126,7 +126,7 @@ export default function Home() {
               </div>
               <div>
                 <FileCheck2 size={20} />
-                <span>Thermal, VOC and waterproofing report highlights available for supplier qualification</span>
+                <span>Thermal, VOC and waterproofing performance highlights available for supplier qualification</span>
               </div>
               <div>
                 <ShieldCheck size={20} />

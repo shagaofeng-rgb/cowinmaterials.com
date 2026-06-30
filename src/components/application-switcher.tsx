@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { applications } from "@/lib/data";
 
@@ -9,6 +9,19 @@ export function ApplicationSwitcher() {
   const [activeId, setActiveId] = useState(applications[0].id);
   const active = applications.find((item) => item.id === activeId) ?? applications[0];
   const Icon = active.icon;
+
+  useEffect(() => {
+    const syncHash = () => {
+      const hash = window.location.hash.replace("#", "");
+      if (applications.some((item) => item.id === hash)) {
+        setActiveId(hash);
+      }
+    };
+
+    syncHash();
+    window.addEventListener("hashchange", syncHash);
+    return () => window.removeEventListener("hashchange", syncHash);
+  }, []);
 
   return (
     <div className="application-layout">
@@ -23,7 +36,10 @@ export function ApplicationSwitcher() {
               role="tab"
               aria-selected={item.id === activeId}
               className={item.id === activeId ? "selected" : ""}
-              onClick={() => setActiveId(item.id)}
+              onClick={() => {
+                setActiveId(item.id);
+                window.history.replaceState(null, "", `#${item.id}`);
+              }}
             >
               <TabIcon size={18} />
               <span>{item.title}</span>

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Mail, MapPin, Phone } from "lucide-react";
-import { megaMenus, navItems, seoTopics, site } from "@/lib/data";
+import { megaMenus, navItems, site } from "@/lib/data";
 
 export function Footer() {
   return (
@@ -59,12 +59,6 @@ export function Footer() {
             </li>
           </ul>
         </div>
-      </div>
-
-      <div className="seo-keywords" aria-label="Core SEO topics">
-        {seoTopics.map((topic) => (
-          <span key={topic}>{topic}</span>
-        ))}
       </div>
 
       <div className="footer-bottom">

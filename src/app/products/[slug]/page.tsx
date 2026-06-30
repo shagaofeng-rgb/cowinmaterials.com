@@ -80,7 +80,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                 <ArrowRight size={18} />
               </Link>
               <Link className="secondary-button" href="/technology">
-                View Test Data
+                View Performance Data
               </Link>
             </div>
           </div>
@@ -95,7 +95,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
             {product.detail.map((paragraph) => (
               <p key={paragraph}>{paragraph}</p>
             ))}
-            <p className="proof-note">{product.proof}</p>
+            <p className="proof-note">Qualification note: {product.proof}</p>
           </article>
 
           <article>

@@ -51,8 +51,8 @@ export const megaMenus = {
     { href: "/applications#fire", label: "Steel fire protection", note: "Coating systems for steel structures" },
   ],
   Resources: [
-    { href: "/technology", label: "Test reports and data", note: "Thermal, VOC and water-repellent report highlights" },
-    { href: "/construction", label: "Installation systems", note: "Primer, coating, topcoat and curing windows" },
+    { href: "/technology", label: "Performance data", note: "Thermal, VOC and waterproofing highlights" },
+    { href: "/construction", label: "Application systems", note: "Primer, coating, topcoat and curing guidance" },
     { href: "/comparison", label: "Why Cowin Materials", note: "Supplier strengths for global B2B projects" },
   ],
 };
@@ -92,7 +92,7 @@ export const products: Product[] = [
       "Nanoporous SiO2 aerogel raw material for coatings, composite fillers and functional modification systems.",
     metrics: ["400-800 m2/g specific surface area", "90-95% porosity", "20-50 nm pore size", "Hydrophobic surface"],
     applications: ["Waterborne industrial coatings", "Thermal coating formulas", "Composite fillers"],
-    proof: "Designed against JC/T 2518-2019 requirements for hydrophobic silica aerogel powder.",
+    proof: "Suitable for hydrophobic silica aerogel powder and waterborne formulation development.",
     image: "/images/waterproof-section-test.png",
     seoTitle: "Hydrophobic Silica Aerogel Powder and Waterborne Aerogel Slurry",
     seoDescription:
@@ -111,7 +111,7 @@ export const products: Product[] = [
       "Flexible aerogel blankets for medium-high temperature insulation, cryogenic service, tanks, pipelines and constrained spaces.",
     metrics: ["0.020 W/(m·K) at 25C", "Up to 650C service for CW-AT-H", "-200C to 125C for CW-AT-L", "Hydrophobicity up to 99.9%"],
     applications: ["Steam pipelines", "Process equipment", "LNG logistics", "Cold chain"],
-    proof: "Product quality aligned with GB/T 34336-2017 nanoporous aerogel composite insulation products.",
+    proof: "Quality control can be aligned with project requirements for nanoporous aerogel insulation products.",
     image: "/images/industrial-coating-system.jpeg",
     seoTitle: "Aerogel Blanket and Thin Thermal Pads for Industrial and Battery Insulation",
     seoDescription:
@@ -128,9 +128,9 @@ export const products: Product[] = [
     category: "Insulation Coatings",
     summary:
       "Waterborne thin-layer aerogel insulation coating used with primer and topcoat for exterior walls, roofs, retrofits and industrial buildings.",
-    metrics: ["0.040 W/(m·K) tested thermal conductivity", "0.26 m2·K/W added thermal resistance", "35 g/L VOC", "0.5 g/mL density"],
+    metrics: ["0.040 W/(m·K) thermal conductivity", "0.26 m2·K/W added thermal resistance", "Low-VOC waterborne system", "Thin coating application"],
     applications: ["Exterior walls", "Roof retrofit", "Factory buildings", "Energy-saving renovation"],
-    proof: "Shanghai Jianke XT226-250016 report: compliant with GB/T 25261-2018 and DG/TJ08-2200-2024.",
+    proof: "Supporting documents are available for thermal conductivity, added thermal resistance and VOC review.",
     image: "/images/fire-test-lab.jpg",
     seoTitle: "Waterborne Aerogel Insulation Coating for Building Energy Retrofit",
     seoDescription:
@@ -168,7 +168,7 @@ export const products: Product[] = [
       "Waterborne ultra-thin intumescent coating that forms an expanded char layer under fire while aerogel slows heat transfer to steel.",
     metrics: ["66±3% solids", "1.30 g/cm3 density", "2 h surface dry", "28-day full cure"],
     applications: ["Steel factories", "Petrochemical frames", "Power facilities", "Commercial steel"],
-    proof: "Designed for GB14907-2018 fireproof coating requirements. Fire-resistance ratings must be matched to project test reports.",
+    proof: "Fire-resistance ratings are confirmed according to the project specification and applicable local standard.",
     image: "/images/fire-char-layer.jpg",
     seoTitle: "Waterborne Aerogel Intumescent Fireproof Coating for Steel Structures",
     seoDescription:
@@ -185,9 +185,9 @@ export const products: Product[] = [
     category: "Fire Protection Coatings",
     summary:
       "Thick-film fire protection coating systems for steel structures requiring higher dry film thickness and defined fire-resistance duration.",
-    metrics: ["24 mm / 2.5 h reference system", "100% solids", "4 h surface dry", "28-day full cure"],
+    metrics: ["Thick-film protection", "Indoor / outdoor systems", "Defined dry film build", "Project-specific rating"],
     applications: ["Steel fire protection", "Outdoor exposure", "Industrial structures"],
-    proof: "Indoor dry density ≤500 kg/m3. Outdoor dry density ≤650 kg/m3.",
+    proof: "Indoor and outdoor systems are selected according to exposure, target rating and coating thickness.",
     image: "/images/fire-test-lab.jpg",
     seoTitle: "Non-Intumescent Fire Protection Coating for Steel Structure Projects",
     seoDescription:
@@ -206,7 +206,7 @@ export const products: Product[] = [
       "Low-viscosity penetrating water repellent that forms nanoscale hydrophobic interfaces inside porous concrete, masonry and stone substrates.",
     metrics: ["0.93 g/cm3 density", "pH 4-7", "8-14% solids", "250 ml/m2 recommended dosage"],
     applications: ["Concrete structures", "Stone protection", "Mortar and gypsum", "Repair and retrofit"],
-    proof: "2024W06363 report: 19% water absorption ratio, 0 mm permeability and no staining under multiple aging conditions.",
+    proof: "Supporting documents are available for water absorption, permeability and appearance review.",
     image: "/images/waterproof-droplets.png",
     seoTitle: "Silicon Penetrating Water Repellent for Concrete, Stone and Masonry",
     seoDescription:
@@ -286,7 +286,7 @@ export const applications = [
     summary:
       "Intumescent and non-intumescent coating systems for steel structures, industrial plants and commercial buildings.",
     fit: ["CW-FTHL intumescent aerogel fireproof coating", "Indoor/outdoor non-intumescent systems"],
-    metrics: ["66±3% solids for intumescent coating", "24 mm / 2.5 h reference thick system", "28-day full cure", "GB14907-2018 basis"],
+    metrics: ["Waterborne intumescent option", "Thick-film system option", "Defined curing process", "Project-specific fire rating"],
   },
   {
     id: "water",
@@ -305,13 +305,13 @@ export const proofItems = [
     value: "0.040",
     unit: "W/(m·K)",
     label: "Thermal conductivity",
-    note: "Building insulation coating test report XT226-250016",
+    note: "Building insulation coating performance highlight",
   },
   {
     value: "0.26",
     unit: "m2·K/W",
     label: "Added thermal resistance",
-    note: "Class II under DG/TJ08-2200-2024 evaluation",
+    note: "Thermal resistance improvement for thin coating systems",
   },
   {
     value: "35",
@@ -323,7 +323,7 @@ export const proofItems = [
     value: "19%",
     unit: "",
     label: "Water absorption ratio",
-    note: "CW-WP-01 report 2024W06363",
+    note: "Penetrating water-repellent performance highlight",
   },
 ];
 
@@ -333,48 +333,44 @@ export const constructionSystems = [
     code: "CW-AC-01/02",
     image: "/images/building-coating-system.jpeg",
     steps: [
-      "Substrate check: moisture ≤8%, pH <10 and flatness ≤4 mm / 2 m.",
-      "Apply putty, one primer coat, two aerogel insulation coats and two topcoat layers.",
-      "Target wet films: 1.2 mm + 1.3 mm, approximately 2 mm dry film after curing.",
-      "Allow 24 h interval in summer or 48 h in winter before next coating operation.",
+      "Confirm the wall or roof substrate is clean, dry and stable before coating.",
+      "Use primer, aerogel insulation coating and weather-resistant topcoat as a complete system.",
+      "Control coating thickness and drying interval according to project conditions.",
     ],
-    parameters: ["Primer 0.14 kg/m2", "Aerogel coating 1.8 kg/m2", "Topcoat 0.25 kg/m2", "7-day final cure at 25C"],
+    parameters: ["Primer + aerogel coating + topcoat", "Thin insulation layer", "Exterior wall / roof retrofit", "Project dosage confirmed by substrate"],
   },
   {
     title: "Industrial Aerogel Coating System",
     code: "CW-AC-14/15/16",
     image: "/images/industrial-coating-system.jpeg",
     steps: [
-      "Stop equipment and cool the surface before coating work.",
-      "Keep substrate temperature at least 3C above dew point and relative humidity ≤85%.",
-      "Use heat-resistant primer, aerogel mid-coat and protective topcoat.",
-      "Control single wet film below 1.5 mm and allow enough drying between coats.",
+      "Confirm operating temperature, shutdown window and surface condition before application.",
+      "Use a heat-resistant primer, aerogel insulation layer and protective topcoat.",
+      "Pay attention to dew point, humidity and coating thickness during construction.",
     ],
-    parameters: ["-40C to 180C service", "≤0.04 W/(m·K)", "Two-coat 2 mm dry film", "7-day final cure"],
+    parameters: ["Pipes, valves and tanks", "Spray or trowel application", "Complex geometry fit", "Protective topcoat available"],
   },
   {
     title: "Steel Fire Protection Coating System",
     code: "CW-FTHL / Non-intumescent",
     image: "/images/fire-char-layer.jpg",
     steps: [
-      "Prepare steel to St3 or Sa2.5 depending on project specification.",
-      "For intumescent coating, apply the first 300-400 μm dry film, then approximately 800 μm per coat.",
-      "Keep water dilution below 5% and allow 24 h between coats.",
-      "Apply topcoat only after the fireproof coating is dry enough to prevent blistering.",
+      "Prepare the steel surface according to the project coating specification.",
+      "Select intumescent or non-intumescent coating according to target fire rating.",
+      "Apply protective topcoat when outdoor exposure or decorative finish is required.",
     ],
-    parameters: ["Surface dry 2-4 h", "Full cure 28 days", "GB14907-2018 basis", "Project-specific fire test required"],
+    parameters: ["Steel structure protection", "Indoor / outdoor options", "Topcoat compatible", "Rating confirmed by project"],
   },
   {
     title: "Penetrating Water Repellent System",
     code: "CW-WP-01",
     image: "/images/silicon-waterproof-deck.jpg",
     steps: [
-      "Clean porous mineral substrate and remove dust, oil, loose particles and laitance.",
-      "Apply undiluted material by spray, roller or brush until surface is evenly saturated.",
-      "Target dosage is approximately 250 ml/m2 depending on substrate porosity.",
-      "Keep the surface dry for more than 12 h and avoid rain during curing.",
+      "Clean porous mineral substrates and remove dust, oil and loose particles.",
+      "Apply by spray, roller or brush until the surface is evenly treated.",
+      "Protect the treated area from rain during the initial curing period.",
     ],
-    parameters: ["pH 4-7", "8-14% solids", "5C to 35C application", "0 mm permeability in test report"],
+    parameters: ["Concrete and masonry", "Breathable protection", "No surface film", "Dosage depends on porosity"],
   },
 ];
 
@@ -387,28 +383,18 @@ export const advantageCards = [
   {
     icon: FileCheck2,
     title: "Test data supports early buyer qualification",
-    text: "Thermal conductivity, VOC, added thermal resistance and water-repellent report highlights help buyers evaluate material fit efficiently.",
+    text: "Key thermal, VOC and waterproofing highlights help buyers evaluate material fit efficiently.",
   },
   {
     icon: Gauge,
     title: "Installation parameters are already documented",
-    text: "Film thickness, substrate preparation, dew-point control, curing windows and consumption ranges can be turned into project guidance.",
+    text: "Substrate preparation, coating sequence, curing windows and project dosage can be clarified before sampling.",
   },
   {
     icon: Globe2,
     title: "Global project support beyond commodity supply",
     text: "The product portfolio supports building retrofit, industrial insulation, fire protection, waterproofing and thermal-management projects.",
   },
-];
-
-export const seoTopics = [
-  "silica aerogel insulation coating",
-  "aerogel fireproof coating",
-  "waterborne intumescent fire protection coating",
-  "penetrating water repellent for concrete",
-  "aerogel blanket for industrial insulation",
-  "EV battery aerogel thermal barrier",
-  "industrial aerogel coating for pipes",
 ];
 
 export const processHighlights = [
