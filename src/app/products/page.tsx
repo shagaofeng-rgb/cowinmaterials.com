@@ -5,9 +5,9 @@ import { SectionHeading } from "@/components/section-heading";
 import { productListJsonLd, createPageMetadata } from "@/lib/seo";
 
 export const metadata = createPageMetadata({
-  title: "Silica Aerogel Products | Insulation Coatings, Fireproof Coatings, Blankets and Water Repellent",
+  title: "Aerogel Products and Functional Coating Systems | Cowin Materials",
   description:
-    "Browse Cowin Materials silica aerogel powder, aerogel blankets, thermal pads, insulation coatings, fireproof coatings, penetrating water repellents and aerogel paste.",
+    "Explore aerogel powder, blankets, insulation coatings, battery thermal barriers, fire protection coatings and waterproofing materials from Cowin Materials.",
   path: "/products",
   keywords: ["silica aerogel products", "aerogel coating supplier", "aerogel blanket", "aerogel thermal pad"],
 });
@@ -20,8 +20,8 @@ export default function ProductsPage() {
         <section className="page-hero compact">
           <SectionHeading
             eyebrow="Products"
-            title="Silica Aerogel Product Portfolio"
-            intro="Filter by material form and engineering use. Each product profile gives overseas buyers a concise view of fit, performance and typical applications."
+            title="Aerogel Materials, Insulation Products and Functional Coating Systems"
+            intro="Browse products by material type and application. Contact us if you need help selecting a suitable grade, thickness, coating system or test document."
           />
         </section>
         <section className="section">

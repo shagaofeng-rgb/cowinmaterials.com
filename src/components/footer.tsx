@@ -10,10 +10,11 @@ export function Footer() {
           <div className="footer-brand">
             <span className="brand-mark">CM</span>
             <span>
-              <strong>{site.legalName}</strong>
+              <strong>{site.name}</strong>
               <em>{site.tagline}</em>
             </span>
           </div>
+          <p>Operated by {site.legalName}</p>
           <p>
             Silica aerogel materials for thermal insulation, fire protection, waterproofing
             and battery thermal-management projects.
@@ -63,7 +64,13 @@ export function Footer() {
 
       <div className="footer-bottom">
         <span>© 2026 {site.legalName}</span>
-        <span>Silica aerogel material systems for global technical buyers and engineering projects.</span>
+        <span>
+          <Link href="/privacy-policy">Privacy Policy</Link>
+          {" · "}
+          <Link href="/terms-of-use">Terms of Use</Link>
+          {" · "}
+          <Link href="/cookie-notice">Cookie Notice</Link>
+        </span>
       </div>
     </footer>
   );

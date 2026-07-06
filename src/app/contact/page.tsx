@@ -7,11 +7,11 @@ import { site } from "@/lib/data";
 import { createPageMetadata } from "@/lib/seo";
 
 export const metadata = createPageMetadata({
-  title: "Contact Cowin Materials | Request Aerogel Coating and Insulation Technical Data",
+  title: "Request a Quote or Technical Information | Cowin Materials",
   description:
-    "Contact Cowin Materials for silica aerogel coating data sheets, fireproof coating details, water-repellent samples, distributor cooperation and project selection support.",
+    "Contact Cowin Materials for product selection, technical documents, samples and quotations for aerogel and functional coating products.",
   path: "/contact",
-  keywords: ["contact aerogel supplier", "request aerogel coating data sheet", "China aerogel manufacturer"],
+  keywords: ["contact aerogel supplier", "request aerogel coating data sheet", "aerogel product selection"],
 });
 
 export default function ContactPage() {
@@ -22,8 +22,8 @@ export default function ContactPage() {
         <section className="page-hero compact">
           <SectionHeading
             eyebrow="Contact"
-            title="Request Technical Data or Project Selection Support"
-            intro="Share your substrate, operating temperature, target thickness, area, fire rating or waterproofing problem. Our team will review the request and reply by email."
+            title="Tell Us About Your Project"
+            intro="Provide as much technical information as possible. This helps us identify the appropriate product, document or next evaluation step."
           />
         </section>
 

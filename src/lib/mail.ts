@@ -4,11 +4,28 @@ import { site } from "@/lib/data";
 type InquiryPayload = {
   name: string;
   email: string;
+  company?: string;
+  phone?: string;
   country?: string;
-  scenario?: string;
+  customerType?: string;
+  requestType?: string;
+  product?: string;
+  application?: string;
+  substrate?: string;
+  operatingTemperature?: string;
+  targetPerformance?: string;
+  quantity?: string;
+  requiredStandard?: string;
+  purchaseTime?: string;
   message?: string;
   page?: string;
   submittedAt?: string;
+  utm?: Record<string, string>;
+  attachment?: {
+    filename: string;
+    content: Buffer;
+    contentType?: string;
+  };
 };
 
 let transporter: nodemailer.Transporter | null = null;
@@ -63,11 +80,23 @@ export async function sendInquiryEmail(payload: InquiryPayload) {
     "New website inquiry",
     "",
     formatTextLine("Name", payload.name),
-    formatTextLine("Company Email", payload.email),
+    formatTextLine("Company", payload.company),
+    formatTextLine("Business Email", payload.email),
+    formatTextLine("Phone / WhatsApp", payload.phone),
     formatTextLine("Country / Region", payload.country),
-    formatTextLine("Application", payload.scenario),
+    formatTextLine("Customer Type", payload.customerType),
+    formatTextLine("Request Type", payload.requestType),
+    formatTextLine("Product", payload.product),
+    formatTextLine("Application", payload.application),
+    formatTextLine("Substrate", payload.substrate),
+    formatTextLine("Operating Temperature", payload.operatingTemperature),
+    formatTextLine("Target Performance", payload.targetPerformance),
+    formatTextLine("Project Area or Quantity", payload.quantity),
+    formatTextLine("Required Standard", payload.requiredStandard),
+    formatTextLine("Estimated Purchase Time", payload.purchaseTime),
     formatTextLine("Submitted At", submittedAt),
     formatTextLine("Page", payload.page),
+    formatTextLine("UTM", payload.utm ? JSON.stringify(payload.utm) : ""),
     "",
     "Project Requirements:",
     payload.message?.trim() || "-",
@@ -78,11 +107,23 @@ export async function sendInquiryEmail(payload: InquiryPayload) {
       <h2 style="margin:0 0 16px;">New website inquiry</h2>
       <table cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid #e5e7eb;min-width:520px;">
         ${formatHtmlRow("Name", payload.name)}
-        ${formatHtmlRow("Company Email", payload.email)}
+        ${formatHtmlRow("Company", payload.company)}
+        ${formatHtmlRow("Business Email", payload.email)}
+        ${formatHtmlRow("Phone / WhatsApp", payload.phone)}
         ${formatHtmlRow("Country / Region", payload.country)}
-        ${formatHtmlRow("Application", payload.scenario)}
+        ${formatHtmlRow("Customer Type", payload.customerType)}
+        ${formatHtmlRow("Request Type", payload.requestType)}
+        ${formatHtmlRow("Product", payload.product)}
+        ${formatHtmlRow("Application", payload.application)}
+        ${formatHtmlRow("Substrate", payload.substrate)}
+        ${formatHtmlRow("Operating Temperature", payload.operatingTemperature)}
+        ${formatHtmlRow("Target Performance", payload.targetPerformance)}
+        ${formatHtmlRow("Project Area or Quantity", payload.quantity)}
+        ${formatHtmlRow("Required Standard", payload.requiredStandard)}
+        ${formatHtmlRow("Estimated Purchase Time", payload.purchaseTime)}
         ${formatHtmlRow("Submitted At", submittedAt)}
         ${formatHtmlRow("Page", payload.page)}
+        ${formatHtmlRow("UTM", payload.utm ? JSON.stringify(payload.utm) : "")}
       </table>
       <h3 style="margin:20px 0 8px;">Project Requirements</h3>
       <div style="white-space:pre-wrap;padding:14px;border:1px solid #e5e7eb;background:#f8fafc;">${escapeHtml(payload.message?.trim() || "-")}</div>
@@ -96,6 +137,7 @@ export async function sendInquiryEmail(payload: InquiryPayload) {
     subject: `[${site.name}] New inquiry from ${payload.name}`,
     text,
     html,
+    attachments: payload.attachment ? [payload.attachment] : undefined,
   });
 }
 

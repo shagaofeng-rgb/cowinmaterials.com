@@ -17,6 +17,7 @@ import {
 export const site = {
   name: "Cowin Materials",
   legalName: "Quzhou Qiying Import & Export Co., Ltd.",
+  legalRelationshipText: "Cowin Materials is the international materials brand operated by Quzhou Qiying Import & Export Co., Ltd.",
   tagline: "Silica Aerogel Material Systems",
   phone: "+86 176 0125 2505",
   phoneHref: "+8617601252505",
@@ -29,31 +30,39 @@ export const navItems = [
   { href: "/", label: "Home" },
   { href: "/products", label: "Products" },
   { href: "/applications", label: "Applications" },
-  { href: "/technology", label: "Testing & Data" },
-  { href: "/construction", label: "Installation" },
-  { href: "/comparison", label: "Why Cowin" },
+  { href: "/technical-resources", label: "Technical Resources" },
+  { href: "/case-studies", label: "Case Studies" },
+  { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
 ];
 
 export const megaMenus = {
   Products: [
     { href: "/products/aerogel-powder-and-slurry", label: "Aerogel powder & slurry", note: "SiO2 aerogel raw materials" },
-    { href: "/products/aerogel-blanket-and-thermal-pads", label: "Blankets & thermal pads", note: "Industrial and EV insulation" },
-    { href: "/products/aerogel-insulation-coating", label: "Aerogel insulation coating", note: "Building and industrial systems" },
-    { href: "/products/aerogel-fireproof-coating", label: "Fire protection coating", note: "Intumescent and non-intumescent" },
+    { href: "/products/aerogel-blanket-and-thermal-pads", label: "Aerogel blankets", note: "Industrial and cryogenic insulation" },
+    { href: "/products/battery-thermal-pads", label: "Battery thermal pads", note: "EV and ESS thermal barriers" },
+    { href: "/products/aerogel-insulation-coating", label: "Building insulation coating", note: "Retrofit and thin thermal layers" },
+    { href: "/products/industrial-aerogel-insulation-coating", label: "Industrial insulation coating", note: "Pipes, tanks and complex equipment" },
+    { href: "/products/aerogel-fireproof-coating", label: "Intumescent fireproof coating", note: "Steel fire protection" },
+    { href: "/products/non-intumescent-fire-protection-coating", label: "Non-intumescent fireproof coating", note: "Thick-film steel protection" },
     { href: "/products/silicon-penetrating-water-repellent", label: "Penetrating water repellent", note: "Concrete and masonry protection" },
+    { href: "/products/aerogel-paste-compound", label: "Aerogel paste & compounds", note: "Specialty sealing and local insulation" },
   ],
   Applications: [
-    { href: "/applications#building", label: "Building energy retrofit", note: "Thin thermal coating and waterproofing" },
-    { href: "/applications#industrial", label: "Industrial equipment", note: "Pipes, valves, tanks and hot surfaces" },
-    { href: "/applications#battery", label: "EV battery thermal barrier", note: "Thin pads for pack-level protection" },
-    { href: "/applications#lng", label: "LNG and cold chain", note: "Cryogenic insulation blankets" },
-    { href: "/applications#fire", label: "Steel fire protection", note: "Coating systems for steel structures" },
+    { href: "/applications/building-energy-retrofit", label: "Building energy retrofit", note: "Walls, roofs and retrofit areas" },
+    { href: "/applications/industrial-pipe-equipment-insulation", label: "Industrial pipe insulation", note: "Pipes, valves, tanks and equipment" },
+    { href: "/applications/ev-ess-thermal-barriers", label: "EV & ESS thermal barriers", note: "Battery modules and storage systems" },
+    { href: "/applications/lng-cryogenic-insulation", label: "LNG & cryogenic insulation", note: "Cold-service pipes and equipment" },
+    { href: "/applications/steel-fire-protection", label: "Steel fire protection", note: "Structural steel coating systems" },
+    { href: "/applications/concrete-masonry-waterproofing", label: "Concrete waterproofing", note: "Porous mineral substrates" },
   ],
   Resources: [
-    { href: "/technology", label: "Performance data", note: "Thermal, VOC and waterproofing highlights" },
-    { href: "/construction", label: "Application systems", note: "Primer, coating, topcoat and curing guidance" },
-    { href: "/comparison", label: "Why Cowin Materials", note: "Supplier strengths for global B2B projects" },
+    { href: "/technical-resources#tds", label: "Technical Data Sheets", note: "Request product-specific TDS" },
+    { href: "/technical-resources#sds", label: "Safety Data Sheets", note: "Request applicable SDS" },
+    { href: "/technical-resources#test-data", label: "Test Data", note: "Review data in context" },
+    { href: "/technical-resources#installation-guides", label: "Installation Guides", note: "Coating system guidance" },
+    { href: "/technical-resources#selection-guide", label: "Product Selection Guide", note: "Choose by conditions" },
+    { href: "/technical-resources#faq", label: "FAQ", note: "Common buyer questions" },
   ],
 };
 
@@ -61,6 +70,7 @@ export const productCategories = [
   "All",
   "Aerogel Raw Materials",
   "Blankets & Thermal Pads",
+  "Battery Thermal Barriers",
   "Insulation Coatings",
   "Fire Protection Coatings",
   "Waterproofing",
@@ -90,7 +100,7 @@ export const products: Product[] = [
     category: "Aerogel Raw Materials",
     summary:
       "Nanoporous SiO2 aerogel raw material for coatings, composite fillers and functional modification systems.",
-    metrics: ["400-800 m2/g specific surface area", "90-95% porosity", "20-50 nm pore size", "Hydrophobic surface"],
+    metrics: ["400-800 m²/g specific surface area", "90-95% porosity", "20-50 nm pore size", "Hydrophobic surface"],
     applications: ["Waterborne industrial coatings", "Thermal coating formulas", "Composite fillers"],
     proof: "Suitable for hydrophobic silica aerogel powder and waterborne formulation development.",
     image: "/images/waterproof-section-test.png",
@@ -99,7 +109,7 @@ export const products: Product[] = [
       "CW-AP silica aerogel powder and CW-AP-W waterborne slurry for aerogel coating, composite filler and thermal insulation formulations.",
     detail: [
       "CW-AP provides a low-density nanoporous silica aerogel platform for formulators who need thermal resistance, hydrophobicity and lightweight filler performance.",
-      "CW-AP-W is a waterborne pre-dispersed aerogel slurry with 20-25% solids and 0.020-0.025 W/(m·K) thermal conductivity after drying.",
+      "CW-AP-W is a waterborne pre-dispersed aerogel slurry with 20-25% solids and typical thermal conductivity information available on request.",
     ],
   },
   {
@@ -109,7 +119,7 @@ export const products: Product[] = [
     category: "Blankets & Thermal Pads",
     summary:
       "Flexible aerogel blankets for medium-high temperature insulation, cryogenic service, tanks, pipelines and constrained spaces.",
-    metrics: ["0.020 W/(m·K) at 25C", "Up to 650C service for CW-AT-H", "-200C to 125C for CW-AT-L", "Hydrophobicity up to 99.9%"],
+    metrics: ["0.020 W/(m•K) at 25 °C", "Up to 650 °C service for CW-AT-H", "-200 °C to 125 °C for CW-AT-L", "Hydrophobicity up to 99.9%"],
     applications: ["Steam pipelines", "Process equipment", "LNG logistics", "Cold chain"],
     proof: "Quality control can be aligned with project requirements for nanoporous aerogel insulation products.",
     image: "/images/industrial-coating-system.jpeg",
@@ -122,19 +132,38 @@ export const products: Product[] = [
     ],
   },
   {
+    name: "Battery Aerogel Thermal Barrier Pads",
+    code: "CW-AT-G / CW-AT-Y / CW-AT-ST",
+    slug: "battery-thermal-pads",
+    category: "Battery Thermal Barriers",
+    summary:
+      "Lightweight aerogel-based thermal barrier materials designed for evaluation in EV battery and energy storage assemblies.",
+    metrics: ["0.3-5 mm thickness range", "UL94-V0 option", "Electrical insulation option", "Low moisture absorption option"],
+    applications: ["Battery modules", "Energy storage systems", "Cell spacing", "Pack-level thermal barriers"],
+    proof: "Designed for evaluation in thermal barrier and heat propagation control applications. Final use depends on module design and project testing.",
+    image: "/images/ev-thermal-sheet.jpg",
+    seoTitle: "Battery Aerogel Thermal Barrier Pads for EV and ESS Applications",
+    seoDescription:
+      "Cowin Materials battery aerogel thermal barrier pads for EV batteries, energy storage systems and module-level thermal-management evaluation.",
+    detail: [
+      "Battery aerogel thermal barrier pads are designed for space-limited assemblies where thermal insulation, lightweight construction and dimensional control are important.",
+      "Product selection depends on pack design, operating conditions, required thickness, electrical insulation needs and the applicable validation plan.",
+    ],
+  },
+  {
     name: "Building Aerogel Thermal Insulation Coating",
     code: "CW-AC-01/02",
     slug: "aerogel-insulation-coating",
     category: "Insulation Coatings",
     summary:
       "Waterborne thin-layer aerogel insulation coating used with primer and topcoat for exterior walls, roofs, retrofits and industrial buildings.",
-    metrics: ["0.040 W/(m·K) thermal conductivity", "0.26 m2·K/W added thermal resistance", "Low-VOC waterborne system", "Thin coating application"],
+    metrics: ["0.040 W/(m•K) thermal conductivity", "0.26 m²•K/W added thermal resistance", "Low-VOC waterborne system", "Thin coating application"],
     applications: ["Exterior walls", "Roof retrofit", "Factory buildings", "Energy-saving renovation"],
     proof: "Supporting documents are available for thermal conductivity, added thermal resistance and VOC review.",
     image: "/images/fire-test-lab.jpg",
     seoTitle: "Waterborne Aerogel Insulation Coating for Building Energy Retrofit",
     seoDescription:
-      "CW-AC aerogel insulation coating for building envelope retrofit, thin thermal insulation layers, exterior walls and roofs with tested 0.040 W/(m·K) conductivity.",
+      "CW-AC aerogel insulation coating for building envelope retrofit, thin thermal insulation layers, exterior walls and roofs.",
     detail: [
       "The coating is designed as a system: substrate preparation, primer, two aerogel insulation coats and two topcoat layers.",
       "It is best positioned for retrofit projects where conventional insulation boards are difficult because of thickness, shape, weight or shutdown constraints.",
@@ -146,14 +175,14 @@ export const products: Product[] = [
     slug: "industrial-aerogel-insulation-coating",
     category: "Insulation Coatings",
     summary:
-      "Sprayable or trowel-applied aerogel insulation coating for equipment, valves, elbows and complex industrial surfaces up to 180C.",
-    metrics: ["-40C to 180C service range", "≤0.04 W/(m·K) thermal conductivity", "≤1.5 mm single wet film", "Three-layer protection system"],
+      "Sprayable or trowel-applied aerogel insulation coating for equipment, valves, elbows and complex industrial surfaces.",
+    metrics: ["-40 °C to 180 °C service range", "≤0.04 W/(m•K) thermal conductivity", "Thin-build coating system", "Primer + insulation + topcoat"],
     applications: ["Hot equipment", "Pipe elbows", "Valves and flanges", "Burn protection"],
     proof: "Installation guidance defines primer, aerogel mid-coat, topcoat, dew-point control and curing windows.",
     image: "/images/fire-test-lab.jpg",
     seoTitle: "Industrial Aerogel Insulation Coating for Pipes and Complex Equipment",
     seoDescription:
-      "CW-AC industrial aerogel coating system for pipes, valves, tanks, process equipment and complex thermal-insulation surfaces up to 180C.",
+      "CW-AC industrial aerogel coating system for pipes, valves, tanks, process equipment and complex thermal-insulation surfaces.",
     detail: [
       "The industrial coating route is useful for geometry that is difficult to wrap with rigid insulation, especially valves, flanges, elbows and maintenance areas.",
       "The system requires surface temperature above dew point +3C and relative humidity control during application.",
@@ -204,7 +233,7 @@ export const products: Product[] = [
     category: "Waterproofing",
     summary:
       "Low-viscosity penetrating water repellent that forms nanoscale hydrophobic interfaces inside porous concrete, masonry and stone substrates.",
-    metrics: ["0.93 g/cm3 density", "pH 4-7", "8-14% solids", "250 ml/m2 recommended dosage"],
+    metrics: ["0.93 g/cm³ density", "pH 4-7", "8-14% solids", "250 ml/m² recommended dosage"],
     applications: ["Concrete structures", "Stone protection", "Mortar and gypsum", "Repair and retrofit"],
     proof: "Supporting documents are available for water absorption, permeability and appearance review.",
     image: "/images/waterproof-droplets.png",
@@ -223,9 +252,9 @@ export const products: Product[] = [
     category: "Aerogel Paste",
     summary:
       "Flexible aerogel composite paste for thin-layer encapsulation, sealing, wear resistance and local thermal insulation.",
-    metrics: ["0.041 W/(m·K) thermal conductivity", ">1 MPa adhesion", "Class B combustion behavior", "Trowel or roller applied"],
+    metrics: ["0.041 W/(m•K) thermal conductivity", ">1 MPa adhesion", "Class B combustion behavior", "Trowel or roller applied"],
     applications: ["Aerogel felt surface treatment", "Substrate coating", "Encapsulation", "Vibration and heat isolation"],
-    proof: "90C drying for 24 hours is recommended when higher adhesion is required.",
+    proof: "Drying and curing conditions are confirmed according to the substrate and target adhesion requirement.",
     image: "/images/waterproof-tank.png",
     seoTitle: "Aerogel Paste Compound for Local Thermal Insulation and Sealing",
     seoDescription:
@@ -240,26 +269,29 @@ export const products: Product[] = [
 export const applications = [
   {
     id: "building",
+    slug: "building-energy-retrofit",
     title: "Building Energy Retrofit",
     icon: Building2,
     image: "/images/fire-waterproof-deck.jpg",
     summary:
       "Thin aerogel thermal coating and penetrating waterproofing for walls, roofs and renovation projects where board insulation is difficult.",
     fit: ["CW-AC-01/02 building aerogel insulation coating", "CW-WP-01 penetrating water repellent"],
-    metrics: ["0.040 W/(m·K)", "0.26 added thermal resistance", "35 g/L VOC", "Formaldehyde and benzene series not detected"],
+    metrics: ["0.040 W/(m•K)", "0.26 m²•K/W added thermal resistance", "35 g/L VOC", "Formaldehyde and benzene series not detected"],
   },
   {
     id: "industrial",
+    slug: "industrial-pipe-equipment-insulation",
     title: "Industrial Pipes and Complex Equipment",
     icon: Factory,
     image: "/images/industrial-coating-system.jpeg",
     summary:
       "Sprayable or trowel-applied aerogel coating systems for elbows, valves, flanges, tanks and surfaces that are hard to wrap.",
     fit: ["CW-AC-14/15/16 industrial aerogel insulation coating", "CW-AT-H aerogel blanket"],
-    metrics: ["-40C to 180C coating range", "≤1.5 mm single wet film", "Dew point +3C application rule", "Primer-coating-topcoat system"],
+    metrics: ["-40 °C to 180 °C coating range", "Complex geometry fit", "Dew point control", "Primer-coating-topcoat system"],
   },
   {
     id: "battery",
+    slug: "ev-ess-thermal-barriers",
     title: "EV Battery Thermal Barriers",
     icon: BatteryCharging,
     image: "/images/ev-thermal-sheet.jpg",
@@ -270,16 +302,18 @@ export const applications = [
   },
   {
     id: "lng",
+    slug: "lng-cryogenic-insulation",
     title: "LNG and Cold Chain",
     icon: Snowflake,
     image: "/images/fire-test-lab.jpg",
     summary:
       "Cryogenic aerogel blankets for low-temperature transport, cold-chain facilities and piping systems where thickness and CUI risk matter.",
     fit: ["CW-AT-L cryogenic aerogel blanket"],
-    metrics: ["0.0125 W/(m·K) at -159C", "-200C to 125C service", "≥98% hydrophobicity", "6 mm / 10 mm thickness"],
+    metrics: ["Low-temperature insulation", "-200 °C to 125 °C service option", "Hydrophobic blanket option", "6 mm / 10 mm thickness option"],
   },
   {
     id: "fire",
+    slug: "steel-fire-protection",
     title: "Steel Fire Protection",
     icon: Flame,
     image: "/images/fire-char-layer.jpg",
@@ -290,6 +324,7 @@ export const applications = [
   },
   {
     id: "water",
+    slug: "concrete-masonry-waterproofing",
     title: "Concrete and Masonry Waterproofing",
     icon: Waves,
     image: "/images/waterproof-droplets.png",
@@ -303,13 +338,13 @@ export const applications = [
 export const proofItems = [
   {
     value: "0.040",
-    unit: "W/(m·K)",
+    unit: "W/(m•K)",
     label: "Thermal conductivity",
     note: "Building insulation coating performance highlight",
   },
   {
     value: "0.26",
-    unit: "m2·K/W",
+    unit: "m²•K/W",
     label: "Added thermal resistance",
     note: "Thermal resistance improvement for thin coating systems",
   },
@@ -325,6 +360,198 @@ export const proofItems = [
     label: "Water absorption ratio",
     note: "Penetrating water-repellent performance highlight",
   },
+];
+
+export const productGroups = [
+  {
+    title: "Aerogel Raw Materials",
+    description: "Hydrophobic aerogel powder and waterborne aerogel slurry for coatings, compounds and insulation product development.",
+    href: "/products/aerogel-powder-and-slurry",
+    cta: "Explore Raw Materials",
+  },
+  {
+    title: "Aerogel Insulation",
+    description: "Aerogel blankets, insulation pads and flexible thermal barriers for high-temperature, cryogenic and space-limited applications.",
+    href: "/products/aerogel-blanket-and-thermal-pads",
+    cta: "Explore Aerogel Insulation",
+  },
+  {
+    title: "Aerogel Coatings",
+    description: "Thin-build insulation coatings designed for buildings, industrial equipment, pipes, valves and complex surfaces.",
+    href: "/products/industrial-aerogel-insulation-coating",
+    cta: "Explore Aerogel Coatings",
+  },
+  {
+    title: "Battery Thermal Barriers",
+    description: "Lightweight thermal barrier materials for battery modules, energy storage systems and heat propagation control evaluation.",
+    href: "/products/battery-thermal-pads",
+    cta: "Explore Battery Materials",
+  },
+  {
+    title: "Fire Protection Coatings",
+    description: "Intumescent and non-intumescent coating systems for structural steel and fire protection applications.",
+    href: "/products/aerogel-fireproof-coating",
+    cta: "Explore Fire Protection",
+  },
+  {
+    title: "Waterproofing Materials",
+    description: "Penetrating water-repellent systems for concrete, masonry and mineral substrates.",
+    href: "/products/silicon-penetrating-water-repellent",
+    cta: "Explore Waterproofing",
+  },
+];
+
+export const capabilityItems = [
+  "Technical Data Support",
+  "Sample Evaluation",
+  "Application Guidance",
+  "Export Documentation",
+];
+
+export const evaluationSteps = [
+  {
+    title: "Submit Project Conditions",
+    text: "Tell us the substrate, operating temperature, target thickness, project area and required standard.",
+  },
+  {
+    title: "Product or System Recommendation",
+    text: "We identify a suitable product grade or coating system based on the available project information.",
+  },
+  {
+    title: "Technical Document Review",
+    text: "Review the applicable TDS, SDS, installation guidance and available test information.",
+  },
+  {
+    title: "Sample Evaluation",
+    text: "Request a sample for laboratory testing, trial application or internal qualification.",
+  },
+  {
+    title: "Quotation and Supply",
+    text: "Confirm packaging, quantity, lead time, export documents and commercial terms.",
+  },
+];
+
+export const applicationPages = [
+  {
+    slug: "building-energy-retrofit",
+    title: "Aerogel Insulation Solutions for Building Energy Retrofit",
+    shortTitle: "Building Energy Retrofit",
+    intro:
+      "Aerogel-based coatings and insulation materials can be evaluated for walls, roofs, thermal bridges and space-limited retrofit areas. Product selection depends on the existing substrate, climate conditions, moisture exposure, target thermal performance and local building requirements.",
+    image: "/images/fire-waterproof-deck.jpg",
+    products: ["Building Aerogel Thermal Insulation Coating", "Silicon-Based Penetrating Water Repellent", "Aerogel Blanket for Industrial Insulation"],
+    challenges: ["Limited available thickness", "Thermal bridges", "Moisture exposure", "Existing substrate condition"],
+    considerations: ["Substrate preparation", "Thermal and moisture requirements", "Coating build-up", "Local building requirements"],
+    requiredInfo: ["Building area", "Existing substrate", "Climate exposure", "Target thermal performance", "Moisture or waterproofing concerns"],
+  },
+  {
+    slug: "industrial-pipe-equipment-insulation",
+    title: "Aerogel Insulation for Industrial Pipes and Complex Equipment",
+    shortTitle: "Industrial Pipe & Equipment Insulation",
+    intro:
+      "Aerogel blankets and insulation coatings can be evaluated for pipes, valves, flanges, tanks and complex equipment where space, access, inspection or geometry limits the use of conventional insulation.",
+    image: "/images/industrial-coating-system.jpeg",
+    products: ["Industrial Aerogel Insulation Coating", "Aerogel Blanket for Industrial Insulation", "Aerogel Paste and Sealant Compound"],
+    challenges: ["Complex geometry", "Inspection access", "Limited shutdown window", "Target surface temperature"],
+    considerations: ["Operating temperature", "Pipe diameter", "Existing insulation", "Ambient conditions", "Corrosion considerations"],
+    requiredInfo: ["Operating temperature", "Pipe diameter", "Existing insulation", "Ambient conditions", "Available thickness", "Target surface temperature"],
+  },
+  {
+    slug: "ev-ess-thermal-barriers",
+    title: "Aerogel Thermal Barrier Materials for EV Batteries and Energy Storage Systems",
+    shortTitle: "EV & ESS Thermal Barriers",
+    intro:
+      "Lightweight aerogel-based thermal barrier materials can be evaluated for battery modules, battery packs and energy storage systems where heat transfer control and space efficiency are important.",
+    image: "/images/ev-thermal-sheet.jpg",
+    products: ["Battery Aerogel Thermal Barrier Pads", "Aerogel Paste and Sealant Compound"],
+    challenges: ["Limited pack space", "Heat propagation control", "Electrical insulation needs", "Module-level validation"],
+    considerations: ["Cell format", "Pack design", "Required thickness", "Electrical insulation", "Validation plan"],
+    requiredInfo: ["Cell or module format", "Available thickness", "Target test method", "Electrical insulation requirement", "Operating temperature"],
+  },
+  {
+    slug: "lng-cryogenic-insulation",
+    title: "Aerogel Insulation for LNG and Cryogenic Applications",
+    shortTitle: "LNG & Cryogenic Insulation",
+    intro:
+      "Flexible aerogel insulation materials can be evaluated for cryogenic pipes, equipment and cold-service systems where low-temperature performance, condensation control and installation space are important.",
+    image: "/images/fire-test-lab.jpg",
+    products: ["Aerogel Blanket for Industrial Insulation"],
+    challenges: ["Low-temperature service", "Condensation control", "Vapor barrier design", "Mechanical protection"],
+    considerations: ["Service temperature", "Insulation thickness", "Vapor barrier", "Mechanical protection", "Applicable standards"],
+    requiredInfo: ["Service temperature", "Pipe or equipment size", "Target insulation thickness", "Vapor barrier design", "Outdoor or indoor exposure"],
+  },
+  {
+    slug: "steel-fire-protection",
+    title: "Fire Protection Coating Systems for Structural Steel",
+    shortTitle: "Steel Fire Protection",
+    intro:
+      "Cowin Materials supplies intumescent and non-intumescent coating products for evaluation in structural steel fire protection systems. Required dry film thickness and system selection depend on the steel section factor, fire resistance period, primer, topcoat and applicable test standard.",
+    image: "/images/fire-char-layer.jpg",
+    products: ["Aerogel Fireproof Coating for Steel Structures", "Non-Intumescent Fire Protection Coating"],
+    challenges: ["Target fire resistance period", "Steel section factor", "Indoor or outdoor exposure", "Topcoat compatibility"],
+    considerations: ["Primer selection", "Topcoat requirement", "Dry film thickness", "Applicable test standard"],
+    requiredInfo: ["Steel section type", "Required fire rating", "Indoor or outdoor exposure", "Primer or topcoat system", "Applicable standard"],
+  },
+  {
+    slug: "concrete-masonry-waterproofing",
+    title: "Penetrating Water-Repellent Solutions for Concrete and Masonry",
+    shortTitle: "Concrete & Masonry Waterproofing",
+    intro:
+      "Penetrating water-repellent materials can be evaluated for concrete, masonry and mineral substrates where reduced water absorption is required without forming a heavy surface film.",
+    image: "/images/waterproof-droplets.png",
+    products: ["Silicon-Based Penetrating Water Repellent"],
+    challenges: ["Substrate porosity", "Water absorption", "Breathability", "Surface appearance"],
+    considerations: ["Surface preparation", "Trial area", "Application rate", "Curing conditions", "Compatibility limitations"],
+    requiredInfo: ["Substrate type", "Surface condition", "Project area", "Water exposure", "Appearance requirement"],
+  },
+];
+
+export const resourceSections = [
+  {
+    id: "tds",
+    title: "Technical Data Sheets",
+    text: "Product-specific TDS files are available during product evaluation. Request the applicable grade before using values for project decisions.",
+    action: "Request TDS",
+  },
+  {
+    id: "sds",
+    title: "Safety Data Sheets",
+    text: "SDS availability may vary by product and destination. Request the applicable safety document for handling and logistics review.",
+    action: "Request SDS",
+  },
+  {
+    id: "test-data",
+    title: "Test Data",
+    text: "Technical values depend on product grade, test method, sample thickness and operating conditions.",
+    action: "Request Test Information",
+  },
+  {
+    id: "installation-guides",
+    title: "Installation Guides",
+    text: "Coating guidance can be provided for substrate preparation, primer, coating sequence, curing and topcoat selection.",
+    action: "Request Installation Guide",
+  },
+  {
+    id: "selection-guide",
+    title: "Product Selection Guide",
+    text: "Share substrate, temperature, target thickness, application method and required standard for product selection support.",
+    action: "Ask an Engineer",
+  },
+  {
+    id: "faq",
+    title: "Frequently Asked Questions",
+    text: "Common questions about samples, documents, packaging, customization and quotations.",
+    action: "View FAQ",
+  },
+];
+
+export const commonFaqs = [
+  ["How do I select the correct product grade?", "Send the operating temperature, substrate, target thickness, application method and required standard so the team can recommend a product route."],
+  ["Can I request a sample?", "Samples can be arranged for evaluation, subject to product type, destination and commercial terms."],
+  ["What information is required for a quotation?", "Please provide product interest, quantity, destination, project schedule, packaging needs and any required technical standard."],
+  ["Are technical documents available?", "Applicable TDS, SDS, installation guidance and available test information can be provided during product evaluation."],
+  ["Can the product be customized?", "Customization can be discussed when the target application, performance requirement and validation method are clear."],
+  ["What packaging options are available?", "Packaging is confirmed according to product form, quantity, shipping method and destination requirements."],
 ];
 
 export const constructionSystems = [

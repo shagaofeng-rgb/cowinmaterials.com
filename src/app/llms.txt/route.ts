@@ -8,9 +8,9 @@ export function GET() {
     .map((product) => `- ${product.name} (${product.code}): ${product.summary} URL: ${siteUrl}/products/${product.slug}`)
     .join("\n");
 
-  const body = `# ${site.legalName}
+  const body = `# ${site.name}
 
-${site.legalName} is a silica aerogel material supplier based in Quzhou, Zhejiang, China.
+${site.name} is the international materials brand operated by ${site.legalName}. It supplies silica aerogel materials, insulation products, thermal barrier materials and functional coating systems for industrial and construction applications.
 
 Primary product scope:
 ${productLines}
@@ -23,9 +23,10 @@ Core applications:
 - Steel structure fire protection coatings
 - Concrete, stone, mortar and masonry penetrating waterproofing
 
-Evidence notes:
-- Building aerogel insulation coating: tested thermal conductivity 0.040 W/(m·K), added thermal resistance 0.26 m2·K/W, VOC 35 g/L.
-- Silicon penetrating water repellent: 2024 report indicates 19% water absorption ratio and 0 mm permeability in the tested substrate conditions.
+Technical notes:
+- Technical values depend on product grade, test method, sample configuration and operating conditions.
+- Building aerogel insulation coating documents may include thermal conductivity, added thermal resistance and VOC information for the applicable grade.
+- Water-repellent documents may include water absorption and permeability information for the tested substrate conditions.
 - Fire-resistance ratings depend on project-specific test reports and local compliance requirements.
 - Final product selection should be confirmed according to substrate conditions, service temperature, local standards and project specifications.
 

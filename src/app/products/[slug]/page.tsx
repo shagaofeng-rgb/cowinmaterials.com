@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
-import { products } from "@/lib/data";
+import { applicationPages, commonFaqs, products } from "@/lib/data";
 import { absoluteUrl, createPageMetadata } from "@/lib/seo";
 
 type ProductPageProps = {
@@ -47,17 +47,12 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
-    sku: product.code,
     category: product.category,
     description: product.seoDescription,
     image: absoluteUrl(product.image),
     brand: {
       "@type": "Brand",
       name: "Cowin Materials",
-    },
-    manufacturer: {
-      "@type": "Organization",
-      name: "Quzhou Qiying Import & Export Co., Ltd.",
     },
   };
 
@@ -75,12 +70,15 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
             <h1>{product.name}</h1>
             <p>{product.summary}</p>
             <div className="hero-actions">
-              <Link className="primary-button" href="/contact">
-                Request Data Sheet
+              <Link className="primary-button" href={`/contact?request=Request%20TDS%20or%20SDS&product=${encodeURIComponent(product.name)}`}>
+                Request TDS
                 <ArrowRight size={18} />
               </Link>
-              <Link className="secondary-button" href="/technology">
-                View Performance Data
+              <Link className="secondary-button" href={`/contact?request=Request%20a%20Sample&product=${encodeURIComponent(product.name)}`}>
+                Request a Sample
+              </Link>
+              <Link className="secondary-button" href={`/contact?request=Request%20a%20Quote&product=${encodeURIComponent(product.name)}`}>
+                Request a Quote
               </Link>
             </div>
           </div>
@@ -120,6 +118,58 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
               ))}
             </div>
           </article>
+        </section>
+
+        <section className="section muted">
+          <div className="product-detail-grid">
+            <article>
+              <h2>Key Benefits</h2>
+              <ul className="metric-list">
+                {[
+                  "Supports product evaluation for defined operating conditions",
+                  "Can be reviewed with applicable technical documents",
+                  "Designed for application-specific material selection",
+                ].map((item) => (
+                  <li key={item}>
+                    <CheckCircle2 size={16} />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </article>
+            <article>
+              <h2>Technical Documents</h2>
+              <div className="chip-row">
+                {["Request TDS", "Request SDS", "Request Test Information", "Request Installation Guide"].map((item) => (
+                  <Link className="chip" href={`/contact?request=${encodeURIComponent(item)}&product=${encodeURIComponent(product.name)}`} key={item}>
+                    {item}
+                  </Link>
+                ))}
+              </div>
+            </article>
+            <article>
+              <h2>Related Applications</h2>
+              <div className="chip-row">
+                {applicationPages.slice(0, 3).map((item) => (
+                  <Link className="chip" href={`/applications/${item.slug}`} key={item.slug}>
+                    {item.shortTitle}
+                  </Link>
+                ))}
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section className="section">
+          <h2>Product FAQ</h2>
+          <div className="faq-list">
+            {commonFaqs.map(([question, answer]) => (
+              <article key={question}>
+                <h2>{question}</h2>
+                <p>{answer}</p>
+              </article>
+            ))}
+          </div>
         </section>
 
         <section className="cta-section">

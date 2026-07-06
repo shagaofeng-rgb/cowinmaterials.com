@@ -1,74 +1,65 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, BadgeCheck, FileCheck2, Layers3, ShieldCheck } from "lucide-react";
+import { ArrowRight, BadgeCheck, FileCheck2, Layers3, PackageCheck } from "lucide-react";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { SectionHeading } from "@/components/section-heading";
-import { applications, proofItems, products, site } from "@/lib/data";
+import { applicationPages, capabilityItems, evaluationSteps, productGroups, site } from "@/lib/data";
 import { createPageMetadata } from "@/lib/seo";
 
 export const metadata = createPageMetadata({
-  title: "Silica Aerogel Insulation Coating, Fireproof Coating and Water Repellent | Cowin Materials",
+  title: "Aerogel Materials, Insulation and Coating Systems | Cowin Materials",
   description:
-    "Cowin Materials supplies silica aerogel insulation coatings, fireproof coatings, aerogel blankets, EV battery thermal barriers and penetrating water repellents for global B2B projects.",
+    "Cowin Materials supplies silica aerogel powder, insulation blankets, thermal barrier materials and functional coating systems for industrial and construction applications.",
   path: "/",
   keywords: [
-    "silica aerogel insulation coating",
+    "silica aerogel materials",
+    "aerogel insulation coating",
     "aerogel fireproof coating",
-    "penetrating water repellent",
-    "aerogel blanket supplier",
+    "battery thermal barrier materials",
   ],
 });
 
 export default function Home() {
-  const featuredProducts = products.filter((product) =>
-    ["CW-AC-01/02", "CW-FTHL", "CW-WP-01", "CW-AT-H / CW-AT-L"].includes(product.code),
-  );
-
   return (
     <>
       <Header />
       <main>
         <section className="hero">
           <div className="hero-copy">
-            <span className="eyebrow">Silica Aerogel Material Systems</span>
-            <h1>Advanced Aerogel Coatings and Insulation Materials for Global Engineering Projects</h1>
+            <span className="eyebrow">AEROGEL MATERIALS & ENGINEERED COATING SYSTEMS</span>
+            <h1>Silica Aerogel Materials and Coating Systems for Demanding Thermal, Fire and Waterproofing Applications</h1>
             <p>
-              {site.legalName} supplies silica aerogel materials for thermal insulation,
-              steel fire protection, penetrating waterproofing and battery thermal barriers.
-              The portfolio is built for buyers who need technical data, installation guidance
-              and project-ready material systems.
+              Cowin Materials supplies aerogel powder, insulation blankets, thermal
+              barrier materials and functional coating systems for industrial equipment,
+              building retrofit, fire protection and specialty applications.
             </p>
             <div className="hero-actions">
               <Link className="primary-button" href="/products">
-                Explore Product Lines
+                Explore Products
                 <ArrowRight size={18} />
               </Link>
-              <Link className="secondary-button" href="/technology">
-                Review Test Data
+              <Link className="secondary-button" href="/contact?request=Request%20a%20Quote">
+                Submit Your Project
               </Link>
             </div>
+            <p className="microcopy">
+              Share your operating temperature, substrate, target thickness and required standard.
+              Our team will help identify a suitable product or system.
+            </p>
           </div>
 
           <div className="hero-media">
-            <Image src="/images/fire-test-lab.jpg" alt="Aerogel coating thermal and fire test setup" width={1280} height={860} priority />
-            <div className="hero-stat">
-              <strong>0.040</strong>
-              <span>W/(m·K) tested conductivity for building aerogel insulation coating</span>
-            </div>
+            <Image src="/images/fire-test-lab.jpg" alt="Aerogel coating test setup for thermal and fire performance evaluation" width={1280} height={860} priority />
           </div>
         </section>
 
         <section className="section band">
           <div className="proof-strip">
-            {proofItems.map((item) => (
-              <div className="proof-item" key={item.label}>
-                <strong>
-                  {item.value}
-                  {item.unit ? <small>{item.unit}</small> : null}
-                </strong>
-                <span>{item.label}</span>
-                <em>{item.note}</em>
+            {capabilityItems.map((item) => (
+              <div className="proof-item" key={item}>
+                <PackageCheck size={24} />
+                <span>{item}</span>
               </div>
             ))}
           </div>
@@ -76,17 +67,17 @@ export default function Home() {
 
         <section className="section">
           <SectionHeading
-            eyebrow="Product Platform"
-            title="A portfolio built around one aerogel core"
-            intro="Cowin Materials is positioned as a practical aerogel system supplier: powder, slurry, blankets, thermal pads, coatings, fire protection and penetrating waterproofing."
+            eyebrow="Product Families"
+            title="Materials and Systems for Thermal Management, Fire Protection and Surface Performance"
+            intro="Explore core product families for industrial insulation, building energy retrofit, battery thermal protection, steel fire protection and concrete waterproofing."
           />
           <div className="feature-grid">
-            {featuredProducts.map((product) => (
-              <Link className="feature-card" href={`/products/${product.slug}`} key={product.code}>
-                <span>{product.category}</span>
-                <h2>{product.name}</h2>
-                <p>{product.summary}</p>
-                <strong>{product.code}</strong>
+            {productGroups.map((group) => (
+              <Link className="feature-card" href={group.href} key={group.title}>
+                <span>{group.title}</span>
+                <h2>{group.title}</h2>
+                <p>{group.description}</p>
+                <strong>{group.cta}</strong>
               </Link>
             ))}
           </div>
@@ -94,65 +85,101 @@ export default function Home() {
 
         <section className="section muted">
           <SectionHeading
-            eyebrow="Application Pathways"
-            title="Choose materials by use case"
-            intro="Engineers can evaluate products by substrate, temperature, geometry, fire rating, waterproofing requirement and documentation needs."
+            eyebrow="Applications"
+            title="Choose a Solution by Application"
+            intro="Product selection should be based on operating temperature, substrate, installation conditions, required thickness and applicable test standards."
           />
           <div className="application-cards">
-            {applications.slice(0, 6).map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link className="application-card" href={`/applications#${item.id}`} key={item.id}>
-                  <Icon size={22} />
-                  <h2>{item.title}</h2>
-                  <p>{item.summary}</p>
-                </Link>
-              );
-            })}
+            {applicationPages.map((item) => (
+              <Link className="application-card" href={`/applications/${item.slug}`} key={item.slug}>
+                <Layers3 size={22} />
+                <h2>{item.shortTitle}</h2>
+                <p>{item.intro}</p>
+              </Link>
+            ))}
           </div>
         </section>
 
         <section className="section split">
           <div>
             <SectionHeading
-              eyebrow="Why Cowin Materials"
-              title="Aerogel material systems with project-ready support"
-              intro="Cowin Materials combines silica aerogel raw materials, coatings, blankets, fire protection and waterproofing into a practical supply platform for global engineering buyers."
+              eyebrow="Technical Context"
+              title="Technical Data Must Be Evaluated in Context"
+              intro="Thermal conductivity, adhesion, fire performance, water resistance and service temperature can vary with product grade, test method, sample thickness and operating conditions. Cowin Materials provides applicable technical documents and test information during product evaluation."
             />
             <div className="evidence-list">
               <div>
-                <Layers3 size={20} />
-                <span>Powder, blankets, coatings, fire protection and water-repellent systems</span>
-              </div>
-              <div>
                 <FileCheck2 size={20} />
-                <span>Thermal, VOC and waterproofing performance highlights available for supplier qualification</span>
-              </div>
-              <div>
-                <ShieldCheck size={20} />
-                <span>Performance statements aligned with report conditions and project specifications</span>
+                <span>Values are reviewed with applicable product grade and test conditions.</span>
               </div>
               <div>
                 <BadgeCheck size={20} />
-                <span>Installation books define film thickness, dosage, curing and substrate preparation</span>
+                <span>TDS, SDS, installation guidance and available test information can be requested.</span>
               </div>
             </div>
           </div>
+          <div className="qualification-panel">
+            <h2>Need documents for evaluation?</h2>
+            <p>
+              Tell us the product, substrate, operating temperature and required standard.
+              We will identify the applicable document or next evaluation step.
+            </p>
+            <Link className="primary-button" href="/technical-resources">
+              View Technical Resources
+              <ArrowRight size={18} />
+            </Link>
+          </div>
+        </section>
+
+        <section className="section">
+          <SectionHeading
+            eyebrow="Evaluation Process"
+            title="From Project Conditions to Product Evaluation"
+          />
+          <div className="positioning-table">
+            {evaluationSteps.map((step) => (
+              <div key={step.title}>
+                <span>{step.title}</span>
+                <strong>{step.title}</strong>
+                <p>{step.text}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="section split muted">
+          <div>
+            <SectionHeading
+              eyebrow="About"
+              title="About Cowin Materials"
+              intro="Cowin Materials supplies silica aerogel materials, insulation products and functional coating systems for industrial and construction applications. We support product evaluation with technical information, application guidance, samples and export documentation."
+            />
+            {site.legalRelationshipText ? <p className="relationship-note">{site.legalRelationshipText}</p> : null}
+            <Link className="secondary-button" href="/about">
+              About Cowin Materials
+            </Link>
+          </div>
           <div className="image-stack">
-            <Image src="/images/fire-char-layer.jpg" alt="Expanded char layer from intumescent aerogel fireproof coating" width={900} height={1180} />
-            <Image src="/images/waterproof-droplets.png" alt="Water droplets on silicon penetrating water repellent treated substrate" width={720} height={980} />
+            <Image src="/images/fire-char-layer.jpg" alt="Aerogel fire protection coating char layer after fire exposure" width={900} height={1180} />
+            <Image src="/images/waterproof-droplets.png" alt="Water droplets on treated mineral substrate" width={720} height={980} />
           </div>
         </section>
 
         <section className="cta-section">
           <div>
-            <span className="eyebrow">Technical Inquiry</span>
-            <h2>Send your substrate, temperature, target thickness or fire rating for a first recommendation.</h2>
+            <span className="eyebrow">Project Review</span>
+            <h2>Have a thermal, fire protection or waterproofing project?</h2>
+            <p>Send us your operating conditions, substrate information, target performance and required standards.</p>
           </div>
-          <Link className="primary-button" href="/contact">
-            Request Technical Data
-            <ArrowRight size={18} />
-          </Link>
+          <div className="hero-actions">
+            <Link className="primary-button" href="/contact?request=Request%20a%20Quote">
+              Submit Your Project
+              <ArrowRight size={18} />
+            </Link>
+            <Link className="secondary-button" href="/contact?request=Request%20a%20Sample">
+              Request a Sample
+            </Link>
+          </div>
         </section>
       </main>
       <Footer />

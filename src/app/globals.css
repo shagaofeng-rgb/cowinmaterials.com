@@ -1,20 +1,20 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f6f7f4;
-  --foreground: #111815;
+  --background: #f5f7f8;
+  --foreground: #17222b;
   --paper: #ffffff;
-  --paper-strong: #edf1ec;
-  --ink-soft: #52605a;
-  --ink-muted: #748078;
-  --line: #d9dfd8;
-  --line-strong: #bcc8c0;
-  --green: #0f6f63;
-  --green-dark: #0d4f49;
-  --blue: #245a7d;
-  --amber: #ad7c2b;
+  --paper-strong: #eaf0f3;
+  --ink-soft: #62717c;
+  --ink-muted: #7d8a93;
+  --line: #d8e0e5;
+  --line-strong: #b9c7cf;
+  --green: #3e718c;
+  --green-dark: #123047;
+  --blue: #3e718c;
+  --amber: #d9822b;
   --red: #a8463b;
-  --shadow: 0 18px 42px rgba(17, 24, 21, 0.11);
+  --shadow: 0 18px 42px rgba(18, 48, 71, 0.12);
 }
 
 @theme inline {
@@ -61,7 +61,7 @@ a:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
-  outline: 3px solid rgba(15, 111, 99, 0.32);
+  outline: 3px solid rgba(62, 113, 140, 0.34);
   outline-offset: 3px;
 }
 
@@ -70,7 +70,7 @@ select:focus-visible {
   top: 0;
   z-index: 50;
   border-bottom: 1px solid rgba(217, 223, 216, 0.92);
-  background: rgba(246, 247, 244, 0.96);
+  background: rgba(245, 247, 248, 0.96);
   backdrop-filter: blur(18px);
 }
 
@@ -362,6 +362,13 @@ select:focus-visible {
   margin-top: 30px;
 }
 
+.microcopy,
+.relationship-note {
+  margin: 18px 0 0;
+  color: var(--ink-soft);
+  line-height: 1.6;
+}
+
 .hero-media,
 .product-visual {
   position: relative;
@@ -499,6 +506,7 @@ select:focus-visible {
 .feature-grid,
 .application-cards,
 .advantage-grid,
+.resource-grid,
 .qualification-grid,
 .product-grid,
 .strength-grid {
@@ -510,7 +518,8 @@ select:focus-visible {
 
 .product-grid,
 .strength-grid,
-.advantage-grid {
+.advantage-grid,
+.resource-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
@@ -521,6 +530,7 @@ select:focus-visible {
 .feature-card,
 .application-card,
 .advantage-card,
+.resource-card,
 .qualification-grid article,
 .product-card,
 .strength-card,
@@ -537,6 +547,7 @@ select:focus-visible {
 
 .feature-card:hover,
 .application-card:hover,
+.resource-card:hover,
 .product-card:hover,
 .strength-card:hover {
   border-color: var(--line-strong);
@@ -544,6 +555,7 @@ select:focus-visible {
 }
 
 .feature-card span,
+.resource-card span,
 .strength-card span,
 .product-code {
   color: var(--green-dark);
@@ -556,6 +568,7 @@ select:focus-visible {
 .feature-card h2,
 .application-card h2,
 .advantage-card h2,
+.resource-card h2,
 .qualification-grid h2,
 .product-card h2,
 .strength-card h2,
@@ -571,6 +584,7 @@ select:focus-visible {
 .feature-card p,
 .application-card p,
 .advantage-card p,
+.resource-card p,
 .qualification-grid p,
 .product-card p,
 .strength-card p,
@@ -589,6 +603,7 @@ select:focus-visible {
 
 .application-card svg,
 .advantage-card svg,
+.resource-card svg,
 .qualification-grid svg {
   color: var(--green-dark);
 }
@@ -1028,6 +1043,11 @@ select:focus-visible {
   color: var(--ink-soft);
 }
 
+.qualification-panel .primary-button,
+.qualification-panel .secondary-button {
+  margin-top: 22px;
+}
+
 .inquiry-form {
   display: grid;
   gap: 18px;
@@ -1044,6 +1064,61 @@ select:focus-visible {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+
+.checkbox-row input {
+  width: auto;
+  margin-top: 4px;
+}
+
+label small {
+  display: block;
+  margin-top: 6px;
+  color: var(--ink-muted);
+  font-size: 13px;
+}
+
+.faq-list {
+  display: grid;
+  gap: 14px;
+  margin-top: 28px;
+}
+
+.faq-list article,
+.legal-copy {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  padding: 24px;
+}
+
+.faq-list h2,
+.legal-copy h2 {
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+
+.faq-list p,
+.legal-copy p {
+  margin: 0 0 18px;
+  color: var(--ink-soft);
+  line-height: 1.7;
+}
+
+.legal-copy p:last-child {
+  margin-bottom: 0;
+}
+
+.mobile-sticky-cta {
+  display: none;
 }
 
 .inquiry-form label {
@@ -1229,6 +1304,7 @@ select:focus-visible {
   .qualification-grid,
   .product-grid,
   .strength-grid,
+  .resource-grid,
   .advantage-grid,
   .positioning-table,
   .product-detail-grid {
@@ -1270,6 +1346,10 @@ select:focus-visible {
 }
 
 @media (max-width: 760px) {
+  body {
+    padding-bottom: 76px;
+  }
+
   .top-strip {
     display: none;
   }
@@ -1287,6 +1367,35 @@ select:focus-visible {
     top: 70px;
     right: 12px;
     left: 12px;
+  }
+
+  .mobile-sticky-cta {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 70;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    border-top: 1px solid var(--line);
+    background: var(--line);
+  }
+
+  .mobile-sticky-cta a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 58px;
+    background: var(--green-dark);
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 780;
+    text-align: center;
+  }
+
+  .mobile-sticky-cta a:nth-child(2) {
+    background: var(--amber);
   }
 
   .hero,
@@ -1344,6 +1453,7 @@ select:focus-visible {
   .feature-grid,
   .application-cards,
   .advantage-grid,
+  .resource-grid,
   .qualification-grid,
   .product-grid,
   .strength-grid,

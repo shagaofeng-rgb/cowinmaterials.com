@@ -53,7 +53,11 @@ export function ProductFilter() {
               ))}
             </div>
             <Link className="text-link" href={`/products/${product.slug}`}>
-              View technical profile
+              View Product
+              <ArrowRight size={16} />
+            </Link>
+            <Link className="text-link" href={`/contact?request=Request%20TDS%20or%20SDS&product=${encodeURIComponent(product.name)}`}>
+              Request TDS
               <ArrowRight size={16} />
             </Link>
           </article>

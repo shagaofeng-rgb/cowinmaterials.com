@@ -6,7 +6,7 @@ import { ChevronDown, Mail, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { megaMenus, navItems, site } from "@/lib/data";
 
-const menuLabels = new Set(["Products", "Applications"]);
+const menuLabels = new Set(["Products", "Applications", "Technical Resources"]);
 
 export function Header() {
   const pathname = usePathname();
@@ -34,7 +34,7 @@ export function Header() {
 
         <nav className="desktop-nav" aria-label="Primary navigation">
           {navItems.map((item) => {
-            const resourceMenu = item.label === "Testing & Data" ? megaMenus.Resources : null;
+            const resourceMenu = item.label === "Technical Resources" ? megaMenus.Resources : null;
             const productMenu = item.label === "Products" ? megaMenus.Products : null;
             const applicationMenu = item.label === "Applications" ? megaMenus.Applications : null;
             const menu = productMenu ?? applicationMenu ?? resourceMenu;
@@ -101,6 +101,10 @@ export function Header() {
           </Link>
         </div>
       ) : null}
+      <div className="mobile-sticky-cta" aria-label="Mobile quick actions">
+        <Link href="/contact?request=Request%20a%20Quote">Request a Quote</Link>
+        <Link href="/contact?request=Ask%20for%20Product%20Selection">Ask an Engineer</Link>
+      </div>
     </header>
   );
 }

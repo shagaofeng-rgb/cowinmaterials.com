@@ -16,11 +16,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Cowin Materials | Silica Aerogel Insulation Coatings and Material Systems",
+    default: "Aerogel Materials, Insulation and Coating Systems | Cowin Materials",
     template: "%s",
   },
   description:
-    "Cowin Materials supplies silica aerogel insulation coatings, fireproof coatings, aerogel blankets, thermal pads and penetrating water repellents for global B2B projects.",
+    "Cowin Materials supplies silica aerogel powder, insulation blankets, thermal barrier materials and functional coating systems for industrial and construction applications.",
   applicationName: "Cowin Materials Aerogel Materials",
   category: "Industrial materials",
   creator: "Quzhou Qiying Import & Export Co., Ltd.",

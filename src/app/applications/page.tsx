@@ -1,15 +1,17 @@
-import { ApplicationSwitcher } from "@/components/application-switcher";
+import Link from "next/link";
+import { ArrowRight, Layers3 } from "lucide-react";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { SectionHeading } from "@/components/section-heading";
+import { applicationPages } from "@/lib/data";
 import { createPageMetadata } from "@/lib/seo";
 
 export const metadata = createPageMetadata({
-  title: "Aerogel Applications | Building Retrofit, Industrial Insulation, EV Batteries and Fire Protection",
+  title: "Aerogel Application Solutions | Cowin Materials",
   description:
-    "Explore Cowin Materials aerogel applications for building energy retrofit, industrial pipes, EV battery thermal barriers, LNG cold chain, steel fire protection and concrete waterproofing.",
+    "Explore Cowin Materials aerogel applications for building retrofit, industrial insulation, EV and ESS thermal barriers, LNG insulation, steel fire protection and concrete waterproofing.",
   path: "/applications",
-  keywords: ["aerogel applications", "EV battery thermal barrier", "industrial aerogel insulation", "building insulation coating"],
+  keywords: ["aerogel applications", "industrial aerogel insulation", "building insulation coating", "battery thermal barrier"],
 });
 
 export default function ApplicationsPage() {
@@ -20,12 +22,24 @@ export default function ApplicationsPage() {
         <section className="page-hero compact">
           <SectionHeading
             eyebrow="Applications"
-            title="Application-Based Aerogel Material Selection"
-            intro="Start from the project problem: thermal conductivity, surface geometry, temperature, fire rating, water ingress or battery pack space limitation."
+            title="Choose Aerogel Materials by Application"
+            intro="Start with the project condition, then evaluate product grade, thickness, substrate compatibility and applicable technical documents."
           />
         </section>
         <section className="section">
-          <ApplicationSwitcher />
+          <div className="application-cards">
+            {applicationPages.map((item) => (
+              <Link className="application-card" href={`/applications/${item.slug}`} key={item.slug}>
+                <Layers3 size={22} />
+                <h2>{item.shortTitle}</h2>
+                <p>{item.intro}</p>
+                <span className="text-link">
+                  View Application
+                  <ArrowRight size={16} />
+                </span>
+              </Link>
+            ))}
+          </div>
         </section>
       </main>
       <Footer />
