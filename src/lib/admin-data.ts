@@ -121,8 +121,12 @@ export const adminModules = {
   },
   news: {
     title: "新闻管理",
-    description: "公司新闻、技术文章和案例文章的发布记录。",
-    rows: [{ name: "已发布文章", status: "暂无记录", value: "0 篇" }],
+    description: "新闻自动化模块已启用真实数据读取；详情请进入左侧“新闻管理”。",
+    rows: [
+      { name: "前台新闻页", status: "已上线", value: "/news" },
+      { name: "RSS Feed", status: "已上线", value: "/news/rss.xml" },
+      { name: "自动任务", status: process.env.DATABASE_URL ? "待数据库记录" : "待配置数据库", value: "/api/cron/news-automation" },
+    ],
   },
   inquiries: {
     title: "客户表单",

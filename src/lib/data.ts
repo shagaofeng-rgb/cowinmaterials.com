@@ -32,7 +32,9 @@ export const navItems = [
   { href: "/applications", label: "Applications" },
   { href: "/technical-resources", label: "Technical Resources" },
   { href: "/case-studies", label: "Case Studies" },
+  { href: "/news", label: "News" },
   { href: "/about", label: "About" },
+  { href: "/search", label: "Search" },
   { href: "/contact", label: "Contact" },
 ];
 

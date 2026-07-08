@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { applicationPages, commonFaqs, products } from "@/lib/data";
+import { getPublishedNews } from "@/lib/news/store";
 import { absoluteUrl, createPageMetadata } from "@/lib/seo";
 
 type ProductPageProps = {
@@ -42,6 +43,8 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
   if (!product) {
     notFound();
   }
+
+  const relatedNews = await getPublishedNews({ pageSize: 3, productSlug: product.slug });
 
   const productJsonLd = {
     "@context": "https://schema.org",
@@ -171,6 +174,32 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
             ))}
           </div>
         </section>
+
+        {relatedNews.articles.length ? (
+          <section className="section muted">
+            <h2>Related Industry News</h2>
+            <div className="news-grid">
+              {relatedNews.articles.map((article) => (
+                <article className="news-card" key={article.slug}>
+                  <div className="news-card-body">
+                    <div className="news-meta">
+                      <span>{article.source.publisher}</span>
+                      <span>{new Date(article.publishedAt).toLocaleDateString("en")}</span>
+                    </div>
+                    <h2>
+                      <Link href={`/news/${article.slug}`}>{article.title}</Link>
+                    </h2>
+                    <p>{article.excerpt}</p>
+                    <Link className="text-link" href={`/news/${article.slug}`}>
+                      Read brief
+                      <ArrowRight size={16} />
+                    </Link>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         <section className="cta-section">
           <div>

@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:news": "node scripts/news-self-test.mjs",
+    "test:self": "node scripts/site-self-check.mjs"
   },
   "dependencies": {
     "lucide-react": "^1.21.0",

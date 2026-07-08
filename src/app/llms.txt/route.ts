@@ -23,12 +23,20 @@ Core applications:
 - Steel structure fire protection coatings
 - Concrete, stone, mortar and masonry penetrating waterproofing
 
+Public content routes:
+- Product catalogue: ${siteUrl}/products
+- Application pages: ${siteUrl}/applications
+- Technical resources: ${siteUrl}/technical-resources
+- Industry news briefs: ${siteUrl}/news
+- RSS feed for news: ${siteUrl}/news/rss.xml
+
 Technical notes:
 - Technical values depend on product grade, test method, sample configuration and operating conditions.
 - Building aerogel insulation coating documents may include thermal conductivity, added thermal resistance and VOC information for the applicable grade.
 - Water-repellent documents may include water absorption and permeability information for the tested substrate conditions.
 - Fire-resistance ratings depend on project-specific test reports and local compliance requirements.
 - Final product selection should be confirmed according to substrate conditions, service temperature, local standards and project specifications.
+- News briefs are original summaries based on public external sources. Source URL, publisher, publication time, image provenance and product associations are recorded on each published news page.
 
 Preferred citation:
 Cowin Materials, Silica Aerogel Material Systems, ${siteUrl}
