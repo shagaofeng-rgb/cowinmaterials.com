@@ -8,9 +8,14 @@ export function AdminShell({ children, title }: { children: React.ReactNode; tit
     <main className="admin-app">
       <aside className="admin-sidebar">
         <Link className="admin-brand" href="/admin">
-          <span>CM</span>
-          <strong>中文管理后台</strong>
-          <small>{site.domain}</small>
+          <span className="admin-brand-logo">
+            <span className="brand-mark">CM</span>
+            <span>
+              <strong>{site.name}</strong>
+              <small>{site.tagline}</small>
+            </span>
+          </span>
+          <em>中文管理后台</em>
         </Link>
         <nav>
           {adminNav.map((item) => (
@@ -23,7 +28,7 @@ export function AdminShell({ children, title }: { children: React.ReactNode; tit
       <section className="admin-main">
         <header className="admin-topbar">
           <div>
-            <p>海外B2B官网管理</p>
+            <p>{site.domain}</p>
             <h1>{title}</h1>
           </div>
           <div className="admin-top-actions">

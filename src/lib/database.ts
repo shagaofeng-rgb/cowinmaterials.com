@@ -39,7 +39,7 @@ export async function getDatabaseHealth(): Promise<DatabaseHealth> {
     return {
       configured: false,
       connected: false,
-      message: "未配置 DATABASE_URL，生产后台数据暂未接入持久化数据库。",
+      message: "当前使用官网内容目录和邮箱通知作为数据来源。",
       checkedAt,
     };
   }
@@ -56,7 +56,7 @@ export async function getDatabaseHealth(): Promise<DatabaseHealth> {
     return {
       configured: true,
       connected: false,
-      message: "已配置 DATABASE_URL，但数据库连接或初始化检查失败。",
+      message: "数据库连接需要检查。",
       checkedAt,
     };
   }

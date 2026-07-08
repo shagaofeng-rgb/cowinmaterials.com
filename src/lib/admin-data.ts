@@ -1,4 +1,4 @@
-import { applications, commonFaqs, products, resourceSections, site } from "@/lib/data";
+import { applications, products, resourceSections, site } from "@/lib/data";
 import { getDatabaseHealth } from "@/lib/database";
 
 export const adminNav = [
@@ -71,16 +71,37 @@ export function getAdminProducts(params: AdminListParams) {
   );
 }
 
+const categoryRows = [...new Set(products.map((product) => product.category))].map((category, index) => ({
+  name: category,
+  status: "启用",
+  value: `排序 ${index + 1} · ${products.filter((product) => product.category === category).length} 个产品`,
+}));
+
+const mediaRows = [...new Set([...products.map((product) => product.image), ...applications.map((application) => application.image)])].map(
+  (image) => ({
+    name: image.replace("/images/", ""),
+    status: "已引用",
+    value: image,
+  }),
+);
+
 export async function getAdminDashboard() {
   const database = await getDatabaseHealth();
 
   return {
     database,
     cards: [
-      { label: "前台产品", value: products.length, note: "当前英文官网已发布目录" },
-      { label: "应用页面", value: applications.length, note: "已上线应用场景页面" },
-      { label: "资料模块", value: resourceSections.length, note: "技术资料入口" },
-      { label: "FAQ", value: commonFaqs.length, note: "采购常见问题" },
+      { label: "已发布产品", value: products.length, note: "官网产品目录" },
+      { label: "应用场景", value: applications.length, note: "官网应用页面" },
+      { label: "产品分类", value: categoryRows.length, note: "启用分类" },
+      { label: "技术资料", value: resourceSections.length, note: "资料入口" },
+    ],
+    systemStatus: [
+      ["内容来源", "官网已发布内容"],
+      ["表单通知", `已发送至 ${site.email}`],
+      ["登录权限", "单管理员账号已启用"],
+      ["数据存储", database.connected ? "数据库连接正常" : "邮箱通知模式"],
+      ["最后检查", database.checkedAt],
     ],
     company: [
       ["品牌", site.name],
@@ -95,70 +116,73 @@ export async function getAdminDashboard() {
 export const adminModules = {
   categories: {
     title: "产品分类",
-    description: "管理英文站产品分类、排序、启用状态和SEO字段。当前分类来自前台代码，接入数据库后可在此新增、停用和恢复。",
-    rows: [...new Set(products.map((product) => product.category))].map((category, index) => ({
-      name: category,
-      status: "启用",
-      sort: index + 1,
-      count: products.filter((product) => product.category === category).length,
-    })),
+    description: "当前官网启用的产品分类与产品数量。",
+    rows: categoryRows,
   },
   news: {
     title: "新闻管理",
-    description: "用于发布行业资讯、案例文章、技术博客和公司动态。未配置数据库时不展示伪造新闻。",
-    rows: [] as Array<Record<string, string | number>>,
+    description: "公司新闻、技术文章和案例文章的发布记录。",
+    rows: [{ name: "已发布文章", status: "暂无记录", value: "0 篇" }],
   },
   inquiries: {
     title: "客户表单",
-    description: "表单邮件已真实发送到公司邮箱；数据库接入后，此处将同步保存询盘、状态、标签、分配人、跟进记录和导出审计。",
-    rows: [] as Array<Record<string, string | number>>,
+    description: "官网询盘表单通知状态与后台记录。",
+    rows: [
+      { name: "收件邮箱", status: "已启用", value: site.email },
+      { name: "后台记录", status: "暂无记录", value: "0 条" },
+    ],
   },
   analytics: {
     title: "访问分析",
-    description: "访问分析需接入 Vercel Analytics、Google Search Console 或自有事件采集；未配置外部凭证时不生成虚假访问量。",
-    rows: [] as Array<Record<string, string | number>>,
+    description: "网站访问数据源与当前统计状态。",
+    rows: [
+      { name: "访问统计", status: "未启用", value: "0 条后台记录" },
+      { name: "产品询价转化", status: "未启用", value: "0 条后台记录" },
+    ],
   },
   seo: {
     title: "SEO数据",
-    description: "管理站内标题、描述、结构化数据、sitemap 与 Search Console 同步状态。",
+    description: "站内SEO文件、结构化数据和页面索引基础配置。",
     rows: [
       { name: "Sitemap", status: "已上线", value: "/sitemap.xml" },
       { name: "Robots", status: "已上线", value: "/robots.txt" },
-      { name: "AI抓取说明", status: "已上线", value: "/llms.txt" },
+      { name: "AI抓取文件", status: "已上线", value: "/llms.txt" },
       { name: "产品SEO字段", status: "已配置", value: `${products.length} 个产品` },
+      { name: "应用页SEO", status: "已配置", value: `${applications.length} 个页面` },
     ],
   },
   media: {
     title: "媒体库",
-    description: "统一管理图片、PDF、视频和附件。生产上传需要接入S3兼容对象存储或Vercel Blob。",
-    rows: resourceSections.map((section) => ({ name: section.title, status: "资料入口", value: section.action })),
+    description: "官网当前引用的图片与资料入口。",
+    rows: mediaRows,
   },
   users: {
     title: "用户与权限",
-    description: "支持超级管理员、管理员、内容编辑、市场、销售、数据分析和只读角色。当前上线的是单管理员安全入口。",
-    rows: [{ name: process.env.ADMIN_USERNAME || "admin", status: "超级管理员", value: "环境变量配置" }],
+    description: "后台登录账号与权限状态。",
+    rows: [{ name: process.env.ADMIN_USERNAME || "admin", status: "超级管理员", value: "已启用" }],
   },
   logs: {
     title: "操作日志",
-    description: "数据库接入后记录登录、发布、删除、导出、权限修改和同步动作；敏感信息不会写入日志。",
-    rows: [] as Array<Record<string, string | number>>,
+    description: "后台关键操作记录。",
+    rows: [{ name: "操作记录", status: "暂无记录", value: "0 条" }],
   },
   settings: {
     title: "系统设置",
-    description: "管理时区、日期格式、数据保留、SEO默认值、表单通知和第三方同步凭证显示状态。",
+    description: "网站基础配置、通知配置和显示规则。",
     rows: [
       { name: "默认时区", status: "Asia/Shanghai", value: "中国运营后台显示" },
-      { name: "数据保留", status: "待配置", value: "建议询盘长期保存，日志按策略归档" },
-      { name: "SMTP通知", status: "已接入", value: site.email },
+      { name: "网站品牌", status: "已配置", value: site.name },
+      { name: "SMTP通知", status: "已启用", value: site.email },
+      { name: "公司电话", status: "已配置", value: site.phone },
     ],
   },
   sync: {
     title: "数据同步",
-    description: "集中管理访问分析、SEO表现、内容发布缓存和定时任务。外部服务不可用时保留已有数据。",
+    description: "站点自动任务与同步状态。",
     rows: [
-      { name: "邮件健康检查", status: "已配置", value: "每月1日自动执行" },
-      { name: "SEO表现同步", status: "待凭证", value: "Google Search Console" },
-      { name: "访问数据同步", status: "待凭证", value: "Vercel / GA4 / 自有事件" },
+      { name: "邮件健康检查", status: "已启用", value: "每月1日自动执行" },
+      { name: "Sitemap生成", status: "已启用", value: "/sitemap.xml" },
+      { name: "Robots生成", status: "已启用", value: "/robots.txt" },
     ],
   },
 };

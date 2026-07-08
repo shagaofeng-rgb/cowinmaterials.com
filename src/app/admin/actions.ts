@@ -9,7 +9,7 @@ export type LoginState = {
 
 export async function loginAction(_state: LoginState, formData: FormData): Promise<LoginState> {
   if (!isAdminConfigured()) {
-    return { error: "后台尚未配置 ADMIN_PASSWORD 或 ADMIN_PASSWORD_HASH 与 ADMIN_SESSION_SECRET。" };
+    return { error: "后台登录服务当前不可用，请联系管理员。" };
   }
 
   const username = String(formData.get("username") || "").trim();

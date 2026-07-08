@@ -40,10 +40,7 @@ export default async function AdminModulePage({ params }: { params: Promise<{ mo
                 </tr>
               </thead>
               <tbody>
-                {page.rows.map((row, index) => {
-                  const info = "value" in row ? row.value : "count" in row ? row.count : "sort" in row ? row.sort : "-";
-
-                  return (
+                {page.rows.map((row, index) => (
                   <tr key={`${row.name}-${index}`}>
                     <td>
                       <strong>{row.name}</strong>
@@ -51,15 +48,14 @@ export default async function AdminModulePage({ params }: { params: Promise<{ mo
                     <td>
                       <span className="admin-badge">{row.status}</span>
                     </td>
-                    <td>{info}</td>
+                    <td>{row.value}</td>
                   </tr>
-                  );
-                })}
+                ))}
               </tbody>
             </table>
           </div>
         ) : (
-          <AdminEmpty text="暂无真实数据。请先配置数据库和相应数据源，系统不会用演示数据冒充生产数据。" />
+          <AdminEmpty text="暂无记录" />
         )}
       </section>
     </AdminShell>

@@ -21,7 +21,7 @@ export default async function AdminProductsPage({
   return (
     <AdminShell title="产品管理">
       <AdminNotice>
-        当前列表读取英文官网已发布产品数据。接入 PostgreSQL 后，可在本页完成新增、复制、草稿、发布、下架、归档、恢复和批量操作。
+        数据来源：官网已发布产品目录。列表仅显示当前对外可见的正式产品信息。
       </AdminNotice>
 
       <section className="admin-panel">
