@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { sendInquiryEmail } from "@/lib/mail";
+import { saveInquiryRecord } from "@/lib/database";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -62,7 +63,7 @@ export async function POST(request: Request) {
 
     const attachment = await parseAttachment(body.get("file"));
 
-    await sendInquiryEmail({
+    const payload = {
       name,
       company,
       email,
@@ -89,7 +90,10 @@ export async function POST(request: Request) {
         utm_content: clean(body.get("utm_content"), 120),
       },
       attachment,
-    });
+    };
+
+    await saveInquiryRecord(payload);
+    await sendInquiryEmail(payload);
 
     return NextResponse.json({ ok: true });
   } catch (error) {

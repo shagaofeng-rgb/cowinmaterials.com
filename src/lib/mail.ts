@@ -1,7 +1,7 @@
 import nodemailer from "nodemailer";
 import { site } from "@/lib/data";
 
-type InquiryPayload = {
+export type InquiryPayload = {
   name: string;
   email: string;
   company?: string;
