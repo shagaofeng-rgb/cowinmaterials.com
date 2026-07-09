@@ -1,6 +1,7 @@
 import "server-only";
 
 import { getPool, hasDatabaseUrl } from "@/lib/database";
+import { getLivePublishedNews } from "@/lib/news/automation";
 import { absoluteUrl } from "@/lib/seo";
 import type { NewsArticle, NewsListResult, NewsRelatedProduct } from "@/lib/news/types";
 
@@ -126,7 +127,18 @@ export async function getPublishedNews({ page = 1, pageSize = 12, productSlug }:
   const safePageSize = Math.min(50, Math.max(1, Math.floor(pageSize)));
 
   if (!pool) {
-    return { articles: [], total: 0, page: safePage, pageSize: safePageSize };
+    const liveArticles = await getLivePublishedNews({ limit: safePage * safePageSize });
+    const start = (safePage - 1) * safePageSize;
+    const filtered = productSlug
+      ? liveArticles.filter((article) => article.relatedProducts.some((product) => product.slug === productSlug))
+      : liveArticles;
+
+    return {
+      articles: filtered.slice(start, start + safePageSize),
+      total: filtered.length,
+      page: safePage,
+      pageSize: safePageSize,
+    };
   }
 
   const offset = (safePage - 1) * safePageSize;
@@ -170,14 +182,26 @@ export async function getPublishedNews({ page = 1, pageSize = 12, productSlug }:
       pageSize: safePageSize,
     };
   } catch {
-    return { articles: [], total: 0, page: safePage, pageSize: safePageSize };
+    const liveArticles = await getLivePublishedNews({ limit: safePage * safePageSize });
+    const start = (safePage - 1) * safePageSize;
+    const filtered = productSlug
+      ? liveArticles.filter((article) => article.relatedProducts.some((product) => product.slug === productSlug))
+      : liveArticles;
+
+    return {
+      articles: filtered.slice(start, start + safePageSize),
+      total: filtered.length,
+      page: safePage,
+      pageSize: safePageSize,
+    };
   }
 }
 
 export async function getPublishedNewsBySlug(slug: string) {
   const pool = getPool();
   if (!pool) {
-    return null;
+    const articles = await getLivePublishedNews({ limit: 40 });
+    return articles.find((article) => article.slug === slug) || null;
   }
 
   try {
@@ -195,7 +219,8 @@ export async function getPublishedNewsBySlug(slug: string) {
 
     return result.rows[0] ? rowToArticle(result.rows[0]) : null;
   } catch {
-    return null;
+    const articles = await getLivePublishedNews({ limit: 40 });
+    return articles.find((article) => article.slug === slug) || null;
   }
 }
 
@@ -204,12 +229,13 @@ export async function getNewsAdminSummary() {
   const configured = hasDatabaseUrl();
 
   if (!pool) {
+    const liveArticles = await getLivePublishedNews({ limit: 12 });
     return {
       configured,
-      totals: { published: 0, draft: 0, review: 0, failedImages: 0 },
-      recentArticles: [] as NewsArticle[],
+      totals: { published: liveArticles.length, draft: 0, review: 0, failedImages: 0 },
+      recentArticles: liveArticles.slice(0, 8),
       recentJobs: [] as Array<{ id: string; status: string; startedAt: string; finishedAt?: string | null; message?: string | null }>,
-      warnings: ["DATABASE_URL 未配置，新闻自动化不会发布正式文章。"],
+      warnings: ["DATABASE_URL 未配置，当前使用实时 RSS 兜底发布；配置数据库后可保存完整任务和审计记录。"],
     };
   }
 

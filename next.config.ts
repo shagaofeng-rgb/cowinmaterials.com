@@ -1,6 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "www.energy-storage.news" },
+      { protocol: "https", hostname: "energy-storage.news" },
+      { protocol: "https", hostname: "www.pv-magazine.com" },
+      { protocol: "https", hostname: "pv-magazine.com" },
+    ],
+  },
   async headers() {
     return [
       {

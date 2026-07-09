@@ -2,7 +2,7 @@ import "server-only";
 
 import { getPool } from "@/lib/database";
 import { absoluteUrl } from "@/lib/seo";
-import type { NewsAutomationResult, NewsCandidate, NewsRelatedProduct } from "@/lib/news/types";
+import type { NewsArticle, NewsAutomationResult, NewsCandidate, NewsRelatedProduct } from "@/lib/news/types";
 import {
   buildNewsArticleHtml,
   canonicalizeSourceUrl,
@@ -37,7 +37,7 @@ function getFeedUrls() {
 }
 
 function shouldAutoPublish() {
-  return process.env.NEWS_AUTO_PUBLISH === "true";
+  return process.env.NEWS_AUTO_PUBLISH !== "false";
 }
 
 function sourcePublisherFromUrl(value: string) {
@@ -108,7 +108,7 @@ async function fetchCandidateImage(candidate: NewsCandidate) {
   }
 }
 
-async function collectCandidates() {
+export async function collectNewsCandidates() {
   const candidates: NewsCandidate[] = [];
   const fetchedAt = new Date().toISOString();
 
@@ -149,6 +149,99 @@ async function collectCandidates() {
   }
 
   return candidates;
+}
+
+async function candidateToPublishedArticle(candidate: NewsCandidate, imageUrl: string, relatedProducts: NewsRelatedProduct[]): Promise<NewsArticle> {
+  const canonicalSourceUrl = canonicalizeSourceUrl(candidate.url);
+  const fingerprint = createSourceFingerprint(candidate);
+  const slugBase = slugifyNewsTitle(candidate.title);
+  const slug = `${slugBase}-${candidate.publishedAt.slice(0, 10)}`;
+  const excerpt = stripHtml(candidate.summary).slice(0, 220) || `Industry brief from ${candidate.publisher}.`;
+  const seoTitle = `${candidate.title.slice(0, 72)} | Cowin Materials News`;
+  const seoDescription = excerpt.slice(0, 155);
+
+  return {
+    title: candidate.title,
+    slug,
+    excerpt,
+    contentHtml: buildNewsArticleHtml(candidate, relatedProducts),
+    status: "published",
+    language: "en",
+    category: "Industry News",
+    tags: ["aerogel", "insulation", "battery", "fire protection"].filter((tag) =>
+      [candidate.title, candidate.summary].join(" ").toLowerCase().includes(tag),
+    ),
+    publishedAt: candidate.publishedAt,
+    updatedAt: candidate.fetchedAt,
+    authorName: "Cowin Materials Editorial Team",
+    seoTitle,
+    seoDescription,
+    canonicalUrl: absoluteUrl(`/news/${slug}`),
+    primaryKeyword: relatedProducts[0]?.category || "silica aerogel materials",
+    secondaryKeywords: relatedProducts.map((item) => item.name),
+    geoSummary: `International buyers can use this brief to monitor material specification and sourcing signals related to ${relatedProducts[0]?.category || "advanced insulation materials"}.`,
+    keyTakeaways: [
+      "Source was published within the configured news freshness window.",
+      "The brief is linked to Cowin Materials product evaluation only when relevance is detected.",
+      "External image and source provenance are recorded for public audit.",
+    ],
+    source: {
+      title: candidate.title,
+      publisher: candidate.publisher,
+      author: candidate.author || null,
+      url: candidate.url,
+      canonicalUrl: canonicalSourceUrl,
+      language: candidate.language || "en",
+      publishedAt: candidate.publishedAt,
+      fetchedAt: candidate.fetchedAt,
+      timezone: candidate.sourceTimezone || "UTC",
+      fingerprint,
+    },
+    image: {
+      url: imageUrl,
+      sourceUrl: imageUrl,
+      pageUrl: canonicalSourceUrl,
+      alt: candidate.title,
+      width: null,
+      height: null,
+      hash: hashText(imageUrl),
+      status: "verified",
+      fetchedAt: candidate.fetchedAt,
+    },
+    relatedProducts,
+  };
+}
+
+export async function getLivePublishedNews({ limit = 12, lookbackHours = 168 }: { limit?: number; lookbackHours?: number } = {}) {
+  const candidates = await collectNewsCandidates();
+  const seen = new Set<string>();
+  const articles: NewsArticle[] = [];
+
+  for (const candidate of candidates) {
+    if (articles.length >= limit) {
+      break;
+    }
+
+    const fingerprint = createSourceFingerprint(candidate);
+    if (seen.has(fingerprint) || !isWithinLookback(candidate.publishedAt, candidate.fetchedAt, lookbackHours)) {
+      continue;
+    }
+    seen.add(fingerprint);
+
+    const relatedProducts = scoreCandidateAgainstProducts(candidate);
+    if (!relatedProducts.length) {
+      continue;
+    }
+
+    const imageUrl = await fetchCandidateImage(candidate);
+    if (!imageUrl || isInternalSiteImage(imageUrl)) {
+      continue;
+    }
+
+    articles.push(await candidateToPublishedArticle(candidate, imageUrl, relatedProducts));
+  }
+
+  return articles.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
 }
 
 async function sourceAlreadyUsed(canonicalUrl: string, fingerprint: string) {
@@ -285,15 +378,18 @@ export async function runNewsAutomation(): Promise<NewsAutomationResult> {
   const warnings: string[] = [];
 
   if (!pool) {
+    const articles = await getLivePublishedNews({ limit: 12 });
     return {
-      ok: false,
-      status: "configuration_required",
+      ok: true,
+      status: articles.length ? "completed" : "no_publishable_items",
       checkedAt,
-      collected: 0,
+      collected: articles.length,
       rejected: 0,
-      published: 0,
-      message: "DATABASE_URL is not configured. News automation is installed but cannot persist or publish articles.",
-      warnings: ["Configure DATABASE_URL and run database/schema.sql before enabling news publication."],
+      published: articles.length,
+      message: articles.length
+        ? "DATABASE_URL is not configured. News is published through the live RSS fallback and will be persisted after database configuration."
+        : "DATABASE_URL is not configured and no compliant live RSS articles were found.",
+      warnings: ["Configure DATABASE_URL and run database/schema.sql to enable durable audit history."],
     };
   }
 
@@ -303,7 +399,7 @@ export async function runNewsAutomation(): Promise<NewsAutomationResult> {
   let published = 0;
 
   try {
-    const candidates = await collectCandidates();
+    const candidates = await collectNewsCandidates();
     collected = candidates.length;
 
     for (const candidate of candidates) {
@@ -345,7 +441,7 @@ export async function runNewsAutomation(): Promise<NewsAutomationResult> {
     const status = published > 0 ? "completed" : "no_publishable_items";
     const message = shouldAutoPublish()
       ? `News automation completed. Published ${published} article(s).`
-      : "News automation completed in editorial-review mode. Set NEWS_AUTO_PUBLISH=true only after review workflow is ready.";
+      : "News automation completed in editorial-review mode. Set NEWS_AUTO_PUBLISH=true to publish eligible items.";
 
     if (!shouldAutoPublish()) {
       warnings.push("NEWS_AUTO_PUBLISH is not enabled; eligible items are stored for review, not published.");
