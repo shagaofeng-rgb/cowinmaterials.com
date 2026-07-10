@@ -37,14 +37,19 @@ for (const path of childPaths) {
 }
 
 const urlChecks = [];
-for (const path of [...new Set(publicPaths)]) {
-  try {
-    const result = await request(path, { method: "HEAD" });
-    urlChecks.push({ path, status: result.status });
-  } catch {
-    urlChecks.push({ path, status: 0 });
+const queue = [...new Set(publicPaths)];
+await Promise.all(Array.from({ length: Math.min(8, queue.length) }, async () => {
+  while (queue.length) {
+    const path = queue.shift();
+    if (!path) break;
+    try {
+      const result = await request(path, { method: "HEAD" });
+      urlChecks.push({ path, status: result.status });
+    } catch {
+      urlChecks.push({ path, status: 0 });
+    }
   }
-}
+}));
 
 const urlFailures = urlChecks.filter((item) => item.status !== 200);
 assert.deepEqual(urlFailures, [], `Sitemap contains unavailable URLs: ${JSON.stringify(urlFailures)}`);
@@ -70,7 +75,7 @@ assert.match(llms.body, /\/products\//);
 assert.match(llms.body, /\/news\/rss\.xml/);
 
 for (const page of [home, products, news]) {
-  assert.match(page.body, /<html lang="en"/);
+  assert.match(page.body, /<html[^>]*\slang="en"/);
   assert.equal((page.body.match(/<h1/g) || []).length, 1, `${page.path} should have exactly one H1.`);
   assert.match(page.body, /rel="canonical"/);
 }
