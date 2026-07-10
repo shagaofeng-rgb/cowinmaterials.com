@@ -21,6 +21,7 @@ export default function ContactPage() {
       <main>
         <section className="page-hero compact">
           <SectionHeading
+            level={1}
             eyebrow="Contact"
             title="Tell Us About Your Project"
             intro="Provide as much technical information as possible. This helps us identify the appropriate product, document or next evaluation step."

@@ -9,6 +9,9 @@ const requiredPaths = [
   "src/app/news/rss.xml/route.ts",
   "src/app/search/page.tsx",
   "src/app/api/cron/news-automation/route.ts",
+  "src/app/api/cron/sitemap-maintenance/route.ts",
+  "src/app/sitemap.xml/route.ts",
+  "src/app/sitemaps/[file]/route.ts",
   "src/app/api/admin/news/run/route.ts",
   "database/schema.sql",
   "vercel.json",
@@ -34,6 +37,10 @@ assert.ok(llms.includes("/news/rss.xml"), "llms.txt route should mention the pub
 const cron = JSON.parse(readFileSync(join(root, "vercel.json"), "utf8"));
 assert.ok(cron.crons.some((entry) => entry.path === "/api/cron/news-automation"), "Missing news cron");
 assert.ok(cron.crons.some((entry) => entry.path === "/api/cron/email-health-check"), "Missing email health cron");
+assert.ok(cron.crons.some((entry) => entry.path === "/api/cron/sitemap-maintenance"), "Missing sitemap maintenance cron");
+
+const robots = readFileSync(join(root, "src/app/robots.ts"), "utf8");
+assert.ok(robots.includes("/sitemap.xml"), "robots.txt must declare the sitemap index");
 
 const forbiddenPublicPhrases = ["瑞太久合", "上海瑞太", "测试文字", "占位内容", "lorem ipsum"];
 const publicFiles = [

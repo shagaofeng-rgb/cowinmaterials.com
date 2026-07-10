@@ -1,5 +1,6 @@
 import "server-only";
 
+import { unstable_cache } from "next/cache";
 import { getPool } from "@/lib/database";
 import { absoluteUrl } from "@/lib/seo";
 import type { NewsArticle, NewsAutomationResult, NewsCandidate, NewsRelatedProduct } from "@/lib/news/types";
@@ -7,9 +8,7 @@ import {
   buildNewsArticleHtml,
   canonicalizeSourceUrl,
   createSourceFingerprint,
-  extractImageFromHtml,
   hashText,
-  isInternalSiteImage,
   isWithinLookback,
   readXmlTag,
   rssItemsFromXml,
@@ -90,34 +89,16 @@ async function insertAudit(jobId: string | null, eventType: string, severity: st
   );
 }
 
-async function fetchCandidateImage(candidate: NewsCandidate) {
-  if (candidate.imageUrl && !isInternalSiteImage(candidate.imageUrl)) {
-    return candidate.imageUrl;
-  }
-
-  try {
-    const response = await fetch(candidate.url, {
-      headers: { "user-agent": "CowinMaterialsNewsBot/1.0 (+https://www.cowinmaterials.com/news)" },
-      next: { revalidate: 0 },
-    });
-    const html = await response.text();
-    const image = extractImageFromHtml(html, candidate.url);
-    return image && !isInternalSiteImage(image) ? image : null;
-  } catch {
-    return null;
-  }
-}
-
 export async function collectNewsCandidates() {
-  const candidates: NewsCandidate[] = [];
   const fetchedAt = new Date().toISOString();
-
-  for (const feedUrl of getFeedUrls()) {
+  const groups = await Promise.all(getFeedUrls().map(async (feedUrl) => {
+    const candidates: NewsCandidate[] = [];
     try {
       const response = await fetch(feedUrl, {
         headers: { "user-agent": "CowinMaterialsNewsBot/1.0 (+https://www.cowinmaterials.com/news)" },
-        next: { revalidate: 0 },
+        next: { revalidate: 900 },
       });
+      if (!response.ok) return candidates;
       const xml = await response.text();
       const publisher = sourcePublisherFromUrl(feedUrl);
 
@@ -144,11 +125,12 @@ export async function collectNewsCandidates() {
         });
       }
     } catch {
-      continue;
+      return candidates;
     }
-  }
+    return candidates;
+  }));
 
-  return candidates;
+  return groups.flat();
 }
 
 async function candidateToPublishedArticle(candidate: NewsCandidate, imageUrl: string, relatedProducts: NewsRelatedProduct[]): Promise<NewsArticle> {
@@ -156,7 +138,7 @@ async function candidateToPublishedArticle(candidate: NewsCandidate, imageUrl: s
   const fingerprint = createSourceFingerprint(candidate);
   const slugBase = slugifyNewsTitle(candidate.title);
   const slug = `${slugBase}-${candidate.publishedAt.slice(0, 10)}`;
-  const excerpt = stripHtml(candidate.summary).slice(0, 220) || `Industry brief from ${candidate.publisher}.`;
+  const excerpt = `A Cowin Materials buyer brief connecting a recent ${candidate.publisher} update with ${relatedProducts[0]?.category.toLowerCase() || "advanced insulation material"} evaluation and sourcing considerations.`;
   const seoTitle = `${candidate.title.slice(0, 72)} | Cowin Materials News`;
   const seoDescription = excerpt.slice(0, 155);
 
@@ -167,7 +149,7 @@ async function candidateToPublishedArticle(candidate: NewsCandidate, imageUrl: s
     contentHtml: buildNewsArticleHtml(candidate, relatedProducts),
     status: "published",
     language: "en",
-    category: "Industry News",
+    category: "Industry Insights",
     tags: ["aerogel", "insulation", "battery", "fire protection"].filter((tag) =>
       [candidate.title, candidate.summary].join(" ").toLowerCase().includes(tag),
     ),
@@ -183,7 +165,7 @@ async function candidateToPublishedArticle(candidate: NewsCandidate, imageUrl: s
     keyTakeaways: [
       "Source was published within the configured news freshness window.",
       "The brief is linked to Cowin Materials product evaluation only when relevance is detected.",
-      "External image and source provenance are recorded for public audit.",
+      "Cowin Materials product imagery and external source provenance are recorded separately.",
     ],
     source: {
       title: candidate.title,
@@ -199,8 +181,8 @@ async function candidateToPublishedArticle(candidate: NewsCandidate, imageUrl: s
     },
     image: {
       url: imageUrl,
-      sourceUrl: imageUrl,
-      pageUrl: canonicalSourceUrl,
+      sourceUrl: absoluteUrl(imageUrl),
+      pageUrl: relatedProducts[0] ? absoluteUrl(`/products/${relatedProducts[0].slug}`) : absoluteUrl("/products"),
       alt: candidate.title,
       width: null,
       height: null,
@@ -212,7 +194,7 @@ async function candidateToPublishedArticle(candidate: NewsCandidate, imageUrl: s
   };
 }
 
-export async function getLivePublishedNews({ limit = 12, lookbackHours = 168 }: { limit?: number; lookbackHours?: number } = {}) {
+async function buildLivePublishedNews(limit: number, lookbackHours: number) {
   const candidates = await collectNewsCandidates();
   const seen = new Set<string>();
   const articles: NewsArticle[] = [];
@@ -233,15 +215,23 @@ export async function getLivePublishedNews({ limit = 12, lookbackHours = 168 }: 
       continue;
     }
 
-    const imageUrl = await fetchCandidateImage(candidate);
-    if (!imageUrl || isInternalSiteImage(imageUrl)) {
-      continue;
-    }
+    const imageUrl = relatedProducts[0]?.image || "/images/fire-test-lab.jpg";
 
     articles.push(await candidateToPublishedArticle(candidate, imageUrl, relatedProducts));
   }
 
   return articles.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+}
+
+const getCachedLivePublishedNews = unstable_cache(
+  async (lookbackHours: number) => buildLivePublishedNews(100, lookbackHours),
+  ["cowin-live-news-v3"],
+  { revalidate: 900, tags: ["cowin-news"] },
+);
+
+export async function getLivePublishedNews({ limit = 12, lookbackHours = 168 }: { limit?: number; lookbackHours?: number } = {}) {
+  const articles = await getCachedLivePublishedNews(lookbackHours);
+  return articles.slice(0, Math.max(1, Math.min(100, limit)));
 }
 
 async function sourceAlreadyUsed(canonicalUrl: string, fingerprint: string) {
@@ -271,7 +261,7 @@ async function saveArticle(candidate: NewsCandidate, imageUrl: string, relatedPr
   const fingerprint = createSourceFingerprint(candidate);
   const slugBase = slugifyNewsTitle(candidate.title);
   const slug = `${slugBase}-${candidate.publishedAt.slice(0, 10)}`;
-  const excerpt = stripHtml(candidate.summary).slice(0, 220) || `Industry brief from ${candidate.publisher}.`;
+  const excerpt = `A Cowin Materials buyer brief connecting a recent ${candidate.publisher} update with ${relatedProducts[0]?.category.toLowerCase() || "advanced insulation material"} evaluation and sourcing considerations.`;
   const contentHtml = buildNewsArticleHtml(candidate, relatedProducts);
   const status = shouldAutoPublish() ? "published" : "review";
   const publishedAt = shouldAutoPublish() ? new Date().toISOString() : null;
@@ -280,7 +270,7 @@ async function saveArticle(candidate: NewsCandidate, imageUrl: string, relatedPr
   const keyTakeaways = [
     "Source was published within the configured 72-hour news window.",
     "Article is linked to Cowin Materials product evaluation only when relevance is detected.",
-    "External image source is recorded for audit and structured data.",
+    "Cowin Materials product imagery is used while external source provenance remains auditable.",
   ];
 
   const result = await pool.query<{ id: string }>(
@@ -294,7 +284,7 @@ async function saveArticle(candidate: NewsCandidate, imageUrl: string, relatedPr
       source_language, source_published_at, source_fetched_at, source_timezone, source_fingerprint,
       relevance_score, credibility_score, generation_model, generation_prompt_version
     ) values (
-      $1, $2, $3, $4, $5, 'en', 'Industry News', $6,
+      $1, $2, $3, $4, $5, 'en', 'Industry Insights', $6,
       $7, now(), 'Cowin Materials Editorial Team', $8, $9, $10,
       $11, $12, $13, $14,
       $15, $16, $17, $18,
@@ -323,8 +313,8 @@ async function saveArticle(candidate: NewsCandidate, imageUrl: string, relatedPr
       `International buyers can use this brief to monitor material specification and sourcing signals related to ${relatedProducts[0]?.category || "advanced insulation materials"}.`,
       keyTakeaways,
       imageUrl,
-      imageUrl,
-      canonicalSourceUrl,
+      absoluteUrl(imageUrl),
+      relatedProducts[0] ? absoluteUrl(`/products/${relatedProducts[0].slug}`) : absoluteUrl("/products"),
       candidate.title,
       hashText(imageUrl),
       candidate.author || null,
@@ -425,12 +415,7 @@ export async function runNewsAutomation(): Promise<NewsAutomationResult> {
         continue;
       }
 
-      const imageUrl = await fetchCandidateImage(candidate);
-      if (!imageUrl || isInternalSiteImage(imageUrl)) {
-        rejected += 1;
-        await insertAudit(jobId, "candidate_rejected", "warning", "No compliant external cover image found.", { title: candidate.title, canonicalSourceUrl });
-        continue;
-      }
+      const imageUrl = relatedProducts[0]?.image || "/images/fire-test-lab.jpg";
 
       const articleId = await saveArticle(candidate, imageUrl, relatedProducts);
       if (articleId && shouldAutoPublish()) {

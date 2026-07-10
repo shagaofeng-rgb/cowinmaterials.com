@@ -16,7 +16,7 @@ export default function TermsOfUsePage() {
       <Header />
       <main>
         <section className="page-hero compact">
-          <SectionHeading eyebrow="Terms" title="Terms of Use" intro="Please review these terms before using the Cowin Materials website." />
+          <SectionHeading level={1} eyebrow="Terms" title="Terms of Use" intro="Please review these terms before using the Cowin Materials website." />
         </section>
         <section className="section legal-copy">
           <h2>Website information</h2>

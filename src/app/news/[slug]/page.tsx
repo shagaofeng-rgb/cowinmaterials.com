@@ -43,7 +43,7 @@ export default async function NewsDetailPage({ params }: NewsDetailProps) {
 
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "NewsArticle",
+    "@type": article.category === "Technical Guide" ? "Article" : "NewsArticle",
     headline: article.title,
     description: article.seoDescription,
     image: [article.image.url],
@@ -93,9 +93,9 @@ export default async function NewsDetailPage({ params }: NewsDetailProps) {
           <figure className="article-cover">
             <Image src={article.image.url} alt={article.image.alt} width={1160} height={640} priority />
             <figcaption>
-              Image source:{" "}
-              <a href={article.image.pageUrl} target="_blank" rel="nofollow noopener">
-                {article.source.publisher}
+              Product image:{" "}
+              <a href={article.image.pageUrl}>
+                Cowin Materials product library
               </a>
             </figcaption>
           </figure>

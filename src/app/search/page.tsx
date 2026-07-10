@@ -12,6 +12,7 @@ export const metadata = createPageMetadata({
   title: "Search Aerogel Products and News | Cowin Materials",
   description: "Search Cowin Materials aerogel products, application pages and published industry news briefs.",
   path: "/search",
+  index: false,
 });
 
 export default async function SearchPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {

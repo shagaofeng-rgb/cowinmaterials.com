@@ -37,7 +37,14 @@ function slugifyNewsTitle(title) {
 }
 
 function stripHtml(value) {
-  return value.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  return value
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&#(\d+);/g, (_match, code) => String.fromCodePoint(Number(code)))
+    .replace(/&amp;/gi, "&")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function productRelevance(candidateText, productText) {
@@ -65,7 +72,7 @@ assert.equal(isInternalSiteImage("/images/fire-test-lab.jpg"), true);
 assert.equal(isInternalSiteImage("https://www.cowinmaterials.com/images/fire-test-lab.jpg"), true);
 assert.equal(isInternalSiteImage("https://example.com/cover.jpg"), false);
 assert.equal(slugifyNewsTitle("Aerogel & Battery Thermal Barriers!"), "aerogel-and-battery-thermal-barriers");
-assert.equal(stripHtml("<p>Hello <strong>world</strong></p>"), "Hello world");
+assert.equal(stripHtml("<p>Hello <strong>world</strong> &#8217; &amp;</p>"), "Hello world ’ &");
 assert.equal(createSourceFingerprint(candidate).length, 64);
 assert.ok(productRelevance(candidate.title + " " + candidate.summary, "Battery Aerogel Thermal Barrier Pads EV energy storage thermal barrier") > 0.12);
 

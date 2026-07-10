@@ -331,6 +331,42 @@ create index if not exists idx_news_products_slug on news_products(product_slug)
 create index if not exists idx_news_jobs_started_at on news_jobs(started_at desc);
 create index if not exists idx_news_publication_audits_created_at on news_publication_audits(created_at desc);
 
+create table if not exists sitemap_url_snapshots (
+  url text primary key,
+  last_modified timestamptz not null,
+  active boolean not null default true,
+  first_seen_at timestamptz not null default now(),
+  last_seen_at timestamptz not null default now(),
+  removed_at timestamptz
+);
+
+create table if not exists sitemap_runs (
+  id uuid primary key default gen_random_uuid(),
+  trigger_type text not null,
+  status text not null,
+  started_at timestamptz not null,
+  finished_at timestamptz,
+  duration_ms bigint,
+  files_processed integer not null default 0,
+  urls_processed integer not null default 0,
+  urls_successful integer not null default 0,
+  urls_skipped integer not null default 0,
+  urls_failed integer not null default 0,
+  total_bytes bigint not null default 0,
+  was_split boolean not null default false,
+  added_urls text[] not null default '{}',
+  modified_urls text[] not null default '{}',
+  removed_urls text[] not null default '{}',
+  search_console_submitted boolean not null default false,
+  search_console_status text,
+  message text,
+  metadata jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_sitemap_runs_started_at on sitemap_runs(started_at desc);
+create index if not exists idx_sitemap_snapshots_active on sitemap_url_snapshots(active, last_seen_at desc);
+
 insert into admin_roles (code, name, description)
 values
   ('super_admin', '超级管理员', '拥有全部后台权限'),

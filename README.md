@@ -14,6 +14,12 @@ The website presents silica aerogel material systems for international technical
 
 The site is built for public search indexing, AI crawler readability, supplier qualification and lead generation. It includes structured metadata, sitemap, robots rules, an `llms.txt` endpoint and an email-backed inquiry form.
 
+## Sitemap and Search Console
+
+The production sitemap is a dynamic index at `https://www.cowinmaterials.com/sitemap.xml`. It separates pages, products, applications and published news, uses real content update timestamps, excludes search/admin/private routes, and is checked by a protected daily Vercel Cron task.
+
+Implementation, commands, Search Console service-account setup, logging and troubleshooting are documented in [docs/SITEMAP.md](docs/SITEMAP.md).
+
 ## Chinese Admin Console
 
 The protected Chinese admin console is available at `/admin/login`. It is intentionally excluded from search indexing and uses server-side session validation.
@@ -32,6 +38,7 @@ Useful commands:
 
 ```bash
 pnpm lint
+pnpm test:sitemap
 pnpm build
 node scripts/hash-admin-password.mjs
 psql "$DATABASE_URL" -f database/schema.sql

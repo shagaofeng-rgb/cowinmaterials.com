@@ -21,6 +21,7 @@ export default function ApplicationsPage() {
       <main>
         <section className="page-hero compact">
           <SectionHeading
+            level={1}
             eyebrow="Applications"
             title="Choose Aerogel Materials by Application"
             intro="Start with the project condition, then evaluate product grade, thickness, substrate compatibility and applicable technical documents."

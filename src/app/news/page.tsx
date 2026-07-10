@@ -9,7 +9,7 @@ import { createPageMetadata } from "@/lib/seo";
 export const dynamic = "force-dynamic";
 
 export const metadata = createPageMetadata({
-  title: "Aerogel Industry News and Material Insights | Cowin Materials",
+  title: "Aerogel Industry News and Technical Insights | Cowin Materials",
   description:
     "Follow Cowin Materials news briefs on silica aerogel insulation, battery thermal barriers, fire protection coatings and waterproofing material trends.",
   path: "/news",
@@ -24,8 +24,8 @@ export default async function NewsPage() {
       <Header />
       <main>
         <section className="subpage-hero news-hero">
-          <span className="eyebrow">Industry News</span>
-          <h1>Aerogel material signals for global buyers</h1>
+          <span className="eyebrow">News & Technical Insights</span>
+          <h1>Aerogel industry signals for global technical buyers</h1>
           <p>
             Curated briefs connect public industry developments with Cowin Materials product
             evaluation areas. Every published item records source, image provenance and related

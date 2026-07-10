@@ -44,6 +44,7 @@ export default function AboutPage() {
       <main>
         <section className="page-hero compact">
           <SectionHeading
+            level={1}
             eyebrow="About"
             title="About Cowin Materials"
             intro="Cowin Materials supplies silica aerogel materials, insulation products, thermal barrier materials and functional coating systems for industrial and construction applications."

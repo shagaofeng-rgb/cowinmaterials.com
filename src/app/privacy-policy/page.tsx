@@ -16,7 +16,7 @@ export default function PrivacyPolicyPage() {
       <Header />
       <main>
         <section className="page-hero compact">
-          <SectionHeading eyebrow="Privacy" title="Privacy Policy" intro="This policy explains how Cowin Materials handles information submitted through this website." />
+          <SectionHeading level={1} eyebrow="Privacy" title="Privacy Policy" intro="This policy explains how Cowin Materials handles information submitted through this website." />
         </section>
         <section className="section legal-copy">
           <h2>Information we collect</h2>

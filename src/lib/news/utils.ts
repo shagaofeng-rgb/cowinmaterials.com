@@ -59,6 +59,14 @@ export function stripHtml(value: string) {
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
     .replace(/<[^>]+>/g, " ")
+    .replace(/&#(\d+);/g, (_match, code) => String.fromCodePoint(Number(code)))
+    .replace(/&#x([0-9a-f]+);/gi, (_match, code) => String.fromCodePoint(Number.parseInt(code, 16)))
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, '"')
+    .replace(/&apos;|&#39;/gi, "'")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -155,20 +163,19 @@ export function scoreCandidateAgainstProducts(candidate: NewsCandidate): NewsRel
 }
 
 export function buildNewsArticleHtml(candidate: NewsCandidate, relatedProducts: NewsRelatedProduct[]) {
-  const sourceSummary = stripHtml(candidate.summary).slice(0, 900);
   const escapedTitle = escapeHtml(candidate.title);
-  const escapedSummary = escapeHtml(sourceSummary || "The source reported a new development relevant to advanced materials buyers.");
+  const escapedPublisher = escapeHtml(candidate.publisher);
   const productList = relatedProducts.map((product) => `<li><a href="/products/${product.slug}">${escapeHtml(product.name)}</a>: ${escapeHtml(product.relationshipReason)}</li>`).join("");
 
   return [
-    `<p>${escapedSummary}</p>`,
+    `<p>${escapedPublisher} published an industry update titled <cite>${escapedTitle}</cite>. Cowin Materials tracks this development as a sourcing and specification signal for international technical buyers.</p>`,
     `<h2>Why it matters for aerogel material buyers</h2>`,
     `<p>This development is monitored because it may influence insulation specification, battery thermal-management design, fire protection requirements or durable building-envelope material selection.</p>`,
     relatedProducts.length
       ? `<h2>Related Cowin Materials product areas</h2><ul>${productList}</ul>`
       : `<h2>Related product areas</h2><p>No strong product association was detected, so this item requires editorial review before publication.</p>`,
     `<h2>Source note</h2>`,
-    `<p>This article is an original Cowin Materials industry brief based on the cited source. It does not reproduce the source article.</p>`,
+    `<p>This is an original Cowin Materials editorial brief based on the cited public source. It does not reproduce the source article or its full text.</p>`,
     `<p><a href="${escapeHtml(candidate.url)}" rel="nofollow noopener" target="_blank">Read the original source: ${escapedTitle}</a></p>`,
   ].join("");
 }

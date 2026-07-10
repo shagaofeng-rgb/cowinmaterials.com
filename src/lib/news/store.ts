@@ -2,6 +2,7 @@ import "server-only";
 
 import { getPool, hasDatabaseUrl } from "@/lib/database";
 import { getLivePublishedNews } from "@/lib/news/automation";
+import { evergreenNews } from "@/lib/news/evergreen";
 import { absoluteUrl } from "@/lib/seo";
 import type { NewsArticle, NewsListResult, NewsRelatedProduct } from "@/lib/news/types";
 
@@ -45,6 +46,11 @@ type NewsRow = {
   source_timezone: string | null;
   source_fingerprint: string;
   related_products: NewsRelatedProduct[] | null;
+};
+
+export type NewsSitemapEntry = {
+  slug: string;
+  updatedAt: string;
 };
 
 function iso(value?: Date | string | null) {
@@ -99,6 +105,12 @@ function rowToArticle(row: NewsRow): NewsArticle {
   };
 }
 
+function liveAndEvergreen(liveArticles: NewsArticle[]) {
+  const bySlug = new Map<string, NewsArticle>();
+  for (const article of [...liveArticles, ...evergreenNews]) bySlug.set(article.slug, article);
+  return [...bySlug.values()].sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+}
+
 const articleSelect = `
   select
     a.*,
@@ -127,7 +139,7 @@ export async function getPublishedNews({ page = 1, pageSize = 12, productSlug }:
   const safePageSize = Math.min(50, Math.max(1, Math.floor(pageSize)));
 
   if (!pool) {
-    const liveArticles = await getLivePublishedNews({ limit: safePage * safePageSize });
+    const liveArticles = liveAndEvergreen(await getLivePublishedNews({ limit: 100 }));
     const start = (safePage - 1) * safePageSize;
     const filtered = productSlug
       ? liveArticles.filter((article) => article.relatedProducts.some((product) => product.slug === productSlug))
@@ -182,7 +194,7 @@ export async function getPublishedNews({ page = 1, pageSize = 12, productSlug }:
       pageSize: safePageSize,
     };
   } catch {
-    const liveArticles = await getLivePublishedNews({ limit: safePage * safePageSize });
+    const liveArticles = liveAndEvergreen(await getLivePublishedNews({ limit: 100 }));
     const start = (safePage - 1) * safePageSize;
     const filtered = productSlug
       ? liveArticles.filter((article) => article.relatedProducts.some((product) => product.slug === productSlug))
@@ -199,8 +211,10 @@ export async function getPublishedNews({ page = 1, pageSize = 12, productSlug }:
 
 export async function getPublishedNewsBySlug(slug: string) {
   const pool = getPool();
+  const evergreen = evergreenNews.find((article) => article.slug === slug);
+  if (evergreen) return evergreen;
   if (!pool) {
-    const articles = await getLivePublishedNews({ limit: 40 });
+    const articles = await getLivePublishedNews({ limit: 100 });
     return articles.find((article) => article.slug === slug) || null;
   }
 
@@ -219,8 +233,89 @@ export async function getPublishedNewsBySlug(slug: string) {
 
     return result.rows[0] ? rowToArticle(result.rows[0]) : null;
   } catch {
-    const articles = await getLivePublishedNews({ limit: 40 });
+    const articles = await getLivePublishedNews({ limit: 100 });
     return articles.find((article) => article.slug === slug) || null;
+  }
+}
+
+export async function getPublishedNewsSitemapSummary(): Promise<{ count: number; lastModified: string }> {
+  const pool = getPool();
+
+  if (!pool) {
+    const articles = liveAndEvergreen(await getLivePublishedNews({ limit: 100 }));
+    const lastModified = articles.reduce(
+      (latest, article) => new Date(article.updatedAt).getTime() > new Date(latest).getTime() ? article.updatedAt : latest,
+      "2026-07-08T00:00:00.000Z",
+    );
+    return { count: articles.length, lastModified };
+  }
+
+  try {
+    const result = await pool.query<{ count: string; last_modified: Date | string | null }>(`
+      select count(*)::text as count, max(updated_at) as last_modified
+      from news_articles
+      where status = 'published'
+        and deleted_at is null
+        and published_at <= now()
+        and cover_image_url <> ''
+    `);
+    return {
+      count: Number(result.rows[0]?.count || 0),
+      lastModified: iso(result.rows[0]?.last_modified || "2026-07-08T00:00:00.000Z"),
+    };
+  } catch {
+    const articles = liveAndEvergreen(await getLivePublishedNews({ limit: 100 }));
+    return {
+      count: articles.length,
+      lastModified: articles[0]?.updatedAt || "2026-07-08T00:00:00.000Z",
+    };
+  }
+}
+
+export async function getPublishedNewsSitemapPage({ offset, limit }: { offset: number; limit: number }): Promise<{ entries: NewsSitemapEntry[]; total: number }> {
+  const pool = getPool();
+  const safeOffset = Math.max(0, Math.floor(offset));
+  const safeLimit = Math.min(45_000, Math.max(1, Math.floor(limit)));
+
+  if (!pool) {
+    const articles = liveAndEvergreen(await getLivePublishedNews({ limit: 100 }));
+    return {
+      entries: articles.slice(safeOffset, safeOffset + safeLimit).map((article) => ({ slug: article.slug, updatedAt: article.updatedAt })),
+      total: articles.length,
+    };
+  }
+
+  try {
+    const [countResult, rows] = await Promise.all([
+      pool.query<{ count: string }>(`
+        select count(*)::text as count
+        from news_articles
+        where status = 'published'
+          and deleted_at is null
+          and published_at <= now()
+          and cover_image_url <> ''
+      `),
+      pool.query<{ slug: string; updated_at: Date | string }>(`
+        select slug, updated_at
+        from news_articles
+        where status = 'published'
+          and deleted_at is null
+          and published_at <= now()
+          and cover_image_url <> ''
+        order by published_at desc, id desc
+        limit $1 offset $2
+      `, [safeLimit, safeOffset]),
+    ]);
+    return {
+      entries: rows.rows.map((row) => ({ slug: row.slug, updatedAt: iso(row.updated_at) })),
+      total: Number(countResult.rows[0]?.count || 0),
+    };
+  } catch {
+    const articles = liveAndEvergreen(await getLivePublishedNews({ limit: 100 }));
+    return {
+      entries: articles.slice(safeOffset, safeOffset + safeLimit).map((article) => ({ slug: article.slug, updatedAt: article.updatedAt })),
+      total: articles.length,
+    };
   }
 }
 
@@ -229,7 +324,7 @@ export async function getNewsAdminSummary() {
   const configured = hasDatabaseUrl();
 
   if (!pool) {
-    const liveArticles = await getLivePublishedNews({ limit: 12 });
+    const liveArticles = liveAndEvergreen(await getLivePublishedNews({ limit: 100 }));
     return {
       configured,
       totals: { published: liveArticles.length, draft: 0, review: 0, failedImages: 0 },

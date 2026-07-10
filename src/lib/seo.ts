@@ -12,6 +12,7 @@ type PageMetadataInput = {
   description: string;
   path: string;
   keywords?: string[];
+  index?: boolean;
 };
 
 export function createPageMetadata({
@@ -19,6 +20,7 @@ export function createPageMetadata({
   description,
   path,
   keywords = [],
+  index = true,
 }: PageMetadataInput): Metadata {
   const canonical = absoluteUrl(path);
 
@@ -43,11 +45,11 @@ export function createPageMetadata({
       description,
     },
     robots: {
-      index: true,
-      follow: true,
+      index,
+      follow: index,
       googleBot: {
-        index: true,
-        follow: true,
+        index,
+        follow: index,
         "max-image-preview": "large",
         "max-snippet": -1,
         "max-video-preview": -1,

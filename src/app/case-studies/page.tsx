@@ -20,6 +20,7 @@ export default function CaseStudiesPage() {
       <main>
         <section className="page-hero compact">
           <SectionHeading
+            level={1}
             eyebrow="Case Studies"
             title="Project References"
             intro="Selected project information is available during technical and commercial evaluation. Contact us with your application requirements."

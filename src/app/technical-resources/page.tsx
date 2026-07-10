@@ -21,6 +21,7 @@ export default function TechnicalResourcesPage() {
       <main>
         <section className="page-hero compact">
           <SectionHeading
+            level={1}
             eyebrow="Technical Resources"
             title="Technical Resources and Product Documentation"
             intro="Access product data sheets, safety information, installation guidance and available test information. Document availability may vary by product grade and project requirement."

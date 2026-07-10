@@ -125,7 +125,8 @@ export const adminModules = {
     rows: [
       { name: "前台新闻页", status: "已上线", value: "/news" },
       { name: "RSS Feed", status: "已上线", value: "/news/rss.xml" },
-      { name: "自动任务", status: process.env.DATABASE_URL ? "待数据库记录" : "待配置数据库", value: "/api/cron/news-automation" },
+      { name: "自动任务", status: "已启用", value: "/api/cron/news-automation" },
+      { name: "持久化与审计", status: process.env.DATABASE_URL ? "数据库已配置" : "实时RSS模式", value: process.env.DATABASE_URL ? "新闻记录永久保存" : "需配置数据库后永久保存" },
     ],
   },
   inquiries: {
@@ -149,6 +150,9 @@ export const adminModules = {
     description: "站内SEO文件、结构化数据和页面索引基础配置。",
     rows: [
       { name: "Sitemap", status: "已上线", value: "/sitemap.xml" },
+      { name: "Sitemap分表", status: "已启用", value: "页面 / 产品 / 应用 / 新闻" },
+      { name: "每日自检", status: "已启用", value: "/api/cron/sitemap-maintenance" },
+      { name: "Google提交", status: process.env.GOOGLE_SEARCH_CONSOLE_ENABLED === "true" ? "已启用" : "未启用", value: "Search Console Sitemaps API" },
       { name: "Robots", status: "已上线", value: "/robots.txt" },
       { name: "AI抓取文件", status: "已上线", value: "/llms.txt" },
       { name: "产品SEO字段", status: "已配置", value: `${products.length} 个产品` },
@@ -186,6 +190,7 @@ export const adminModules = {
     rows: [
       { name: "邮件健康检查", status: "已启用", value: "每月1日自动执行" },
       { name: "Sitemap生成", status: "已启用", value: "/sitemap.xml" },
+      { name: "Sitemap每日检查", status: "已启用", value: "每天 UTC 02:30" },
       { name: "Robots生成", status: "已启用", value: "/robots.txt" },
     ],
   },

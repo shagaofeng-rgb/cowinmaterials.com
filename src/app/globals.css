@@ -301,10 +301,10 @@ select:focus-visible {
 .hero {
   display: grid;
   grid-template-columns: minmax(0, 0.92fr) minmax(420px, 1fr);
-  gap: 56px;
+  gap: 48px;
   align-items: center;
-  min-height: calc(100vh - 107px);
-  padding: 66px 72px;
+  min-height: min(760px, calc(100vh - 107px));
+  padding: 44px 72px;
 }
 
 .hero-copy {
@@ -327,6 +327,7 @@ select:focus-visible {
 
 .hero h1,
 .section-heading h1,
+.section-heading h2,
 .cta-section h2,
 .product-hero h1 {
   margin: 16px 0 0;
@@ -337,8 +338,8 @@ select:focus-visible {
 
 .hero h1 {
   max-width: 780px;
-  font-size: 56px;
-  line-height: 1.03;
+  font-size: 50px;
+  line-height: 1.06;
 }
 
 .hero p,
@@ -351,15 +352,15 @@ select:focus-visible {
 
 .hero p {
   max-width: 650px;
-  margin: 24px 0 0;
-  font-size: 18px;
+  margin: 18px 0 0;
+  font-size: 17px;
 }
 
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  margin-top: 30px;
+  margin-top: 24px;
 }
 
 .microcopy,
@@ -440,7 +441,8 @@ select:focus-visible {
   max-width: 900px;
 }
 
-.section-heading h1 {
+.section-heading h1,
+.section-heading h2 {
   font-size: 48px;
   line-height: 1.08;
 }
@@ -1687,7 +1689,8 @@ label small {
     line-height: 1.08;
   }
 
-  .section-heading h1 {
+  .section-heading h1,
+  .section-heading h2 {
     font-size: 34px;
     line-height: 1.12;
   }

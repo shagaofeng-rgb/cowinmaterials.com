@@ -16,7 +16,7 @@ export default function CookieNoticePage() {
       <Header />
       <main>
         <section className="page-hero compact">
-          <SectionHeading eyebrow="Cookies" title="Cookie Notice" intro="This website keeps cookies and tracking simple." />
+          <SectionHeading level={1} eyebrow="Cookies" title="Cookie Notice" intro="This website keeps cookies and tracking simple." />
         </section>
         <section className="section legal-copy">
           <h2>Current cookie use</h2>
