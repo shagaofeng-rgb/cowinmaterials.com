@@ -8,7 +8,9 @@ export const size = {
 };
 export const contentType = "image/png";
 
-export default function Image() {
+export default async function Image() {
+  const logo = await fetch(new URL("./icon.png", import.meta.url)).then((response) => response.arrayBuffer());
+
   return new ImageResponse(
     (
       <div
@@ -25,22 +27,17 @@ export default function Image() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-          <div
+          <img
+            src={logo as unknown as string}
+            alt=""
             style={{
-              width: 70,
-              height: 70,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              background: "#0f5a52",
-              color: "#fff",
+              width: 78,
+              height: 78,
+              objectFit: "contain",
+              background: "#ffffff",
               borderRadius: 8,
-              fontSize: 30,
-              fontWeight: 800,
             }}
-          >
-            CM
-          </div>
+          />
           <div style={{ display: "flex", flexDirection: "column" }}>
             <span style={{ fontSize: 30, fontWeight: 800 }}>Cowin Materials</span>
             <span style={{ fontSize: 18, color: "#5c6a63" }}>Silica Aerogel Material Systems</span>

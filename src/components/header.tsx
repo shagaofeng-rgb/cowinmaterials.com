@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { ChevronDown, Mail, Menu, X } from "lucide-react";
 import { useState } from "react";
@@ -26,7 +27,14 @@ export function Header() {
 
         <div className="nav-shell">
           <Link className="brand" href="/" aria-label="Cowin Materials homepage">
-            <span className="brand-mark">CM</span>
+            <Image
+              className="brand-logo"
+              src="/brand/cowin-cy-logo.png"
+              alt=""
+              width={48}
+              height={48}
+              priority
+            />
             <span>
               <strong>{site.name}</strong>
               <em>{site.tagline}</em>

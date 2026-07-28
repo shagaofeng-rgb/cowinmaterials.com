@@ -116,17 +116,14 @@ select:focus-visible {
   min-width: 0;
 }
 
-.brand-mark {
-  display: inline-grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
+.brand-logo {
+  display: block;
+  width: 48px;
+  height: 48px;
   flex: 0 0 auto;
-  border-radius: 8px;
-  background: var(--green-dark);
-  color: #ffffff;
-  font-weight: 820;
-  letter-spacing: 0;
+  object-fit: contain;
+  background: #ffffff;
+  border-radius: 6px;
 }
 
 .brand strong,

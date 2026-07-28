@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { logoutAction } from "@/app/admin/actions";
 import { adminNav } from "@/lib/admin-data";
 import { site } from "@/lib/data";
@@ -9,7 +10,14 @@ export function AdminShell({ children, title }: { children: React.ReactNode; tit
       <aside className="admin-sidebar">
         <Link className="admin-brand" href="/admin">
           <span className="admin-brand-logo">
-            <span className="brand-mark">CM</span>
+            <Image
+              className="brand-logo"
+              src="/brand/cowin-cy-logo.png"
+              alt=""
+              width={48}
+              height={48}
+              priority
+            />
             <span>
               <strong>{site.name}</strong>
               <small>{site.tagline}</small>

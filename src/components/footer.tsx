@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { megaMenus, navItems, site } from "@/lib/data";
 
@@ -8,7 +9,13 @@ export function Footer() {
       <div className="footer-grid">
         <div>
           <div className="footer-brand">
-            <span className="brand-mark">CM</span>
+            <Image
+              className="brand-logo"
+              src="/brand/cowin-cy-logo.png"
+              alt=""
+              width={48}
+              height={48}
+            />
             <span>
               <strong>{site.name}</strong>
               <em>{site.tagline}</em>
