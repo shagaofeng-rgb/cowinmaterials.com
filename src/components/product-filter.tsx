@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { productCategories, products } from "@/lib/data";
 
@@ -32,6 +33,9 @@ export function ProductFilter() {
       <div className="product-grid">
         {filtered.map((product) => (
           <article className="product-card" key={product.code}>
+            <Link className="product-card-media" href={`/products/${product.slug}`} aria-label={`View ${product.name}`}>
+              <Image src={product.image} alt={product.name} width={760} height={500} />
+            </Link>
             <div>
               <span className="product-code">{product.code}</span>
               <h2>{product.name}</h2>

@@ -47,6 +47,7 @@ export function Header() {
             const productMenu = item.label === "Products" ? megaMenus.Products : null;
             const applicationMenu = item.label === "Applications" ? megaMenus.Applications : null;
             const menu = productMenu ?? applicationMenu ?? resourceMenu;
+            const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
 
             return (
               <div
@@ -54,20 +55,26 @@ export function Header() {
                 key={item.href}
                 onMouseEnter={() => setActiveMenu(menu ? item.label : null)}
                 onMouseLeave={() => setActiveMenu(null)}
+                onBlur={(event) => {
+                  if (!event.currentTarget.contains(event.relatedTarget)) {
+                    setActiveMenu(null);
+                  }
+                }}
               >
                 <Link
-                  className={pathname === item.href ? "nav-link active" : "nav-link"}
+                  className={isActive ? "nav-link active" : "nav-link"}
                   href={item.href}
                   onFocus={() => setActiveMenu(menu ? item.label : null)}
-                  onBlur={() => setActiveMenu(null)}
+                  aria-haspopup={menu ? "menu" : undefined}
+                  aria-expanded={menu ? activeMenu === item.label : undefined}
                 >
                   {item.label}
                   {menu || menuLabels.has(item.label) ? <ChevronDown size={14} /> : null}
                 </Link>
                 {menu ? (
-                  <div className="mega-menu">
+                  <div className="mega-menu" role="menu">
                     {menu.map((entry) => (
-                      <Link key={entry.href} href={entry.href}>
+                      <Link key={entry.href} href={entry.href} role="menuitem">
                         <strong>{entry.label}</strong>
                         <span>{entry.note}</span>
                       </Link>
