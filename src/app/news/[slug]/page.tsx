@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
+import { hasDatabaseUrl } from "@/lib/database";
 import { getPublishedNewsBySlug } from "@/lib/news/store";
 import { absoluteUrl, createPageMetadata } from "@/lib/seo";
 
@@ -30,6 +31,7 @@ export async function generateMetadata({ params }: NewsDetailProps) {
     description: article.seoDescription,
     path: `/news/${article.slug}`,
     keywords: [article.primaryKeyword || "aerogel news", ...article.secondaryKeywords],
+    index: hasDatabaseUrl() || article.id?.startsWith("evergreen-") === true,
   });
 }
 

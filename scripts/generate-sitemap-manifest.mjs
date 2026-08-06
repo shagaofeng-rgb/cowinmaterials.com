@@ -37,7 +37,11 @@ async function fallbackDate(path) {
 
 async function gitDate(path) {
   try {
-    const value = execFileSync("git", ["log", "-1", "--format=%cI", "--", path], { cwd: root, encoding: "utf8" }).trim();
+    const value = execFileSync("git", ["log", "-1", "--format=%cI", "--", path], {
+      cwd: root,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
     if (value) return new Date(value).toISOString();
   } catch {
     // The committed fallback remains valid when build metadata is unavailable.

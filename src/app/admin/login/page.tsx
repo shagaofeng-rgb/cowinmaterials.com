@@ -25,7 +25,7 @@ export default async function AdminLoginPage({
   }
 
   return (
-    <main className="admin-login-page">
+    <main className="admin-login-page" lang="zh-CN">
       <LoginForm next={next} />
     </main>
   );

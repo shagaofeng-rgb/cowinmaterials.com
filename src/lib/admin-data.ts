@@ -65,7 +65,6 @@ export function getAdminProducts(params: AdminListParams) {
       ...product,
       status: "已发布",
       language: "English",
-      updatedAt: "2026-07-08",
     })),
     params,
   );
@@ -134,7 +133,11 @@ export const adminModules = {
     description: "官网询盘表单通知状态与后台记录。",
     rows: [
       { name: "收件邮箱", status: "已启用", value: site.email },
-      { name: "后台记录", status: "暂无记录", value: "0 条" },
+      {
+        name: "后台记录",
+        status: process.env.DATABASE_URL ? "数据库已启用" : "未启用",
+        value: process.env.DATABASE_URL ? "以数据库实时查询结果为准" : "当前仅发送邮箱通知，未配置数据库存储",
+      },
     ],
   },
   analytics: {
@@ -151,7 +154,7 @@ export const adminModules = {
     rows: [
       { name: "Sitemap", status: "已上线", value: "/sitemap.xml" },
       { name: "Sitemap分表", status: "已启用", value: "页面 / 产品 / 应用 / 新闻" },
-      { name: "每日自检", status: "已启用", value: "/api/cron/sitemap-maintenance" },
+      { name: "每3天自检", status: "已启用", value: "/api/cron/sitemap-maintenance · UTC 02:30" },
       { name: "Google提交", status: process.env.GOOGLE_SEARCH_CONSOLE_ENABLED === "true" ? "已启用" : "未启用", value: "Search Console Sitemaps API" },
       { name: "Robots", status: "已上线", value: "/robots.txt" },
       { name: "AI抓取文件", status: "已上线", value: "/llms.txt" },
@@ -172,7 +175,11 @@ export const adminModules = {
   logs: {
     title: "操作日志",
     description: "后台关键操作记录。",
-    rows: [{ name: "操作记录", status: "暂无记录", value: "0 条" }],
+    rows: [{
+      name: "操作记录",
+      status: process.env.DATABASE_URL ? "数据库已启用" : "未启用",
+      value: process.env.DATABASE_URL ? "以数据库审计日志为准" : "当前没有持久化操作日志数据库",
+    }],
   },
   settings: {
     title: "系统设置",
@@ -190,7 +197,7 @@ export const adminModules = {
     rows: [
       { name: "邮件健康检查", status: "已启用", value: "每月1日自动执行" },
       { name: "Sitemap生成", status: "已启用", value: "/sitemap.xml" },
-      { name: "Sitemap每日检查", status: "已启用", value: "每天 UTC 02:30" },
+      { name: "Sitemap定期检查", status: "已启用", value: "每3天 UTC 02:30" },
       { name: "Robots生成", status: "已启用", value: "/robots.txt" },
     ],
   },

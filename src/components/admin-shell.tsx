@@ -6,7 +6,7 @@ import { site } from "@/lib/data";
 
 export function AdminShell({ children, title }: { children: React.ReactNode; title: string }) {
   return (
-    <main className="admin-app">
+    <main className="admin-app" lang="zh-CN">
       <aside className="admin-sidebar">
         <Link className="admin-brand" href="/admin">
           <span className="admin-brand-logo">

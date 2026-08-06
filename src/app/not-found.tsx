@@ -1,7 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
+
+export const metadata: Metadata = {
+  title: "Page Not Found | Cowin Materials",
+  description: "The requested Cowin Materials page could not be found.",
+  robots: { index: false, follow: false },
+};
 
 export default function NotFound() {
   return (

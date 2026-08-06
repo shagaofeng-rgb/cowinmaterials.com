@@ -242,12 +242,11 @@ export async function getPublishedNewsSitemapSummary(): Promise<{ count: number;
   const pool = getPool();
 
   if (!pool) {
-    const articles = liveAndEvergreen(await getLivePublishedNews({ limit: 100 }));
-    const lastModified = articles.reduce(
+    const lastModified = evergreenNews.reduce(
       (latest, article) => new Date(article.updatedAt).getTime() > new Date(latest).getTime() ? article.updatedAt : latest,
       "2026-07-08T00:00:00.000Z",
     );
-    return { count: articles.length, lastModified };
+    return { count: evergreenNews.length, lastModified };
   }
 
   try {
@@ -264,10 +263,9 @@ export async function getPublishedNewsSitemapSummary(): Promise<{ count: number;
       lastModified: iso(result.rows[0]?.last_modified || "2026-07-08T00:00:00.000Z"),
     };
   } catch {
-    const articles = liveAndEvergreen(await getLivePublishedNews({ limit: 100 }));
     return {
-      count: articles.length,
-      lastModified: articles[0]?.updatedAt || "2026-07-08T00:00:00.000Z",
+      count: evergreenNews.length,
+      lastModified: evergreenNews[0]?.updatedAt || "2026-07-08T00:00:00.000Z",
     };
   }
 }
@@ -278,10 +276,9 @@ export async function getPublishedNewsSitemapPage({ offset, limit }: { offset: n
   const safeLimit = Math.min(45_000, Math.max(1, Math.floor(limit)));
 
   if (!pool) {
-    const articles = liveAndEvergreen(await getLivePublishedNews({ limit: 100 }));
     return {
-      entries: articles.slice(safeOffset, safeOffset + safeLimit).map((article) => ({ slug: article.slug, updatedAt: article.updatedAt })),
-      total: articles.length,
+      entries: evergreenNews.slice(safeOffset, safeOffset + safeLimit).map((article) => ({ slug: article.slug, updatedAt: article.updatedAt })),
+      total: evergreenNews.length,
     };
   }
 
@@ -311,10 +308,9 @@ export async function getPublishedNewsSitemapPage({ offset, limit }: { offset: n
       total: Number(countResult.rows[0]?.count || 0),
     };
   } catch {
-    const articles = liveAndEvergreen(await getLivePublishedNews({ limit: 100 }));
     return {
-      entries: articles.slice(safeOffset, safeOffset + safeLimit).map((article) => ({ slug: article.slug, updatedAt: article.updatedAt })),
-      total: articles.length,
+      entries: evergreenNews.slice(safeOffset, safeOffset + safeLimit).map((article) => ({ slug: article.slug, updatedAt: article.updatedAt })),
+      total: evergreenNews.length,
     };
   }
 }

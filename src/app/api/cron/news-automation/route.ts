@@ -18,6 +18,7 @@ export async function GET(request: Request) {
   }
 
   const result = await runNewsAutomation();
+  console.info(JSON.stringify({ event: "news_automation", trigger: "vercel_cron", ...result }));
   return NextResponse.json(result, { status: result.ok ? 200 : 202 });
 }
 

@@ -86,9 +86,12 @@ assert.ok(newsPayload.total >= 3, "News API should expose stable published techn
 const firstNewsSlug = newsPayload.articles?.[0]?.slug;
 assert.ok(firstNewsSlug, "News API should include a published article slug.");
 assert.ok(news.body.includes(`/news/${firstNewsSlug}`), "News page and News API should expose the same published article.");
-assert.ok(publicPaths.includes(`/news/${firstNewsSlug}`), "Sitemap and News API should expose the same published article.");
 const newsDetail = await request(`/api/news/${firstNewsSlug}`);
 assert.equal(newsDetail.status, 200);
+const sitemapNewsPath = publicPaths.find((path) => path.startsWith("/news/") && path !== "/news");
+assert.ok(sitemapNewsPath, "News sitemap should include durable published content.");
+const sitemapNewsDetail = await request(sitemapNewsPath);
+assert.equal(sitemapNewsDetail.status, 200, "Every indexed news URL must remain available.");
 assert.equal(adminHealth.status, 401);
 assert.equal(sitemapCron.status, 401);
 
@@ -101,7 +104,7 @@ console.log(JSON.stringify({
   robots: robots.status,
   rss: rss.status,
   llms: llms.status,
-  newsSync: { api: newsApi.status, detail: newsDetail.status, firstSlug: firstNewsSlug },
+  newsSync: { api: newsApi.status, detail: newsDetail.status, firstSlug: firstNewsSlug, indexedDetail: sitemapNewsPath },
   protectedRoutes: { adminHealth: adminHealth.status, sitemapCron: sitemapCron.status },
   corePages: [home, products, news, search].map((page) => ({ path: page.path, status: page.status })),
 }, null, 2));

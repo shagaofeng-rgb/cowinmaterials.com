@@ -116,7 +116,12 @@ async function saveRun(result: Record<string, unknown>) {
         result.trigger, result.status, result.startedAt, result.finishedAt, result.durationMs, result.files,
         result.urlCount, result.successCount, result.skippedCount, result.errorCount, result.totalBytes,
         result.wasSplit, result.added, result.modified, result.removed, result.searchConsoleSubmitted,
-        result.searchConsoleStatus, result.message, JSON.stringify({ failures: result.failures, dryRun: result.dryRun }),
+        result.searchConsoleStatus, result.message, JSON.stringify({
+          failures: result.failures,
+          dryRun: result.dryRun,
+          searchConsoleHttpStatus: result.searchConsoleHttpStatus,
+          searchConsoleMessage: result.searchConsoleMessage,
+        }),
       ],
     );
   } catch (error) {
@@ -177,6 +182,8 @@ export async function runSitemapMaintenance(options: MaintenanceOptions = {}) {
         robotsValid,
         searchConsoleSubmitted: searchConsole.submitted,
         searchConsoleStatus: searchConsole.status,
+        searchConsoleHttpStatus: searchConsole.httpStatus || null,
+        searchConsoleMessage: searchConsole.message,
         message: errorCount === 0 ? "Sitemap index, child files, public URLs and robots declaration are valid." : "Sitemap maintenance found validation errors.",
       };
       await saveRun(result);

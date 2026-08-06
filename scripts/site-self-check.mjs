@@ -38,6 +38,17 @@ const cron = JSON.parse(readFileSync(join(root, "vercel.json"), "utf8"));
 assert.ok(cron.crons.some((entry) => entry.path === "/api/cron/news-automation"), "Missing news cron");
 assert.ok(cron.crons.some((entry) => entry.path === "/api/cron/email-health-check"), "Missing email health cron");
 assert.ok(cron.crons.some((entry) => entry.path === "/api/cron/sitemap-maintenance"), "Missing sitemap maintenance cron");
+assert.equal(
+  cron.crons.find((entry) => entry.path === "/api/cron/sitemap-maintenance")?.schedule,
+  "30 2 */3 * *",
+  "Sitemap maintenance and Google submission gate must run every three days",
+);
+assert.equal(cron.crons.some((entry) => /blog/i.test(entry.path)), false, "Blog automation cron must remain disabled");
+
+const repositoryFiles = readFileSync(join(root, "next.config.ts"), "utf8")
+  + readFileSync(join(root, "package.json"), "utf8")
+  + readFileSync(join(root, "vercel.json"), "utf8");
+assert.equal(/blog[-_/ ]?(automation|publish|cron)/i.test(repositoryFiles), false, "Blog automation trigger must not exist");
 
 const robots = readFileSync(join(root, "src/app/robots.ts"), "utf8");
 assert.ok(robots.includes("/sitemap.xml"), "robots.txt must declare the sitemap index");

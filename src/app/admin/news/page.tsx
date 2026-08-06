@@ -18,7 +18,9 @@ export default async function AdminNewsPage() {
   return (
     <AdminShell title="新闻管理">
       <AdminNotice>
-        新闻自动化已接入正式发布流程。系统只展示真实数据库记录；未通过来源时效、去重、产品相关性和封面图片审计的内容不会出现在前台。
+        {summary.configured
+          ? "新闻自动化已接入数据库发布流程。这里只展示数据库中的真实任务和发布记录。"
+          : "当前未配置新闻数据库，前台与后台读取经过来源时效、去重和产品相关性筛选的实时 RSS 内容；这些内容不会形成永久发布记录或任务审计历史。"}
       </AdminNotice>
 
       {summary.warnings.length ? (
@@ -31,9 +33,9 @@ export default async function AdminNewsPage() {
 
       <section className="admin-card-grid">
         <div className="admin-metric-card">
-          <span>已发布新闻</span>
+          <span>{summary.configured ? "已发布新闻" : "当前可见新闻"}</span>
           <strong>{summary.totals.published}</strong>
-          <p>前台 /news 可见内容</p>
+          <p>{summary.configured ? "数据库发布并在 /news 可见" : "实时 RSS 与自有技术文章合计"}</p>
         </div>
         <div className="admin-metric-card">
           <span>审稿队列</span>
@@ -56,7 +58,7 @@ export default async function AdminNewsPage() {
         <div className="admin-panel-heading">
           <div>
             <h2>自动化任务</h2>
-            <p>建议配置数据库、RSS来源、CRON_SECRET 后再启用自动发布。</p>
+            <p>{summary.configured ? "任务执行结果与发布记录保存在数据库中。" : "配置数据库并初始化表结构后，任务才能形成持久化发布记录。"}</p>
           </div>
           <form action="/api/admin/news/run" method="post">
             <button className="admin-action-button" type="submit">

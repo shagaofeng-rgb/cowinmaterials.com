@@ -10,7 +10,7 @@
     },
     {
       "path": "/api/cron/sitemap-maintenance",
-      "schedule": "30 2 * * *"
+      "schedule": "30 2 */3 * *"
     }
   ]
 }

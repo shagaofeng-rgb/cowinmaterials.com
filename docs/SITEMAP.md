@@ -30,7 +30,7 @@ SITE_URL=https://www.cowinmaterials.com pnpm test:smoke
 
 `--dry-run` only checks public sitemap files. Other modes call the authenticated maintenance route and require `CRON_SECRET`. `--submit` still requires `GOOGLE_SEARCH_CONSOLE_ENABLED=true` and valid Google credentials; the flag cannot bypass the environment safety switch.
 
-The production Vercel Cron route is `/api/cron/sitemap-maintenance`, scheduled daily in `vercel.json`. Vercel supplies `Authorization: Bearer $CRON_SECRET` automatically when the project secret is configured.
+The production Vercel Cron route is `/api/cron/sitemap-maintenance`, scheduled every three days at 02:30 UTC in `vercel.json`. Vercel supplies `Authorization: Bearer $CRON_SECRET` automatically when the project secret is configured.
 
 ## Environment Variables
 
