@@ -5,7 +5,7 @@
 | Plugin field | Value |
 |---|---|
 | Website framework | Custom development framework / Webhook |
-| Domain or request URL | `https://www.cowinmaterials.com/api/webhook/send_article` |
+| Domain | `https://www.cowinmaterials.com` |
 | API_KEY | Use the value in the protected local key file listed below |
 | Backend login account | `admin` |
 | Note | `Cowin Materials Blog publishing` |
@@ -13,9 +13,11 @@
 
 The generated API key is stored locally at:
 
-`/Users/apple/Documents/材料/site-audit-backups/2026-08-06-pre-blog-webhook/BLOG_WEBHOOK_SIGN.txt`
+`/Users/apple/Documents/材料/site-audit-backups/2026-08-06-pre-blog-webhook/WEBHOOK_ARTICLE_SIGN.txt`
 
-The file is permission-restricted and the same value is stored as the encrypted Vercel environment variable `BLOG_WEBHOOK_SIGN`. Do not send it by email, commit it to Git, or include it in screenshots.
+The file is permission-restricted and the same value is stored as the encrypted Vercel environment variable `WEBHOOK_ARTICLE_SIGN`. Do not send it by email, commit it to Git, or include it in screenshots.
+
+For the **Custom Development Framework Webhook**, enter only `https://www.cowinmaterials.com`; its validation request is sent to `POST /` and internally rewritten to the publishing API. For a **Universal Webhook**, use the complete endpoint `https://www.cowinmaterials.com/api/webhook/send_article`.
 
 ## Request
 
@@ -46,4 +48,14 @@ The plugin-compatible response always contains `code` and `msg`:
 {"code":0,"msg":"发布失败：具体原因"}
 ```
 
-Published articles appear at `/blog` and `/blog/{slug}` and are added to the Blog sitemap. Publishing logs use the structured event name `blog_webhook_publish` in Vercel runtime logs.
+Published articles are stored in PostgreSQL `articles`, linked to `article_categories`, appear at `/blog` and `/blog/{slug}`, and are added to the Blog sitemap. The authenticated management list is available at `/admin/blog`. Publishing logs use the structured event name `blog_webhook_publish` in Vercel runtime logs.
+
+An authenticated request containing only `sign` and `class_id`, or short placeholder title/content fields, returns `{"code":1,"msg":"验证成功"}` without creating a database row.
+
+## Verification sequence
+
+1. Custom framework validation: send `sign` and `class_id=blog` to `POST https://www.cowinmaterials.com`.
+2. Confirm the response is `{"code":1,"msg":"验证成功"}` and the article count is unchanged.
+3. Send a complete article payload to the same root URL or the direct API URL.
+4. Confirm `{"code":1,"msg":"发布成功"}`, then compare `/admin/blog`, the PostgreSQL row and `/blog/{slug}`.
+5. Retry the identical payload and confirm the database count does not increase.

@@ -6,6 +6,7 @@ export const adminNav = [
   { href: "/admin/products", label: "产品管理" },
   { href: "/admin/categories", label: "产品分类" },
   { href: "/admin/news", label: "新闻管理" },
+  { href: "/admin/blog", label: "Blog文章管理" },
   { href: "/admin/inquiries", label: "客户表单" },
   { href: "/admin/analytics", label: "访问分析" },
   { href: "/admin/seo", label: "SEO数据" },

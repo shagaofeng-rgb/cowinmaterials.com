@@ -103,6 +103,11 @@ create table if not exists articles (
   slug text not null unique,
   excerpt_en text,
   body_html text,
+  class_id text not null default 'blog',
+  author_id text not null default 'Cowin Materials',
+  cover_image_url text,
+  external_fingerprint text unique,
+  source_type text not null default 'manual',
   status text not null default 'draft',
   related_product_ids uuid[] not null default '{}',
   seo_title text,
@@ -114,6 +119,12 @@ create table if not exists articles (
   updated_at timestamptz not null default now(),
   deleted_at timestamptz
 );
+
+alter table articles add column if not exists class_id text not null default 'blog';
+alter table articles add column if not exists author_id text not null default 'Cowin Materials';
+alter table articles add column if not exists cover_image_url text;
+alter table articles add column if not exists external_fingerprint text unique;
+alter table articles add column if not exists source_type text not null default 'manual';
 
 create table if not exists inquiries (
   id uuid primary key default gen_random_uuid(),
@@ -213,6 +224,8 @@ create table if not exists system_settings (
 create index if not exists idx_products_status on products(status) where deleted_at is null;
 create index if not exists idx_products_category on products(category_id) where deleted_at is null;
 create index if not exists idx_articles_status on articles(status) where deleted_at is null;
+create index if not exists idx_articles_category_status on articles(category_id, status, published_at desc) where deleted_at is null;
+create index if not exists idx_articles_class_status on articles(class_id, status, published_at desc) where deleted_at is null;
 create index if not exists idx_inquiries_created_at on inquiries(created_at desc) where deleted_at is null;
 create index if not exists idx_analytics_occurred_at on analytics_events(occurred_at desc);
 create index if not exists idx_audit_logs_created_at on audit_logs(created_at desc);
@@ -377,3 +390,7 @@ values
   ('analyst', '数据分析人员', '查看访问分析和SEO数据'),
   ('readonly', '只读用户', '仅查看授权模块')
 on conflict (code) do nothing;
+
+insert into article_categories (name, slug, sort_order)
+values ('Blog', 'blog', 10)
+on conflict (slug) do update set name = excluded.name, sort_order = excluded.sort_order;

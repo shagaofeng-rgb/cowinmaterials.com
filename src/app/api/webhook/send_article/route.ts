@@ -28,7 +28,7 @@ async function readFields(request: Request) {
 export async function POST(request: Request) {
   try {
     const fields = await readFields(request);
-    const expectedSign = process.env.BLOG_WEBHOOK_SIGN || "";
+    const expectedSign = process.env.WEBHOOK_ARTICLE_SIGN || "";
 
     if (!expectedSign || !safeEqual(fields.sign || "", expectedSign)) {
       return response(0, "秘钥错误");
@@ -40,12 +40,14 @@ export async function POST(request: Request) {
     const authorId = (fields.author_id || "").trim();
     const imageUrl = (fields.image_url || "").trim();
 
-    if (!classId || !title || !content || !authorId) {
-      return response(0, "class_id、title、content 和 author_id 为必填参数");
-    }
+    if (!classId) return response(0, "class_id 为必填参数");
     if (!["blog", "31"].includes(classId)) {
       return response(0, "栏目参数错误，请使用 blog 或 31");
     }
+    if (!title || !content || (title.length <= 4 && content.length <= 20)) {
+      return response(1, "验证成功");
+    }
+    if (!authorId) return response(0, "author_id 为必填参数");
     if (title.length > 180 || content.length > 200_000 || authorId.length > 120 || imageUrl.length > 2000) {
       return response(0, "参数长度超过限制");
     }

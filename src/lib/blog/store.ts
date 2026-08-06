@@ -1,9 +1,43 @@
 import { createHash } from "node:crypto";
-import { list, put } from "@vercel/blob";
 import sanitizeHtml from "sanitize-html";
+import { getPool } from "@/lib/database";
 import type { BlogArticle } from "./types";
 
-const articlePrefix = "blog/articles/";
+type BlogRow = {
+  id: string;
+  slug: string;
+  class_id: string;
+  title_en: string;
+  body_html: string;
+  excerpt_en: string | null;
+  author_id: string;
+  cover_image_url: string | null;
+  status: string;
+  category_name: string;
+  published_at: Date | string | null;
+  updated_at: Date | string;
+};
+
+export type AdminBlogArticle = BlogArticle & { status: string; categoryName: string };
+
+function iso(value: Date | string | null) {
+  return value ? new Date(value).toISOString() : new Date().toISOString();
+}
+
+function rowToArticle(row: BlogRow): BlogArticle {
+  return {
+    id: row.id,
+    slug: row.slug,
+    classId: row.class_id,
+    title: row.title_en,
+    contentHtml: row.body_html,
+    excerpt: row.excerpt_en || "",
+    authorId: row.author_id,
+    imageUrl: row.cover_image_url,
+    publishedAt: iso(row.published_at),
+    updatedAt: iso(row.updated_at),
+  };
+}
 
 function slugify(value: string) {
   return value
@@ -52,15 +86,19 @@ function normalizeImageUrl(value: string) {
   }
 }
 
-async function readArticle(url: string) {
-  const response = await fetch(url, { cache: "no-store" });
-  if (!response.ok) return null;
-  return response.json() as Promise<BlogArticle>;
+function requirePool() {
+  const pool = getPool();
+  if (!pool) throw new Error("Blog database is not configured.");
+  return pool;
 }
 
-export function hasBlogStorage() {
-  return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
-}
+const articleSelect = `
+  select a.id, a.slug, a.class_id, a.title_en, a.body_html, a.excerpt_en,
+    a.author_id, a.cover_image_url, a.status, a.published_at, a.updated_at,
+    coalesce(c.name, 'Blog') as category_name
+  from articles a
+  left join article_categories c on c.id = a.category_id
+`;
 
 export async function publishBlogArticle(input: {
   classId: string;
@@ -69,10 +107,7 @@ export async function publishBlogArticle(input: {
   authorId: string;
   imageUrl: string;
 }) {
-  if (!hasBlogStorage()) {
-    throw new Error("Blog storage is not configured.");
-  }
-
+  const pool = requirePool();
   const contentHtml = sanitizeContent(input.content);
   if (!contentHtml) throw new Error("Article content is empty after security filtering.");
 
@@ -80,44 +115,84 @@ export async function publishBlogArticle(input: {
     .update(`${input.classId}\n${input.title}\n${contentHtml}`)
     .digest("hex");
   const slug = `${slugify(input.title)}-${fingerprint.slice(0, 10)}`;
-  const now = new Date().toISOString();
-  const existing = await getBlogArticle(slug);
-  const article: BlogArticle = {
-    id: fingerprint,
-    slug,
-    classId: input.classId,
-    title: input.title.trim(),
-    contentHtml,
-    excerpt: excerptFromHtml(contentHtml),
-    authorId: input.authorId.trim(),
-    imageUrl: normalizeImageUrl(input.imageUrl),
-    publishedAt: existing?.publishedAt || now,
-    updatedAt: now,
-  };
+  const excerpt = excerptFromHtml(contentHtml);
+  const imageUrl = normalizeImageUrl(input.imageUrl);
 
-  await put(`${articlePrefix}${slug}.json`, JSON.stringify(article), {
-    access: "public",
-    addRandomSuffix: false,
-    allowOverwrite: true,
-    contentType: "application/json; charset=utf-8",
-    cacheControlMaxAge: 60,
-  });
-
-  return article;
+  const result = await pool.query<BlogRow>(
+    `with category as (
+       insert into article_categories (name, slug, sort_order)
+       values ('Blog', 'blog', 10)
+       on conflict (slug) do update set name = excluded.name
+       returning id
+     )
+     insert into articles (
+       category_id, title_en, slug, excerpt_en, body_html, class_id, author_id,
+       cover_image_url, external_fingerprint, source_type, status, published_at, created_at, updated_at
+     ) values (
+       (select id from category), $1, $2, $3, $4, $5, $6,
+       $7, $8, 'webhook', 'published', now(), now(), now()
+     )
+     on conflict (external_fingerprint) do update set
+       title_en = excluded.title_en,
+       excerpt_en = excluded.excerpt_en,
+       body_html = excluded.body_html,
+       author_id = excluded.author_id,
+       cover_image_url = excluded.cover_image_url,
+       status = 'published',
+       deleted_at = null,
+       updated_at = now()
+     returning id, slug, class_id, title_en, body_html, excerpt_en, author_id,
+       cover_image_url, status, published_at, updated_at, 'Blog'::text as category_name`,
+    [input.title.trim(), slug, excerpt, contentHtml, input.classId, input.authorId.trim(), imageUrl, fingerprint],
+  );
+  return rowToArticle(result.rows[0]);
 }
 
 export async function getBlogArticles() {
-  if (!hasBlogStorage()) return [];
-  const result = await list({ prefix: articlePrefix, limit: 1000 });
-  const articles = (await Promise.all(result.blobs.map((blob) => readArticle(blob.url))))
-    .filter((article): article is BlogArticle => Boolean(article));
-  return articles.sort((a, b) => Date.parse(b.publishedAt) - Date.parse(a.publishedAt));
+  const pool = getPool();
+  if (!pool) return [];
+  const result = await pool.query<BlogRow>(
+    `${articleSelect}
+     where a.class_id in ('blog', '31') and a.status = 'published'
+       and a.deleted_at is null and a.published_at <= now()
+     order by a.published_at desc, a.id desc
+     limit 1000`,
+  );
+  return result.rows.map(rowToArticle);
 }
 
 export async function getBlogArticle(slug: string) {
-  if (!hasBlogStorage()) return null;
-  const result = await list({ prefix: `${articlePrefix}${slug}.json`, limit: 1 });
-  const blob = result.blobs.find((entry) => entry.pathname === `${articlePrefix}${slug}.json`);
-  return blob ? readArticle(blob.url) : null;
+  const pool = getPool();
+  if (!pool) return null;
+  const result = await pool.query<BlogRow>(
+    `${articleSelect}
+     where a.slug = $1 and a.class_id in ('blog', '31') and a.status = 'published'
+       and a.deleted_at is null and a.published_at <= now()
+     limit 1`,
+    [slug],
+  );
+  return result.rows[0] ? rowToArticle(result.rows[0]) : null;
+}
+
+export async function getAdminBlogArticles() {
+  const pool = requirePool();
+  const result = await pool.query<BlogRow>(
+    `${articleSelect}
+     where a.class_id in ('blog', '31') and a.deleted_at is null
+     order by a.created_at desc
+     limit 500`,
+  );
+  return result.rows.map((row) => ({ ...rowToArticle(row), status: row.status, categoryName: row.category_name }));
+}
+
+export async function updateBlogArticleStatus(id: string, status: "draft" | "published" | "archived") {
+  const pool = requirePool();
+  await pool.query(
+    `update articles set status = $2,
+       published_at = case when $2 = 'published' then coalesce(published_at, now()) else published_at end,
+       updated_at = now()
+     where id = $1 and class_id in ('blog', '31') and deleted_at is null`,
+    [id, status],
+  );
 }
 

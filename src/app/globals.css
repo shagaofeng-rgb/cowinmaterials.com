@@ -2149,6 +2149,28 @@ label small {
   color: #62717c;
 }
 
+.admin-row-actions,
+.admin-row-actions form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-row-actions select,
+.admin-row-actions button {
+  min-height: 36px;
+  border: 1px solid #cdd8de;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #123047;
+  padding: 0 10px;
+}
+
+.admin-row-actions button {
+  cursor: pointer;
+  font-weight: 760;
+}
+
 .admin-action-button {
   border: 1px solid #123047;
   background: #123047;

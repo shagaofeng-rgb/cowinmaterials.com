@@ -10,7 +10,9 @@ const requiredPaths = [
   "src/app/search/page.tsx",
   "src/app/blog/page.tsx",
   "src/app/blog/[slug]/page.tsx",
+  "src/app/admin/blog/page.tsx",
   "src/app/api/webhook/send_article/route.ts",
+  "src/proxy.ts",
   "src/app/api/cron/news-automation/route.ts",
   "src/app/api/cron/sitemap-maintenance/route.ts",
   "src/app/sitemap.xml/route.ts",
@@ -27,6 +29,12 @@ for (const path of requiredPaths) {
 const schema = readFileSync(join(root, "database/schema.sql"), "utf8");
 for (const table of ["news_articles", "news_products", "news_sources", "news_jobs", "news_publication_audits"]) {
   assert.ok(schema.includes(`create table if not exists ${table}`), `Missing table: ${table}`);
+}
+for (const table of ["article_categories", "articles"]) {
+  assert.ok(schema.includes(`create table if not exists ${table}`), `Missing Blog table: ${table}`);
+}
+for (const column of ["class_id", "author_id", "cover_image_url", "external_fingerprint"]) {
+  assert.ok(schema.includes(column), `Missing Blog column: ${column}`);
 }
 
 const data = readFileSync(join(root, "src/lib/data.ts"), "utf8");
@@ -53,6 +61,10 @@ const repositoryFiles = readFileSync(join(root, "next.config.ts"), "utf8")
   + readFileSync(join(root, "vercel.json"), "utf8");
 assert.equal(/blog[-_/ ]?(automation|publish|cron)/i.test(repositoryFiles), false, "Blog automation trigger must not exist");
 assert.equal(repositoryFiles.includes('source: "/blog"'), false, "Blog must be a real page, not a redirect");
+
+const webhook = readFileSync(join(root, "src/app/api/webhook/send_article/route.ts"), "utf8");
+assert.ok(webhook.includes("WEBHOOK_ARTICLE_SIGN"), "Webhook must use the server-only WEBHOOK_ARTICLE_SIGN variable");
+assert.equal(webhook.includes("BLOG_WEBHOOK_SIGN"), false, "Legacy webhook key variable must not remain in code");
 
 const robots = readFileSync(join(root, "src/app/robots.ts"), "utf8");
 assert.ok(robots.includes("/sitemap.xml"), "robots.txt must declare the sitemap index");
