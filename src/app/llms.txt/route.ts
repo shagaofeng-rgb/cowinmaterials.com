@@ -29,6 +29,7 @@ Public content routes:
 - Technical resources: ${siteUrl}/technical-resources
 - Industry news briefs: ${siteUrl}/news
 - RSS feed for news: ${siteUrl}/news/rss.xml
+- Technical blog: ${siteUrl}/blog
 
 Technical notes:
 - Technical values depend on product grade, test method, sample configuration and operating conditions.

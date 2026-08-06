@@ -1,5 +1,6 @@
 import manifest from "@/generated/sitemap-content.json";
 import { applicationPages, products } from "@/lib/data";
+import { getBlogArticles } from "@/lib/blog/store";
 import { getPublishedNewsSitemapPage, getPublishedNewsSitemapSummary } from "@/lib/news/store";
 import { absoluteUrl } from "@/lib/seo";
 import { MAX_SITEMAP_URLS } from "./xml";
@@ -12,6 +13,7 @@ const pagePaths = [
   "/technical-resources",
   "/case-studies",
   "/news",
+  "/blog",
   "/about",
   "/contact",
   "/privacy-policy",
@@ -27,7 +29,7 @@ function latest(entries: SitemapEntry[], fallback = manifest.generatedAt) {
   ), fallback);
 }
 
-export function getStaticSitemapEntries(kind: Exclude<SitemapKind, "news">): SitemapEntry[] {
+export function getStaticSitemapEntries(kind: Exclude<SitemapKind, "news" | "blog">): SitemapEntry[] {
   if (kind === "pages") {
     return pagePaths.map((path) => ({
       url: absoluteUrl(path),
@@ -59,6 +61,14 @@ export async function getSitemapSummary(kind: SitemapKind): Promise<SitemapSumma
     return { kind, ...(await getPublishedNewsSitemapSummary()) };
   }
 
+  if (kind === "blog") {
+    const articles = await getBlogArticles();
+    return { kind, count: articles.length, lastModified: latest(articles.map((article) => ({
+      url: absoluteUrl(`/blog/${encodeURIComponent(article.slug)}`),
+      lastModified: article.updatedAt,
+    }))) };
+  }
+
   const entries = getStaticSitemapEntries(kind);
   return { kind, count: entries.length, lastModified: latest(entries) };
 }
@@ -77,7 +87,17 @@ export async function getSitemapChunk(kind: SitemapKind, part: number) {
     }));
   }
 
+  if (kind === "blog") {
+    const articles = await getBlogArticles();
+    return articles.slice(offset, offset + MAX_SITEMAP_URLS).map((article) => ({
+      url: absoluteUrl(`/blog/${encodeURIComponent(article.slug)}`),
+      canonicalUrl: absoluteUrl(`/blog/${encodeURIComponent(article.slug)}`),
+      lastModified: article.updatedAt,
+      status: "published" as const,
+    }));
+  }
+
   return getStaticSitemapEntries(kind).slice(offset, offset + MAX_SITEMAP_URLS);
 }
 
-export const sitemapKinds: SitemapKind[] = ["pages", "products", "applications", "news"];
+export const sitemapKinds: SitemapKind[] = ["pages", "products", "applications", "news", "blog"];

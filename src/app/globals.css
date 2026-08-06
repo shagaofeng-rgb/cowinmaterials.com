@@ -1357,6 +1357,35 @@ label small {
   font-weight: 780;
 }
 
+.news-image > img,
+.article-cover > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.article-body img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  margin: 24px auto;
+}
+
+.article-body table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+
+.article-body th,
+.article-body td {
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  text-align: left;
+}
+
 .article-related,
 .source-box {
   margin-top: 28px;

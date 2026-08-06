@@ -8,6 +8,9 @@ const requiredPaths = [
   "src/app/news/[slug]/page.tsx",
   "src/app/news/rss.xml/route.ts",
   "src/app/search/page.tsx",
+  "src/app/blog/page.tsx",
+  "src/app/blog/[slug]/page.tsx",
+  "src/app/api/webhook/send_article/route.ts",
   "src/app/api/cron/news-automation/route.ts",
   "src/app/api/cron/sitemap-maintenance/route.ts",
   "src/app/sitemap.xml/route.ts",
@@ -27,7 +30,7 @@ for (const table of ["news_articles", "news_products", "news_sources", "news_job
 }
 
 const data = readFileSync(join(root, "src/lib/data.ts"), "utf8");
-for (const item of ["/news", "/search", "Quzhou Qiying Import & Export Co., Ltd.", "davidsha@cowinmaterials.com", "+86 176 0125 2505"]) {
+for (const item of ["/news", "/blog", "/search", "Quzhou Qiying Import & Export Co., Ltd.", "davidsha@cowinmaterials.com", "+86 176 0125 2505"]) {
   assert.ok(data.includes(item), `Missing official site datum: ${item}`);
 }
 
@@ -49,6 +52,7 @@ const repositoryFiles = readFileSync(join(root, "next.config.ts"), "utf8")
   + readFileSync(join(root, "package.json"), "utf8")
   + readFileSync(join(root, "vercel.json"), "utf8");
 assert.equal(/blog[-_/ ]?(automation|publish|cron)/i.test(repositoryFiles), false, "Blog automation trigger must not exist");
+assert.equal(repositoryFiles.includes('source: "/blog"'), false, "Blog must be a real page, not a redirect");
 
 const robots = readFileSync(join(root, "src/app/robots.ts"), "utf8");
 assert.ok(robots.includes("/sitemap.xml"), "robots.txt must declare the sitemap index");

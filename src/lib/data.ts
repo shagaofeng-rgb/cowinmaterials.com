@@ -33,6 +33,7 @@ export const navItems = [
   { href: "/technical-resources", label: "Technical Resources" },
   { href: "/case-studies", label: "Case Studies" },
   { href: "/news", label: "News & Insights" },
+  { href: "/blog", label: "Blog" },
   { href: "/about", label: "About" },
   { href: "/search", label: "Search" },
   { href: "/contact", label: "Contact" },

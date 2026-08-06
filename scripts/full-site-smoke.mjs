@@ -54,17 +54,19 @@ await Promise.all(Array.from({ length: Math.min(8, queue.length) }, async () => 
 const urlFailures = urlChecks.filter((item) => item.status !== 200);
 assert.deepEqual(urlFailures, [], `Sitemap contains unavailable URLs: ${JSON.stringify(urlFailures)}`);
 
-const [robots, rss, llms, home, products, news, search, newsApi, adminHealth, sitemapCron] = await Promise.all([
+const [robots, rss, llms, home, products, news, blog, search, newsApi, adminHealth, sitemapCron, blogWebhook] = await Promise.all([
   request("/robots.txt"),
   request("/news/rss.xml"),
   request("/llms.txt"),
   request("/"),
   request("/products"),
   request("/news"),
+  request("/blog"),
   request("/search?q=aerogel"),
   request("/api/news"),
   request("/api/admin/health"),
   request("/api/cron/sitemap-maintenance"),
+  request("/api/webhook/send_article", { method: "POST", body: new URLSearchParams({ sign: "invalid" }) }),
 ]);
 
 assert.match(robots.body, /Sitemap: https:\/\/www\.cowinmaterials\.com\/sitemap\.xml/);
@@ -74,7 +76,7 @@ assert.match(rss.body, /<item>/);
 assert.match(llms.body, /\/products\//);
 assert.match(llms.body, /\/news\/rss\.xml/);
 
-for (const page of [home, products, news]) {
+for (const page of [home, products, news, blog]) {
   assert.match(page.body, /<html[^>]*\slang="en"/);
   assert.equal((page.body.match(/<h1/g) || []).length, 1, `${page.path} should have exactly one H1.`);
   assert.match(page.body, /rel="canonical"/);
@@ -94,6 +96,7 @@ const sitemapNewsDetail = await request(sitemapNewsPath);
 assert.equal(sitemapNewsDetail.status, 200, "Every indexed news URL must remain available.");
 assert.equal(adminHealth.status, 401);
 assert.equal(sitemapCron.status, 401);
+assert.equal(JSON.parse(blogWebhook.body).code, 0, "Blog webhook must reject an invalid API key.");
 
 console.log(JSON.stringify({
   ok: true,
@@ -105,6 +108,6 @@ console.log(JSON.stringify({
   rss: rss.status,
   llms: llms.status,
   newsSync: { api: newsApi.status, detail: newsDetail.status, firstSlug: firstNewsSlug, indexedDetail: sitemapNewsPath },
-  protectedRoutes: { adminHealth: adminHealth.status, sitemapCron: sitemapCron.status },
-  corePages: [home, products, news, search].map((page) => ({ path: page.path, status: page.status })),
+  protectedRoutes: { adminHealth: adminHealth.status, sitemapCron: sitemapCron.status, blogWebhookCode: JSON.parse(blogWebhook.body).code },
+  corePages: [home, products, news, blog, search].map((page) => ({ path: page.path, status: page.status })),
 }, null, 2));

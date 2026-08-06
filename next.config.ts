@@ -38,7 +38,6 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
-      { source: "/blog", destination: "/news", permanent: true },
       { source: "/technology", destination: "/technical-resources", permanent: true },
       { source: "/construction", destination: "/technical-resources#installation-guides", permanent: true },
       { source: "/comparison", destination: "/about", permanent: true },
