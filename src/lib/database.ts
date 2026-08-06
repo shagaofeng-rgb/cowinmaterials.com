@@ -10,6 +10,13 @@ export type DatabaseHealth = {
 
 let pool: Pool | null = null;
 
+function normalizedConnectionString(value: string) {
+  const url = new URL(value);
+  url.searchParams.delete("sslmode");
+  url.searchParams.delete("channel_binding");
+  return url.toString();
+}
+
 export function hasDatabaseUrl() {
   return Boolean(process.env.DATABASE_URL);
 }
@@ -21,7 +28,7 @@ export function getPool() {
 
   if (!pool) {
     pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
+      connectionString: normalizedConnectionString(process.env.DATABASE_URL),
       connectionTimeoutMillis: 3000,
       max: 5,
       ssl: process.env.DATABASE_SSL === "false" ? false : { rejectUnauthorized: false },
