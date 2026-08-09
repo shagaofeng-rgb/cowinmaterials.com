@@ -1,7 +1,6 @@
 import manifest from "@/generated/sitemap-content.json";
-import { applicationPages, products } from "@/lib/data";
+import { applicationPages, getProductFamilyPath, getProductPath, productFamilies, products } from "@/lib/data";
 import { getBlogArticles } from "@/lib/blog/store";
-import { getPublishedNewsSitemapPage, getPublishedNewsSitemapSummary } from "@/lib/news/store";
 import { absoluteUrl } from "@/lib/seo";
 import { MAX_SITEMAP_URLS } from "./xml";
 import type { SitemapEntry, SitemapKind, SitemapSummary } from "./types";
@@ -10,12 +9,12 @@ const pagePaths = [
   "/",
   "/products",
   "/applications",
-  "/technical-resources",
-  "/case-studies",
-  "/news",
-  "/blog",
+  "/resources",
   "/about",
+  "/locations",
+  "/quality",
   "/contact",
+  "/request-quote",
   "/privacy-policy",
   "/terms-of-use",
   "/cookie-notice",
@@ -29,7 +28,7 @@ function latest(entries: SitemapEntry[], fallback = manifest.generatedAt) {
   ), fallback);
 }
 
-export function getStaticSitemapEntries(kind: Exclude<SitemapKind, "news" | "blog">): SitemapEntry[] {
+export function getStaticSitemapEntries(kind: Exclude<SitemapKind, "blog">): SitemapEntry[] {
   if (kind === "pages") {
     return pagePaths.map((path) => ({
       url: absoluteUrl(path),
@@ -40,12 +39,20 @@ export function getStaticSitemapEntries(kind: Exclude<SitemapKind, "news" | "blo
   }
 
   if (kind === "products") {
-    return products.map((product) => ({
-      url: absoluteUrl(`/products/${encodeURIComponent(product.slug)}`),
-      canonicalUrl: absoluteUrl(`/products/${encodeURIComponent(product.slug)}`),
-      lastModified: manifest.catalog,
-      status: "published",
-    }));
+    return [
+      ...productFamilies.map((family) => ({
+        url: absoluteUrl(getProductFamilyPath(family)),
+        canonicalUrl: absoluteUrl(getProductFamilyPath(family)),
+        lastModified: manifest.catalog,
+        status: "published" as const,
+      })),
+      ...products.map((product) => ({
+        url: absoluteUrl(getProductPath(product)),
+        canonicalUrl: absoluteUrl(getProductPath(product)),
+        lastModified: manifest.catalog,
+        status: "published" as const,
+      })),
+    ];
   }
 
   return applicationPages.map((application) => ({
@@ -57,10 +64,6 @@ export function getStaticSitemapEntries(kind: Exclude<SitemapKind, "news" | "blo
 }
 
 export async function getSitemapSummary(kind: SitemapKind): Promise<SitemapSummary> {
-  if (kind === "news") {
-    return { kind, ...(await getPublishedNewsSitemapSummary()) };
-  }
-
   if (kind === "blog") {
     const articles = await getBlogArticles();
     return { kind, count: articles.length, lastModified: latest(articles.map((article) => ({
@@ -77,16 +80,6 @@ export async function getSitemapChunk(kind: SitemapKind, part: number) {
   const offset = (part - 1) * MAX_SITEMAP_URLS;
   if (part < 1) return [];
 
-  if (kind === "news") {
-    const page = await getPublishedNewsSitemapPage({ offset, limit: MAX_SITEMAP_URLS });
-    return page.entries.map((entry) => ({
-      url: absoluteUrl(`/news/${encodeURIComponent(entry.slug)}`),
-      canonicalUrl: absoluteUrl(`/news/${encodeURIComponent(entry.slug)}`),
-      lastModified: entry.updatedAt,
-      status: "published" as const,
-    }));
-  }
-
   if (kind === "blog") {
     const articles = await getBlogArticles();
     return articles.slice(offset, offset + MAX_SITEMAP_URLS).map((article) => ({
@@ -100,4 +93,4 @@ export async function getSitemapChunk(kind: SitemapKind, part: number) {
   return getStaticSitemapEntries(kind).slice(offset, offset + MAX_SITEMAP_URLS);
 }
 
-export const sitemapKinds: SitemapKind[] = ["pages", "products", "applications", "news", "blog"];
+export const sitemapKinds: SitemapKind[] = ["pages", "products", "applications", "blog"];

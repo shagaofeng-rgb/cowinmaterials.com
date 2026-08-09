@@ -7,12 +7,16 @@ import { createPageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = createPageMetadata({
-  title: "Aerogel Technical Blog | Cowin Materials",
-  description: "Technical articles about silica aerogel insulation, fire protection, waterproofing and thermal-management applications.",
-  path: "/blog",
-  keywords: ["aerogel blog", "silica aerogel technical articles", "industrial insulation guidance"],
-});
+export async function generateMetadata() {
+  const articles = await getBlogArticles();
+  return createPageMetadata({
+    title: "Aerogel Technical Blog | Cowin Materials",
+    description: "Technical articles about silica aerogel insulation, fire protection, waterproofing and thermal-management applications.",
+    path: "/blog",
+    keywords: ["aerogel blog", "silica aerogel technical articles", "industrial insulation guidance"],
+    index: articles.length > 0,
+  });
+}
 
 export default async function BlogPage() {
   const articles = await getBlogArticles();

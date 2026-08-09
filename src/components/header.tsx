@@ -1,129 +1,162 @@
 "use client";
 
-import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
-import { ChevronDown, Mail, Menu, X } from "lucide-react";
-import { useState } from "react";
-import { megaMenus, navItems, site } from "@/lib/data";
+import Link from "next/link";
+import { ArrowRight, ChevronDown, Menu, Search, X } from "lucide-react";
+import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
+import { applicationPages, getProductFamilyPath, megaMenus, navItems, productFamilies, site } from "@/lib/data";
 
-const menuLabels = new Set(["Products", "Applications", "Technical Resources"]);
+type PanelName = "Products" | "Applications" | null;
+
+function focusableElements(container: HTMLElement) {
+  return [...container.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+    .filter((element) => !element.hasAttribute("hidden"));
+}
 
 export function Header() {
-  const pathname = usePathname();
-  const [open, setOpen] = useState(false);
-  const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const [activePanel, setActivePanel] = useState<PanelName>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const drawerId = useId();
+  const drawerRef = useRef<HTMLDialogElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const wasDrawerOpenRef = useRef(false);
+
+  useEffect(() => {
+    const drawer = drawerRef.current;
+    if (!drawer) return;
+
+    if (drawerOpen) {
+      if (!drawer.open) drawer.showModal();
+      document.body.classList.add("drawer-open");
+      wasDrawerOpenRef.current = true;
+      requestAnimationFrame(() => focusableElements(drawer)[0]?.focus());
+      return;
+    }
+
+    document.body.classList.remove("drawer-open");
+    if (drawer.open) drawer.close();
+    if (wasDrawerOpenRef.current) triggerRef.current?.focus();
+    wasDrawerOpenRef.current = false;
+  }, [drawerOpen]);
+
+  useEffect(() => () => document.body.classList.remove("drawer-open"), []);
+
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const closeOnEscape = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") setDrawerOpen(false);
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [drawerOpen]);
+
+  const closeDrawer = () => setDrawerOpen(false);
+  const togglePanel = (panel: Exclude<PanelName, null>) => {
+    setActivePanel((current) => current === panel ? null : panel);
+  };
+
+  const handleDrawerKeyDown = (event: KeyboardEvent<HTMLDialogElement>) => {
+    if (event.key !== "Tab") return;
+    const drawer = drawerRef.current;
+    if (!drawer) return;
+    const focusable = focusableElements(drawer);
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
 
   return (
     <>
       <header className="site-header">
         <div className="top-strip">
-          <span>Global aerogel material systems from Quzhou, Zhejiang, China</span>
-          <a href={`mailto:${site.email}`}>
-            <Mail size={14} />
-            {site.email}
-          </a>
+          <span>Quzhou Qiying Import & Export Co., Ltd. · {site.phone}</span>
+          <a href={`mailto:${site.email}`}>{site.email}</a>
         </div>
-
         <div className="nav-shell">
-          <Link className="brand" href="/" aria-label="Cowin Materials homepage">
-            <Image
-              className="brand-logo"
-              src="/brand/cowin-cy-logo.png"
-              alt=""
-              width={48}
-              height={48}
-              priority
-            />
-            <span>
-              <strong>{site.name}</strong>
-              <em>{site.tagline}</em>
-            </span>
+          <Link className="brand" href="/" aria-label="Cowin Materials home">
+            <Image className="brand-logo" src="/brand/cowin-cy-logo.png" alt="Cowin Materials" width={48} height={48} priority />
+            <span><strong>{site.name}</strong><em>{site.tagline}</em></span>
           </Link>
 
-        <nav className="desktop-nav" aria-label="Primary navigation">
-          {navItems.map((item) => {
-            const resourceMenu = item.label === "Technical Resources" ? megaMenus.Resources : null;
-            const productMenu = item.label === "Products" ? megaMenus.Products : null;
-            const applicationMenu = item.label === "Applications" ? megaMenus.Applications : null;
-            const menu = productMenu ?? applicationMenu ?? resourceMenu;
-            const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+          <nav className="desktop-nav" aria-label="Primary navigation">
+            {navItems.map((item) => {
+              const panel = item.label === "Products" || item.label === "Applications" ? item.label : null;
+              const isOpen = activePanel === panel;
+              return (
+                <div className="nav-cluster" key={item.href}>
+                  <Link className="nav-link" href={item.href} onClick={() => setActivePanel(null)}>{item.label}</Link>
+                  {panel ? (
+                    <button className="nav-panel-toggle" type="button" aria-label={`Open ${panel} menu`} aria-expanded={isOpen} aria-controls={`${panel.toLowerCase()}-mega-panel`} onClick={() => togglePanel(panel)}>
+                      <ChevronDown size={15} aria-hidden="true" />
+                    </button>
+                  ) : null}
+                  {panel && isOpen ? (
+                    <div className="mega-panel" id={`${panel.toLowerCase()}-mega-panel`}>
+                      <span className="mega-kicker">Explore {panel}</span>
+                      <div className="mega-panel-grid">
+                        {panel === "Products" ? productFamilies.map((family) => (
+                          <Link href={getProductFamilyPath(family)} key={family.slug} onClick={() => setActivePanel(null)}>
+                            <strong>{family.title}</strong><span>{family.intent}</span>
+                          </Link>
+                        )) : applicationPages.map((application) => (
+                          <Link href={`/applications/${application.slug}`} key={application.slug} onClick={() => setActivePanel(null)}>
+                            <strong>{application.shortTitle}</strong><span>{application.challenges.slice(0, 2).join(" · ")}</span>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
+          </nav>
 
-            return (
-              <div
-                className={activeMenu === item.label ? "nav-cluster open" : "nav-cluster"}
-                key={item.href}
-                onMouseEnter={() => setActiveMenu(menu ? item.label : null)}
-                onMouseLeave={() => setActiveMenu(null)}
-                onBlur={(event) => {
-                  if (!event.currentTarget.contains(event.relatedTarget)) {
-                    setActiveMenu(null);
-                  }
-                }}
-              >
-                <Link
-                  className={isActive ? "nav-link active" : "nav-link"}
-                  href={item.href}
-                  onFocus={() => setActiveMenu(menu ? item.label : null)}
-                  aria-haspopup={menu ? "menu" : undefined}
-                  aria-expanded={menu ? activeMenu === item.label : undefined}
-                >
-                  {item.label}
-                  {menu || menuLabels.has(item.label) ? <ChevronDown size={14} /> : null}
-                </Link>
-                {menu ? (
-                  <div className="mega-menu" role="menu">
-                    {menu.map((entry) => (
-                      <Link key={entry.href} href={entry.href} role="menuitem">
-                        <strong>{entry.label}</strong>
-                        <span>{entry.note}</span>
-                      </Link>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-            );
-          })}
-        </nav>
-
-        <Link className="header-cta" href="/contact">
-          Request Data Sheet
-        </Link>
-
-        <button
-          className="mobile-menu-button"
-          type="button"
-          aria-label={open ? "Close navigation" : "Open navigation"}
-          aria-controls="mobile-navigation"
-          aria-expanded={open}
-          onClick={() => setOpen((value) => !value)}
-        >
-          {open ? <X size={20} /> : <Menu size={20} />}
-        </button>
-        </div>
-
-        {open ? (
-          <div className="mobile-panel" id="mobile-navigation">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                className={pathname === item.href ? "mobile-link active" : "mobile-link"}
-                href={item.href}
-                onClick={() => setOpen(false)}
-              >
-                {item.label}
-              </Link>
-            ))}
-            <Link className="mobile-cta" href="/contact" onClick={() => setOpen(false)}>
-              Request Technical Data
-            </Link>
+          <div className="header-actions">
+            <Link className="header-cta" href="/request-quote">Request a Quote</Link>
+            <button ref={triggerRef} className="menu-button" type="button" aria-label="Open site menu" aria-controls={drawerId} aria-expanded={drawerOpen} onClick={() => setDrawerOpen(true)}>
+              <Menu size={20} aria-hidden="true" />
+              <span>Menu</span>
+            </button>
           </div>
-        ) : null}
+        </div>
       </header>
-      <div className="mobile-sticky-cta" aria-label="Mobile quick actions">
-        <Link href="/contact?request=Request%20a%20Quote">Request a Quote</Link>
-        <Link href="/contact?request=Ask%20for%20Product%20Selection">Ask an Engineer</Link>
-      </div>
+
+      <noscript>
+        <nav className="fallback-nav" aria-label="Site navigation">
+          {navItems.map((item) => <a href={item.href} key={item.href}>{item.label}</a>)}
+        </nav>
+      </noscript>
+
+      <dialog
+        ref={drawerRef}
+        id={drawerId}
+        className="site-drawer"
+        aria-label="Site menu"
+        onCancel={(event) => { event.preventDefault(); closeDrawer(); }}
+        onClick={(event) => { if (event.target === event.currentTarget) closeDrawer(); }}
+        onKeyDown={handleDrawerKeyDown}
+      >
+        <div className="drawer-surface">
+          <div className="drawer-header">
+            <span className="drawer-title">Menu</span>
+            <button className="drawer-close" type="button" aria-label="Close site menu" onClick={closeDrawer}><X size={20} aria-hidden="true" /></button>
+          </div>
+          <div className="drawer-scroll">
+            <section className="drawer-group"><h2>Explore Products</h2>{productFamilies.map((family) => <Link href={getProductFamilyPath(family)} key={family.slug} onClick={closeDrawer}><strong>{family.title}</strong><span>{family.intent}</span></Link>)}</section>
+            <section className="drawer-group"><h2>Explore Applications</h2>{applicationPages.map((application) => <Link href={`/applications/${application.slug}`} key={application.slug} onClick={closeDrawer}><strong>{application.shortTitle}</strong><span>{application.challenges.slice(0, 2).join(" · ")}</span></Link>)}</section>
+            <section className="drawer-group"><h2>Resources</h2>{megaMenus.Resources.map((resource) => <Link href={resource.href} key={resource.href} onClick={closeDrawer}><strong>{resource.label}</strong><span>{resource.note}</span></Link>)}<Link href="/resources" onClick={closeDrawer}><strong>Technical resources</strong><span>Reviewed documentation and application guidance</span></Link></section>
+            <section className="drawer-group drawer-company"><h2>Company</h2><Link href="/about" onClick={closeDrawer}>About Quzhou Qiying</Link><Link href="/locations" onClick={closeDrawer}>Locations</Link><Link href="/quality" onClick={closeDrawer}>Quality</Link><Link href="/contact" onClick={closeDrawer}>Contact</Link><Link href="/search" onClick={closeDrawer}><Search size={16} aria-hidden="true" /> Search the site</Link></section>
+          </div>
+          <div className="drawer-footer"><Link className="primary-button" href="/request-quote" onClick={closeDrawer}>Request a Quote <ArrowRight size={18} aria-hidden="true" /></Link><a href={`mailto:${site.email}`}>{site.email}</a></div>
+        </div>
+      </dialog>
     </>
   );
 }

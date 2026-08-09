@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Mail, MapPin, Phone } from "lucide-react";
-import { megaMenus, navItems, site } from "@/lib/data";
+import { getProductFamilyPath, navItems, productFamilies, site } from "@/lib/data";
 
 export function Footer() {
   return (
@@ -36,15 +36,18 @@ export function Footer() {
                 {item.label}
               </Link>
             ))}
+            <Link href="/resources">Technical Resources</Link>
+            <Link href="/locations">Locations</Link>
+            <Link href="/search">Search</Link>
           </div>
         </div>
 
         <div>
           <h2>Product Lines</h2>
           <div className="footer-links">
-            {megaMenus.Products.slice(0, 5).map((item) => (
-              <Link key={item.href} href={item.href}>
-                {item.label}
+            {productFamilies.map((family) => (
+              <Link key={family.slug} href={getProductFamilyPath(family)}>
+                {family.title}
               </Link>
             ))}
           </div>
@@ -63,7 +66,11 @@ export function Footer() {
             </li>
             <li>
               <MapPin size={16} />
-              <span>{site.address}</span>
+              <span><strong>Office:</strong> {site.officeAddress}</span>
+            </li>
+            <li>
+              <MapPin size={16} />
+              <span><strong>Manufacturing facility address:</strong> {site.manufacturingFacilityAddress}</span>
             </li>
           </ul>
         </div>

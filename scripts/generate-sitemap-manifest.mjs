@@ -11,10 +11,12 @@ const pageFiles = {
   "/case-studies": "src/app/case-studies/page.tsx",
   "/contact": "src/app/contact/page.tsx",
   "/cookie-notice": "src/app/cookie-notice/page.tsx",
-  "/news": "src/app/news/page.tsx",
+  "/locations": "src/app/locations/page.tsx",
+  "/quality": "src/app/quality/page.tsx",
+  "/request-quote": "src/app/request-quote/page.tsx",
   "/privacy-policy": "src/app/privacy-policy/page.tsx",
   "/products": "src/app/products/page.tsx",
-  "/technical-resources": "src/app/technical-resources/page.tsx",
+  "/resources": "src/app/resources/page.tsx",
   "/terms-of-use": "src/app/terms-of-use/page.tsx",
 };
 const sharedPublicFiles = [

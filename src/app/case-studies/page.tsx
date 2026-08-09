@@ -11,6 +11,7 @@ export const metadata = createPageMetadata({
     "Selected Cowin Materials project information is available during technical and commercial evaluation when sufficient project details can be shared.",
   path: "/case-studies",
   keywords: ["aerogel project references", "aerogel coating applications", "Cowin Materials case studies"],
+  index: false,
 });
 
 export default function CaseStudiesPage() {
@@ -21,9 +22,9 @@ export default function CaseStudiesPage() {
         <section className="page-hero compact">
           <SectionHeading
             level={1}
-            eyebrow="Case Studies"
-            title="Project References"
-            intro="Selected project information is available during technical and commercial evaluation. Contact us with your application requirements."
+            eyebrow="Technical References"
+            title="Technical References and Project Evaluation"
+            intro="Project-specific technical references are reviewed during evaluation when the documentation and disclosure scope are clear."
           />
         </section>
         <section className="section">

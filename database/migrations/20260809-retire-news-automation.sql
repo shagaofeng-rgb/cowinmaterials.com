@@ -1,0 +1,14 @@
+-- REVIEW REQUIRED: This is a production-database operator runbook, not an automatic migration.
+-- Do not execute until a verified backup, the exact production schema, and a rollback owner are confirmed.
+-- The deployed application no longer creates or queries news_* tables.
+--
+-- Recommended reversible archival pattern (adapt names after verifying the database):
+-- BEGIN;
+-- ALTER TABLE news_publication_audits RENAME TO news_publication_audits_retired_20260809;
+-- ALTER TABLE news_products RENAME TO news_products_retired_20260809;
+-- ALTER TABLE news_articles RENAME TO news_articles_retired_20260809;
+-- ALTER TABLE news_jobs RENAME TO news_jobs_retired_20260809;
+-- ALTER TABLE news_sources RENAME TO news_sources_retired_20260809;
+-- COMMIT;
+--
+-- Do not drop archived tables until retention, export, and restoration checks are complete.

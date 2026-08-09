@@ -81,7 +81,7 @@ export function ApplicationSwitcher() {
           </div>
         </div>
         <div className="application-image">
-          <Image src={active.image} alt={active.title} width={1000} height={640} priority />
+          {active.image ? <Image src={active.image} alt={active.title} width={1000} height={640} priority /> : <div className="technical-visual"><span>Application</span><strong>{active.title}</strong><p>Review the complete system against project conditions.</p></div>}
         </div>
       </article>
     </div>

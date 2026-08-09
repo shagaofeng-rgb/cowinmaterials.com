@@ -2,15 +2,14 @@ import Link from "next/link";
 import { Search } from "lucide-react";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
-import { products } from "@/lib/data";
-import { getPublishedNews } from "@/lib/news/store";
+import { getProductPath, products } from "@/lib/data";
 import { createPageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
 export const metadata = createPageMetadata({
-  title: "Search Aerogel Products and News | Cowin Materials",
-  description: "Search Cowin Materials aerogel products, application pages and published industry news briefs.",
+  title: "Search Aerogel Products | Cowin Materials",
+  description: "Search Cowin Materials aerogel products and application information.",
   path: "/search",
   index: false,
 });
@@ -18,18 +17,9 @@ export const metadata = createPageMetadata({
 export default async function SearchPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const { q = "" } = await searchParams;
   const query = q.trim().toLowerCase();
-  const news = await getPublishedNews({ pageSize: 20 });
   const productResults = query
     ? products.filter((product) =>
         [product.name, product.code, product.category, product.summary, product.applications.join(" ")]
-          .join(" ")
-          .toLowerCase()
-          .includes(query),
-      )
-    : [];
-  const newsResults = query
-    ? news.articles.filter((article) =>
-        [article.title, article.excerpt, article.category, article.relatedProducts.map((item) => item.name).join(" ")]
           .join(" ")
           .toLowerCase()
           .includes(query),
@@ -59,15 +49,10 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
             <div className="search-results">
               <h2>Results for “{q}”</h2>
               {[...productResults.map((product) => ({
-                href: `/products/${product.slug}`,
+                href: getProductPath(product),
                 title: product.name,
                 label: product.category,
                 text: product.summary,
-              })), ...newsResults.map((article) => ({
-                href: `/news/${article.slug}`,
-                title: article.title,
-                label: "News",
-                text: article.excerpt,
               }))].map((item) => (
                 <Link href={item.href} key={item.href} className="search-result-card">
                   <span>{item.label}</span>
@@ -75,7 +60,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
                   <p>{item.text}</p>
                 </Link>
               ))}
-              {!productResults.length && !newsResults.length ? <p>No matching published result was found.</p> : null}
+              {!productResults.length ? <p>No matching published result was found.</p> : null}
             </div>
           )}
         </section>

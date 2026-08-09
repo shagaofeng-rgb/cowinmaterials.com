@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { products, site } from "@/lib/data";
+import { getProductPath, products, site } from "@/lib/data";
 
 export const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.cowinmaterials.com";
 
@@ -63,7 +63,9 @@ export const organizationJsonLd = {
   "@type": "Organization",
   name: site.legalName,
   alternateName: site.name,
+  legalName: site.legalName,
   url: siteUrl,
+  logo: absoluteUrl("/brand/cowin-cy-logo.png"),
   email: site.email,
   telephone: site.phone,
   address: {
@@ -73,7 +75,13 @@ export const organizationJsonLd = {
     addressRegion: "Zhejiang Province",
     addressCountry: "CN",
   },
-  areaServed: ["Global", "Asia", "Europe", "North America", "Middle East"],
+  contactPoint: [{
+    "@type": "ContactPoint",
+    contactType: "sales",
+    telephone: site.phone,
+    email: site.email,
+    availableLanguage: "English",
+  }],
   knowsAbout: [
     "Silica aerogel",
     "Aerogel insulation coating",
@@ -92,7 +100,7 @@ export const websiteJsonLd = {
   inLanguage: "en",
   publisher: {
     "@type": "Organization",
-    name: site.legalName,
+    name: site.name,
   },
 };
 
@@ -103,7 +111,7 @@ export const productListJsonLd = {
   itemListElement: products.map((product, index) => ({
     "@type": "ListItem",
     position: index + 1,
-    url: absoluteUrl(`/products/${product.slug}`),
+    url: absoluteUrl(getProductPath(product)),
     name: product.name,
   })),
 };

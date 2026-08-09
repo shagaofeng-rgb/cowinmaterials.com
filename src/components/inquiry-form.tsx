@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Send } from "lucide-react";
 import { useState } from "react";
+import { trackAnalyticsEvent } from "@/components/analytics-events";
 
 const customerTypes = [
   "End User",
@@ -33,6 +35,7 @@ const applications = [
 ];
 
 export function InquiryForm() {
+  const router = useRouter();
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [defaults] = useState(() => {
     if (typeof window === "undefined") {
@@ -67,8 +70,9 @@ export function InquiryForm() {
         });
 
         if (response.ok) {
-          form.reset();
-          setStatus("success");
+          trackAnalyticsEvent("form_submit", { request_type: String(formData.get("requestType") || "") });
+          router.push("/thank-you");
+          return;
         } else {
           setStatus("error");
         }
@@ -197,11 +201,6 @@ export function InquiryForm() {
         <Send size={18} />
         {status === "sending" ? "Sending..." : "Send Enquiry"}
       </button>
-      {status === "success" ? (
-        <p className="form-success">
-          Thank you for your enquiry. Your project information has been submitted.
-        </p>
-      ) : null}
       {status === "error" ? (
         <p className="form-error">
           The message could not be sent right now. Please email davidsha@cowinmaterials.com directly.

@@ -1,0 +1,13 @@
+import Link from "next/link";
+import { ArrowRight, FileCheck2 } from "lucide-react";
+import { Footer } from "@/components/footer";
+import { Header } from "@/components/header";
+import { SectionHeading } from "@/components/section-heading";
+import { commonFaqs, publicDataHighlights, resourceSections } from "@/lib/data";
+import { createPageMetadata } from "@/lib/seo";
+
+export const metadata = createPageMetadata({ title: "Technical Resources and Product Documentation | Cowin Materials", description: "Review Cowin Materials technical-data requests, safety-information scope, installation guidance and selected traceable material data.", path: "/resources", keywords: ["aerogel technical resources", "aerogel TDS", "aerogel SDS", "material application guide"] });
+
+export default function ResourcesPage() {
+  return <><Header /><main><section className="page-hero compact"><SectionHeading level={1} eyebrow="Technical resources" title="Documentation for responsible material evaluation" intro="Resources are limited to product-specific documents, installation guidance and clearly scoped data. Download links are not shown where a real document has not been cleared for publication." /></section><section className="section"><div className="resource-grid">{resourceSections.map((resource) => <article className="resource-card" id={resource.id} key={resource.id}><FileCheck2 size={22} /><span>{resource.title}</span><h2>{resource.title}</h2><p>{resource.text}</p><Link className="text-link" href={`/request-quote?request=${encodeURIComponent(resource.action)}`}>{resource.action}<ArrowRight size={16} /></Link></article>)}</div></section><section className="section muted"><div className="data-scope-heading"><span className="eyebrow">Selected data scope</span><h2>Figures with conditions</h2><p>These highlights point to the named document and product scope. They do not replace the complete document set or project-level qualification.</p></div><div className="technical-fact-grid">{publicDataHighlights.map((item) => <article key={item.label}><span>{item.label}</span><strong>{item.value}</strong><p>{item.scope}</p></article>)}</div></section><section className="section"><SectionHeading eyebrow="Procurement FAQ" title="Common documentation questions" /><div className="faq-list">{commonFaqs.map(([question, answer]) => <article key={question}><h2>{question}</h2><p>{answer}</p></article>)}</div></section></main><Footer /></>;
+}

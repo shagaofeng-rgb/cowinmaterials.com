@@ -3,7 +3,7 @@ import { ArrowRight, FileCheck2 } from "lucide-react";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { SectionHeading } from "@/components/section-heading";
-import { commonFaqs, resourceSections } from "@/lib/data";
+import { commonFaqs, publicDataHighlights, resourceSections } from "@/lib/data";
 import { createPageMetadata } from "@/lib/seo";
 
 export const metadata = createPageMetadata({
@@ -53,6 +53,23 @@ export default function TechnicalResourcesPage() {
               conditions. They should not be used as a project guarantee without reviewing
               the complete test method, sample configuration and operating conditions.
             </p>
+          </div>
+        </section>
+
+        <section className="section" id="data-highlights">
+          <div className="data-scope-heading">
+            <span className="eyebrow">Public Data Scope</span>
+            <h2>Selected technical figures with their conditions</h2>
+            <p>These are traceable highlights from supplied source material. They do not replace the complete document set or project-level qualification.</p>
+          </div>
+          <div className="technical-fact-grid">
+            {publicDataHighlights.map((item) => (
+              <article key={item.label}>
+                <span>{item.label}</span>
+                <strong>{item.value}</strong>
+                <p>{item.scope}</p>
+              </article>
+            ))}
           </div>
         </section>
 

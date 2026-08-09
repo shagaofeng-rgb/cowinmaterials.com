@@ -3,6 +3,7 @@ import Link from "next/link";
 import { AdminNotice, AdminShell } from "@/components/admin-shell";
 import { getAdminProducts } from "@/lib/admin-data";
 import { requireAdminSession } from "@/lib/admin-auth";
+import { getProductPath } from "@/lib/data";
 
 export const metadata: Metadata = {
   title: "产品管理 | Cowin Materials 后台",
@@ -65,7 +66,7 @@ export default async function AdminProductsPage({
                   <td>{product.language}</td>
                   <td>{product.seoTitle}</td>
                   <td>
-                    <Link href={`/products/${product.slug}`} target="_blank">
+                    <Link href={getProductPath(product)} target="_blank">
                       预览
                     </Link>
                   </td>

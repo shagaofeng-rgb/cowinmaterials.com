@@ -44,6 +44,12 @@ async function parseAttachment(file: FormDataEntryValue | null) {
 
 export async function POST(request: Request) {
   try {
+    const origin = request.headers.get("origin");
+    const host = request.headers.get("host");
+    if (origin && host && new URL(origin).host !== host) {
+      return NextResponse.json({ error: "Invalid request origin." }, { status: 403 });
+    }
+
     const body = await request.formData();
 
     const website = clean(body.get("website"), 120);

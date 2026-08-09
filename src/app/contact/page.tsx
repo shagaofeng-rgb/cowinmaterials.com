@@ -23,7 +23,7 @@ export default function ContactPage() {
           <SectionHeading
             level={1}
             eyebrow="Contact"
-            title="Tell Us About Your Project"
+            title="Request a Quote or Technical Review"
             intro="Provide as much technical information as possible. This helps us identify the appropriate product, document or next evaluation step."
           />
         </section>
@@ -42,7 +42,11 @@ export default function ContactPage() {
               </li>
               <li>
                 <MapPin size={18} />
-                <span>{site.address}</span>
+                <span><strong>Office:</strong> {site.officeAddress}</span>
+              </li>
+              <li>
+                <MapPin size={18} />
+                <span><strong>Manufacturing facility address:</strong> {site.manufacturingFacilityAddress}</span>
               </li>
             </ul>
             <div className="contact-note">

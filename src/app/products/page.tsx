@@ -21,8 +21,8 @@ export default function ProductsPage() {
           <SectionHeading
             level={1}
             eyebrow="Products"
-            title="Aerogel Materials, Insulation Products and Functional Coating Systems"
-            intro="Browse products by material type and application. Contact us if you need help selecting a suitable grade, thickness, coating system or test document."
+            title="Explore aerogel material categories"
+            intro="Start with a product form, then review the named grade, its documented scope and the conditions that matter for your application."
           />
         </section>
         <section className="section">

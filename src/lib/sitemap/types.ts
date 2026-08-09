@@ -1,4 +1,4 @@
-export type SitemapKind = "pages" | "products" | "applications" | "news" | "blog";
+export type SitemapKind = "pages" | "products" | "applications" | "blog";
 
 export type SitemapEntry = {
   url: string;

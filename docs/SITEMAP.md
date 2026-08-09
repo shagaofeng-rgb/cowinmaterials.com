@@ -14,7 +14,7 @@ The index only lists non-empty child files. A child file is split before 50,000 
 
 Static public page timestamps are generated from the last Git commit that significantly changed each page. Product and application timestamps come from the last commit to `src/lib/data.ts`. The manifest is regenerated before every production build by `scripts/generate-sitemap-manifest.mjs`.
 
-Published news is read at request time from PostgreSQL when `DATABASE_URL` is configured. Without PostgreSQL, the existing verified RSS fallback remains available, but it does not provide permanent article storage or durable audit history.
+Published News is read at request time from PostgreSQL when `DATABASE_URL` is configured. The public fallback is limited to the reviewed technical guides bundled with the site; the website does not publish live external RSS items.
 
 Dynamic sitemap routes mean a published or removed database article is reflected without writing to the Vercel filesystem. The daily maintenance job validates the index, child XML, robots declaration, and public HTTP status. It records URL additions, modifications, and removals in PostgreSQL when the schema is installed, and always writes a structured Vercel runtime log.
 

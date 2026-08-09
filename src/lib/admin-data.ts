@@ -5,7 +5,6 @@ export const adminNav = [
   { href: "/admin", label: "数据概览" },
   { href: "/admin/products", label: "产品管理" },
   { href: "/admin/categories", label: "产品分类" },
-  { href: "/admin/news", label: "新闻管理" },
   { href: "/admin/blog", label: "Blog文章管理" },
   { href: "/admin/inquiries", label: "客户表单" },
   { href: "/admin/analytics", label: "访问分析" },
@@ -77,7 +76,7 @@ const categoryRows = [...new Set(products.map((product) => product.category))].m
   value: `排序 ${index + 1} · ${products.filter((product) => product.category === category).length} 个产品`,
 }));
 
-const mediaRows = [...new Set([...products.map((product) => product.image), ...applications.map((application) => application.image)])].map(
+const mediaRows = [...new Set([...products.map((product) => product.image), ...applications.map((application) => application.image)].filter((image): image is string => Boolean(image)))].map(
   (image) => ({
     name: image.replace("/images/", ""),
     status: "已引用",
@@ -108,7 +107,8 @@ export async function getAdminDashboard() {
       ["公司", site.legalName],
       ["邮箱", site.email],
       ["电话", site.phone],
-      ["地址", site.address],
+      ["办公室地址", site.officeAddress],
+      ["生产地点地址", site.manufacturingFacilityAddress],
     ],
   };
 }
@@ -118,16 +118,6 @@ export const adminModules = {
     title: "产品分类",
     description: "当前官网启用的产品分类与产品数量。",
     rows: categoryRows,
-  },
-  news: {
-    title: "新闻管理",
-    description: "新闻自动化模块已启用真实数据读取；详情请进入左侧“新闻管理”。",
-    rows: [
-      { name: "前台新闻页", status: "已上线", value: "/news" },
-      { name: "RSS Feed", status: "已上线", value: "/news/rss.xml" },
-      { name: "自动任务", status: "已启用", value: "/api/cron/news-automation" },
-      { name: "持久化与审计", status: process.env.DATABASE_URL ? "数据库已配置" : "实时RSS模式", value: process.env.DATABASE_URL ? "新闻记录永久保存" : "需配置数据库后永久保存" },
-    ],
   },
   inquiries: {
     title: "客户表单",

@@ -23,8 +23,8 @@ export default function ApplicationsPage() {
           <SectionHeading
             level={1}
             eyebrow="Applications"
-            title="Choose Aerogel Materials by Application"
-            intro="Start with the project condition, then evaluate product grade, thickness, substrate compatibility and applicable technical documents."
+            title="Start with the engineering conditions"
+            intro="Each solution path identifies the project challenge, material families to consider and the conditions needed for a responsible evaluation."
           />
         </section>
         <section className="section">
@@ -33,9 +33,9 @@ export default function ApplicationsPage() {
               <Link className="application-card" href={`/applications/${item.slug}`} key={item.slug}>
                 <Layers3 size={22} />
                 <h2>{item.shortTitle}</h2>
-                <p>{item.intro}</p>
+                <p>{item.challenges.slice(0, 3).join(" · ")}</p>
                 <span className="text-link">
-                  View Application
+                  Explore solution
                   <ArrowRight size={16} />
                 </span>
               </Link>
