@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Silica aerogel materials, insulation and functional coating systems.",
     start_url: "/",
     display: "browser",
-    background_color: "#ffffff",
-    theme_color: "#0b75c9",
+    background_color: "#06213A",
+    theme_color: "#06213A",
     icons: [
       {
         src: "/brand/cowin-cy-icon-192.png",

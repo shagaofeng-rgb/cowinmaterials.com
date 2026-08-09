@@ -31,10 +31,10 @@ export const metadata: Metadata = {
   publisher: "Quzhou Qiying Import & Export Co., Ltd.",
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "any" },
       { url: "/icon.png", type: "image/png", sizes: "512x512" },
+      { url: "/favicon.ico", type: "image/x-icon", sizes: "256x256" },
     ],
-    shortcut: "/favicon.ico",
+    shortcut: "/icon.png",
     apple: [{ url: "/apple-icon.png", type: "image/png", sizes: "180x180" }],
   },
   manifest: "/manifest.webmanifest",

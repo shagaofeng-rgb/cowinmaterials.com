@@ -20,8 +20,8 @@ export default async function Image() {
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          background: "#f5f6f2",
-          color: "#17201d",
+          background: "#06213A",
+          color: "#ffffff",
           padding: 64,
           fontFamily: "Arial, sans-serif",
         }}
@@ -40,14 +40,14 @@ export default async function Image() {
           />
           <div style={{ display: "flex", flexDirection: "column" }}>
             <span style={{ fontSize: 30, fontWeight: 800 }}>Cowin Materials</span>
-            <span style={{ fontSize: 18, color: "#5c6a63" }}>Silica Aerogel Material Systems</span>
+            <span style={{ fontSize: 18, color: "#8EE5E7" }}>Silica Aerogel Material Systems</span>
           </div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 20, maxWidth: 880 }}>
           <h1 style={{ fontSize: 68, lineHeight: 1.02, margin: 0 }}>
             Aerogel Coatings, Fire Protection and Thermal Insulation
           </h1>
-          <p style={{ fontSize: 26, lineHeight: 1.35, margin: 0, color: "#42504a" }}>
+          <p style={{ fontSize: 26, lineHeight: 1.35, margin: 0, color: "#C6DBE0" }}>
             Engineered silica aerogel materials for global B2B projects.
           </p>
         </div>
