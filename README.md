@@ -16,7 +16,7 @@ The site is built for public search indexing, AI crawler readability, supplier q
 
 ## Sitemap and Search Console
 
-The production sitemap is a dynamic index at `https://www.cowinmaterials.com/sitemap.xml`. It separates pages, products, applications and published news, uses real content update timestamps, excludes search/admin/private routes, and is checked by a protected Vercel Cron task every three days.
+The production sitemap is a dynamic index at `https://www.cowinmaterials.com/sitemap.xml`. It separates pages, products, applications, published Blog articles and published News, uses real content update timestamps, excludes search/admin/private routes, and is checked by a protected Vercel Cron task every three days.
 
 Implementation, commands, Search Console service-account setup, logging and troubleshooting are documented in [docs/SITEMAP.md](docs/SITEMAP.md).
 

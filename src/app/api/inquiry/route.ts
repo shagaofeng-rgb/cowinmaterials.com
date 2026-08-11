@@ -14,6 +14,8 @@ const allowedTypes = new Set([
   "image/png",
 ]);
 
+class InquiryValidationError extends Error {}
+
 function clean(value: FormDataEntryValue | null, maxLength: number) {
   return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
 }
@@ -28,11 +30,11 @@ async function parseAttachment(file: FormDataEntryValue | null) {
   }
 
   if (file.size > maxFileSize) {
-    throw new Error("File is larger than 5 MB.");
+    throw new InquiryValidationError("File is larger than 5 MB.");
   }
 
   if (!allowedTypes.has(file.type)) {
-    throw new Error("Unsupported file type.");
+    throw new InquiryValidationError("Unsupported file type.");
   }
 
   return {
@@ -50,7 +52,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid request origin." }, { status: 403 });
     }
 
-    const body = await request.formData();
+    const contentType = request.headers.get("content-type") || "";
+    if (!contentType.includes("multipart/form-data") && !contentType.includes("application/x-www-form-urlencoded")) {
+      return NextResponse.json({ error: "Use form data to submit an enquiry." }, { status: 415 });
+    }
+
+    let body: FormData;
+    try {
+      body = await request.formData();
+    } catch {
+      return NextResponse.json({ error: "Invalid enquiry form data." }, { status: 400 });
+    }
 
     const website = clean(body.get("website"), 120);
     if (website) {
@@ -103,6 +115,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true });
   } catch (error) {
+    if (error instanceof InquiryValidationError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
     console.error("Inquiry email failed", error);
     return NextResponse.json({ error: "Unable to send inquiry right now." }, { status: 500 });
   }
