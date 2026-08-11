@@ -27,6 +27,7 @@ Public content routes:
 - Product catalogue: ${siteUrl}/products
 - Application pages: ${siteUrl}/applications
 - Technical resources: ${siteUrl}/resources
+- Source-linked industry news: ${siteUrl}/news
 - Office and manufacturing facility address: ${siteUrl}/locations
 - Quality and documentation scope: ${siteUrl}/quality
 

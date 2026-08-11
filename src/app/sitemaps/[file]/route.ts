@@ -4,7 +4,7 @@ import { isWellFormedSitemapXml, renderUrlSet } from "@/lib/sitemap/xml";
 
 export const dynamic = "force-dynamic";
 
-const filePattern = /^(pages|products|applications|blog)-(\d+)\.xml$/;
+const filePattern = /^(pages|products|applications|blog|news)-(\d+)\.xml$/;
 
 export async function GET(_request: Request, { params }: { params: Promise<{ file: string }> }) {
   const { file } = await params;

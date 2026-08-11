@@ -17,6 +17,7 @@ const pageFiles = {
   "/privacy-policy": "src/app/privacy-policy/page.tsx",
   "/products": "src/app/products/page.tsx",
   "/resources": "src/app/resources/page.tsx",
+  "/news": "src/app/news/page.tsx",
   "/terms-of-use": "src/app/terms-of-use/page.tsx",
 };
 const sharedPublicFiles = [

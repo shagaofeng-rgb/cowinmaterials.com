@@ -1,0 +1,6 @@
+import { NextResponse } from "next/server";
+import { getPublishedNews } from "@/lib/news/store";
+import { absoluteUrl } from "@/lib/seo";
+export const dynamic = "force-dynamic";
+const escapeXml = (value: string) => value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+export async function GET() { const news = await getPublishedNews({ pageSize: 30 }); const items = news.articles.map((article) => `<item><title>${escapeXml(article.title)}</title><link>${absoluteUrl(`/news/${article.slug}`)}</link><guid>${absoluteUrl(`/news/${article.slug}`)}</guid><description>${escapeXml(article.excerpt)}</description><pubDate>${new Date(article.publishedAt).toUTCString()}</pubDate><source url="${escapeXml(article.source.url)}">${escapeXml(article.source.publisher)}</source></item>`).join(""); return new NextResponse(`<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>Cowin Materials Aerogel News</title><link>${absoluteUrl("/news")}</link><description>Source-linked aerogel industry briefs from Cowin Materials.</description><language>en</language>${items}</channel></rss>`, { headers: { "content-type": "application/rss+xml; charset=utf-8", "cache-control": "s-maxage=900, stale-while-revalidate=3600" } }); }

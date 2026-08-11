@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/sitemap-maintenance",
       "schedule": "30 2 */3 * *"
+    },
+    {
+      "path": "/api/cron/news-automation",
+      "schedule": "15 3 * * *"
     }
   ]
 }

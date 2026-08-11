@@ -52,6 +52,7 @@ export const megaMenus = {
     { href: "/applications/concrete-masonry-waterproofing", label: "Concrete waterproofing", note: "Porous mineral substrates" },
   ],
   Resources: [
+    { href: "/news", label: "Industry News", note: "Source-linked aerogel market briefs" },
     { href: "/resources#tds", label: "Technical Data Sheets", note: "Request product-specific TDS" },
     { href: "/resources#sds", label: "Safety Data Sheets", note: "Request applicable SDS" },
     { href: "/resources#data-highlights", label: "Test Data", note: "Review data in context" },

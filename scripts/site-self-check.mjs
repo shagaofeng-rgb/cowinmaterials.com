@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const root = process.cwd();
-const requiredPaths = ["src/app/resources/page.tsx", "src/app/locations/page.tsx", "src/app/quality/page.tsx", "src/app/request-quote/page.tsx", "src/app/thank-you/page.tsx", "src/app/news/[[...slug]]/route.ts", "src/app/api/webhook/send_article/route.ts", "src/app/api/cron/sitemap-maintenance/route.ts", "src/app/sitemap.xml/route.ts", "src/app/sitemaps/[file]/route.ts", "database/schema.sql", "vercel.json"];
+const requiredPaths = ["src/app/resources/page.tsx", "src/app/locations/page.tsx", "src/app/quality/page.tsx", "src/app/request-quote/page.tsx", "src/app/thank-you/page.tsx", "src/app/news/page.tsx", "src/app/news/[slug]/page.tsx", "src/app/news/rss.xml/route.ts", "src/app/api/news/route.ts", "src/app/api/cron/news-automation/route.ts", "src/lib/news/automation.ts", "src/lib/news/store.ts", "src/app/api/webhook/send_article/route.ts", "src/app/api/cron/sitemap-maintenance/route.ts", "src/app/sitemap.xml/route.ts", "src/app/sitemaps/[file]/route.ts", "database/schema.sql", "vercel.json"];
 for (const path of requiredPaths) assert.ok(existsSync(join(root, path)), `Missing required path: ${path}`);
 
 const data = readFileSync(join(root, "src/lib/data.ts"), "utf8");
@@ -14,15 +14,17 @@ assert.ok(source.includes("/products/aerogel-powder-and-slurry"), "Missing legac
 assert.ok(source.includes("/resources"), "Missing technical resources redirect.");
 
 const cron = JSON.parse(readFileSync(join(root, "vercel.json"), "utf8"));
-assert.equal(cron.crons.some((entry) => /news/i.test(entry.path)), false, "News cron must not exist");
+assert.equal(cron.crons.find((entry) => entry.path === "/api/cron/news-automation")?.schedule, "15 3 * * *", "News cron must run daily");
 assert.equal(cron.crons.some((entry) => /blog/i.test(entry.path)), false, "Blog automation cron must not exist");
 assert.ok(cron.crons.some((entry) => entry.path === "/api/cron/email-health-check"), "Missing email health cron");
 assert.equal(cron.crons.find((entry) => entry.path === "/api/cron/sitemap-maintenance")?.schedule, "30 2 */3 * *", "Sitemap maintenance must run every three days");
 
-for (const removed of ["src/app/news/page.tsx", "src/app/news/[slug]/page.tsx", "src/app/news/rss.xml/route.ts", "src/app/api/news/route.ts", "src/app/api/cron/news-automation/route.ts", "src/lib/news/store.ts"]) assert.equal(existsSync(join(root, removed)), false, `Retired News implementation remains: ${removed}`);
+const newsAutomation = readFileSync(join(root, "src/lib/news/automation.ts"), "utf8");
+assert.match(newsAutomation, /'published'/, "News automation must publish directly after automatic checks");
+assert.match(newsAutomation, /sourceAlreadyUsed/, "News automation must deduplicate source records");
 
 const llms = readFileSync(join(root, "src/app/llms.txt/route.ts"), "utf8");
-assert.doesNotMatch(llms, /\/news/);
+assert.match(llms, /\/news/);
 const webhook = readFileSync(join(root, "src/app/api/webhook/send_article/route.ts"), "utf8");
 assert.ok(webhook.includes("WEBHOOK_ARTICLE_SIGN"), "Webhook must use the server-only WEBHOOK_ARTICLE_SIGN variable");
 const publicFiles = ["src/app/page.tsx", "src/app/resources/page.tsx", "src/app/search/page.tsx", "src/components/header.tsx", "src/components/footer.tsx"];

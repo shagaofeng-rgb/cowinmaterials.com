@@ -1,6 +1,7 @@
 import manifest from "@/generated/sitemap-content.json";
 import { applicationPages, getProductFamilyPath, getProductPath, productFamilies, products } from "@/lib/data";
 import { getBlogArticles } from "@/lib/blog/store";
+import { getPublishedNewsSitemapPage, getPublishedNewsSitemapSummary } from "@/lib/news/store";
 import { absoluteUrl } from "@/lib/seo";
 import { MAX_SITEMAP_URLS } from "./xml";
 import type { SitemapEntry, SitemapKind, SitemapSummary } from "./types";
@@ -10,6 +11,7 @@ const pagePaths = [
   "/products",
   "/applications",
   "/resources",
+  "/news",
   "/about",
   "/locations",
   "/quality",
@@ -28,7 +30,7 @@ function latest(entries: SitemapEntry[], fallback = manifest.generatedAt) {
   ), fallback);
 }
 
-export function getStaticSitemapEntries(kind: Exclude<SitemapKind, "blog">): SitemapEntry[] {
+export function getStaticSitemapEntries(kind: Exclude<SitemapKind, "blog" | "news">): SitemapEntry[] {
   if (kind === "pages") {
     return pagePaths.map((path) => ({
       url: absoluteUrl(path),
@@ -72,6 +74,11 @@ export async function getSitemapSummary(kind: SitemapKind): Promise<SitemapSumma
     }))) };
   }
 
+  if (kind === "news") {
+    const summary = await getPublishedNewsSitemapSummary();
+    return { kind, count: summary.count, lastModified: summary.lastModified };
+  }
+
   const entries = getStaticSitemapEntries(kind);
   return { kind, count: entries.length, lastModified: latest(entries) };
 }
@@ -90,7 +97,12 @@ export async function getSitemapChunk(kind: SitemapKind, part: number) {
     }));
   }
 
+  if (kind === "news") {
+    const result = await getPublishedNewsSitemapPage({ offset, limit: MAX_SITEMAP_URLS });
+    return result.entries.map((article) => ({ url: absoluteUrl(`/news/${encodeURIComponent(article.slug)}`), canonicalUrl: absoluteUrl(`/news/${encodeURIComponent(article.slug)}`), lastModified: article.updatedAt, status: "published" as const }));
+  }
+
   return getStaticSitemapEntries(kind).slice(offset, offset + MAX_SITEMAP_URLS);
 }
 
-export const sitemapKinds: SitemapKind[] = ["pages", "products", "applications", "blog"];
+export const sitemapKinds: SitemapKind[] = ["pages", "products", "applications", "blog", "news"];
