@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const root = process.cwd();
-const requiredPaths = ["src/app/resources/page.tsx", "src/app/locations/page.tsx", "src/app/quality/page.tsx", "src/app/request-quote/page.tsx", "src/app/thank-you/page.tsx", "src/app/news/page.tsx", "src/app/news/[slug]/page.tsx", "src/app/news/rss.xml/route.ts", "src/app/api/news/route.ts", "src/app/api/cron/news-automation/route.ts", "src/lib/news/automation.ts", "src/lib/news/store.ts", "src/app/api/webhook/send_article/route.ts", "src/app/api/cron/sitemap-maintenance/route.ts", "src/app/sitemap.xml/route.ts", "src/app/sitemaps/[file]/route.ts", "database/schema.sql", "vercel.json"];
+const requiredPaths = ["src/app/resources/page.tsx", "src/app/locations/page.tsx", "src/app/quality/page.tsx", "src/app/request-quote/page.tsx", "src/app/thank-you/page.tsx", "src/app/news/page.tsx", "src/app/news/[slug]/page.tsx", "src/app/news/rss.xml/route.ts", "src/app/api/news/route.ts", "src/app/api/cron/news-automation/route.ts", "src/lib/news/automation.ts", "src/lib/news/store.ts", "src/app/api/webhook/send_article/route.ts", "src/app/api/cron/sitemap-maintenance/route.ts", "src/app/sitemap.xml/route.ts", "src/app/sitemaps/[file]/route.ts", "database/migrations/20260811-add-blog-webhook-audit.sql", "database/schema.sql", "vercel.json"];
 for (const path of requiredPaths) assert.ok(existsSync(join(root, path)), `Missing required path: ${path}`);
 
 const data = readFileSync(join(root, "src/lib/data.ts"), "utf8");
@@ -27,6 +27,8 @@ const llms = readFileSync(join(root, "src/app/llms.txt/route.ts"), "utf8");
 assert.match(llms, /\/news/);
 const webhook = readFileSync(join(root, "src/app/api/webhook/send_article/route.ts"), "utf8");
 assert.ok(webhook.includes("WEBHOOK_ARTICLE_SIGN"), "Webhook must use the server-only WEBHOOK_ARTICLE_SIGN variable");
+assert.ok(webhook.includes("logBlogWebhookEvent"), "Webhook must persist publication outcomes without exposing its API key");
+assert.ok(webhook.includes("idempotentReplay"), "Webhook must identify duplicate delivery replays");
 const publicFiles = ["src/app/page.tsx", "src/app/resources/page.tsx", "src/app/search/page.tsx", "src/components/header.tsx", "src/components/footer.tsx"];
 for (const file of publicFiles) {
   const body = readFileSync(join(root, file), "utf8").toLowerCase();

@@ -34,7 +34,7 @@ For the **Custom Development Framework Webhook**, enter only `https://www.cowinm
 | `author_id` | Yes | Displayed author or publisher name, maximum 120 characters |
 | `image_url` | No | Public HTTPS cover image URL |
 
-The server filters unsafe HTML, scripts, event handlers and unsupported URL schemes before publication. Repeating an identical request is idempotent and updates the same Blob object instead of creating duplicates.
+The server filters unsafe HTML, scripts, event handlers and unsupported URL schemes before publication. Repeating an identical request is idempotent and updates the same PostgreSQL article record instead of creating duplicates.
 
 ## Response
 
@@ -48,7 +48,7 @@ The plugin-compatible response always contains `code` and `msg`:
 {"code":0,"msg":"发布失败：具体原因"}
 ```
 
-Published articles are stored in PostgreSQL `articles`, linked to `article_categories`, appear at `/blog` and `/blog/{slug}`, and are added to the Blog sitemap. The authenticated management list is available at `/admin/blog`. Publishing logs use the structured event name `blog_webhook_publish` in Vercel runtime logs.
+Published articles are stored in PostgreSQL `articles`, linked to `article_categories`, appear at `/blog` and `/blog/{slug}`, and are added to the Blog sitemap. The authenticated management list is available at `/admin/blog`. Each verification, publication, replay and failure is also persisted in `blog_webhook_events` without storing a secret or article body. Retryable database/network failures return HTTP 503 with the plugin-compatible JSON response so a compliant plugin can retry; duplicate payloads remain safe.
 
 An authenticated request containing only `sign` and `class_id`, or short placeholder title/content fields, returns `{"code":1,"msg":"验证成功"}` without creating a database row.
 

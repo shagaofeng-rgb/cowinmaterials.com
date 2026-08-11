@@ -20,6 +20,18 @@ type BlogRow = {
 
 export type AdminBlogArticle = BlogArticle & { status: string; categoryName: string };
 
+export type BlogWebhookEvent = {
+  requestFingerprint?: string | null;
+  articleId?: string | null;
+  eventType: "verification" | "published" | "idempotent_replay" | "rejected" | "retryable_failure";
+  classId?: string | null;
+  authorId?: string | null;
+  outcome: "accepted" | "rejected" | "retryable_failure";
+  httpStatus: number;
+  message: string;
+  metadata?: Record<string, string | number | boolean | null>;
+};
+
 function iso(value: Date | string | null) {
   return value ? new Date(value).toISOString() : new Date().toISOString();
 }
@@ -106,7 +118,7 @@ export async function publishBlogArticle(input: {
   content: string;
   authorId: string;
   imageUrl: string;
-}) {
+}): Promise<{ article: BlogArticle; idempotentReplay: boolean }> {
   const pool = requirePool();
   const contentHtml = sanitizeContent(input.content);
   if (!contentHtml) throw new Error("Article content is empty after security filtering.");
@@ -118,7 +130,7 @@ export async function publishBlogArticle(input: {
   const excerpt = excerptFromHtml(contentHtml);
   const imageUrl = normalizeImageUrl(input.imageUrl);
 
-  const result = await pool.query<BlogRow>(
+  const result = await pool.query<BlogRow & { inserted: boolean }>(
     `with category as (
        insert into article_categories (name, slug, sort_order)
        values ('Blog', 'blog', 10)
@@ -142,10 +154,39 @@ export async function publishBlogArticle(input: {
        deleted_at = null,
        updated_at = now()
      returning id, slug, class_id, title_en, body_html, excerpt_en, author_id,
-       cover_image_url, status, published_at, updated_at, 'Blog'::text as category_name`,
+       cover_image_url, status, published_at, updated_at, 'Blog'::text as category_name,
+       (xmax = 0) as inserted`,
     [input.title.trim(), slug, excerpt, contentHtml, input.classId, input.authorId.trim(), imageUrl, fingerprint],
   );
-  return rowToArticle(result.rows[0]);
+  const row = result.rows[0];
+  return { article: rowToArticle(row), idempotentReplay: !row.inserted };
+}
+
+export async function logBlogWebhookEvent(event: BlogWebhookEvent) {
+  const pool = getPool();
+  if (!pool) return;
+
+  try {
+    await pool.query(
+      `insert into blog_webhook_events (
+        request_fingerprint, article_id, event_type, class_id, author_id,
+        outcome, http_status, message, metadata
+      ) values ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb)`,
+      [
+        event.requestFingerprint || null,
+        event.articleId || null,
+        event.eventType,
+        event.classId || null,
+        event.authorId || null,
+        event.outcome,
+        event.httpStatus,
+        event.message,
+        JSON.stringify(event.metadata || {}),
+      ],
+    );
+  } catch (error) {
+    console.warn(JSON.stringify({ event: "blog_webhook_audit_failed", message: error instanceof Error ? error.message : "Unknown audit persistence error" }));
+  }
 }
 
 export async function getBlogArticles() {
@@ -195,4 +236,3 @@ export async function updateBlogArticleStatus(id: string, status: "draft" | "pub
     [id, status],
   );
 }
-
