@@ -23,9 +23,9 @@ async function createJob() {
   const result = await pool.query<{ id: string }>(`insert into news_jobs (job_type, status, started_at, message) values ('cron_collect_generate_publish', 'running', now(), 'Automated direct publishing started.') returning id`);
   return result.rows[0]?.id || null;
 }
-async function finishJob(id: string | null, status: string, message: string, metadata: Record<string, unknown>) {
+async function finishJob(id: string | null, status: string, message: string, metadata: { collected: number; rejected: number; published: number; [key: string]: unknown }) {
   const pool = getPool(); if (!pool || !id) return;
-  await pool.query(`update news_jobs set status = $2, finished_at = now(), message = $3, metadata = $4::jsonb where id = $1`, [id, status, message, JSON.stringify(metadata)]);
+  await pool.query(`update news_jobs set status = $2, finished_at = now(), message = $3, records_collected = $4, records_rejected = $5, records_published = $6, metadata = $7::jsonb where id = $1`, [id, status, message, metadata.collected, metadata.rejected, metadata.published, JSON.stringify(metadata)]);
 }
 async function insertAudit(jobId: string | null, eventType: string, severity: string, message: string, metadata: Record<string, unknown>) {
   const pool = getPool(); if (!pool) return;
@@ -53,6 +53,10 @@ export async function collectNewsCandidates() {
     } catch { return [] as NewsCandidate[]; }
   }));
   return groups.flat().sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+}
+
+function hasDirectMaterialRelevance(candidate: NewsCandidate) {
+  return /\b(aerogel|silica aerogel|thermal insulation|thermal barrier|thermal management|battery (?:thermal|energy storage|storage)|energy storage system|cryogenic|lng|intumescent|fireproof|fire protection|water repellent|waterproofing|concrete|masonry)\b/i.test(`${candidate.title} ${candidate.summary}`);
 }
 
 async function sourceAlreadyUsed(canonicalUrl: string, fingerprint: string) {
@@ -88,6 +92,7 @@ export async function runNewsAutomation(): Promise<NewsAutomationResult> {
       const fingerprint = createSourceFingerprint(candidate); const canonicalUrl = canonicalizeSourceUrl(candidate.url);
       if (seen.has(fingerprint) || !isWithinLookback(candidate.publishedAt, candidate.fetchedAt, getLookbackHours()) || await sourceAlreadyUsed(canonicalUrl, fingerprint)) { rejected += 1; continue; }
       seen.add(fingerprint);
+      if (!hasDirectMaterialRelevance(candidate)) { rejected += 1; await insertAudit(jobId, "candidate_rejected", "info", "Candidate did not mention a direct aerogel, thermal-management, fire-protection or waterproofing topic.", { sourceUrl: canonicalUrl }); continue; }
       const relatedProducts = scoreCandidateAgainstProducts(candidate);
       if (!relatedProducts.length) { rejected += 1; await insertAudit(jobId, "candidate_rejected", "info", "Candidate did not meet product-relevance threshold.", { sourceUrl: canonicalUrl }); continue; }
       const articleId = await saveArticle(candidate, relatedProducts);
