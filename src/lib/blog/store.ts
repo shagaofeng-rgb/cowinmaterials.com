@@ -226,13 +226,88 @@ export async function getAdminBlogArticles() {
   return result.rows.map((row) => ({ ...rowToArticle(row), status: row.status, categoryName: row.category_name }));
 }
 
-export async function updateBlogArticleStatus(id: string, status: "draft" | "published" | "archived") {
+export async function getAdminBlogArticle(id: string) {
   const pool = requirePool();
-  await pool.query(
-    `update articles set status = $2,
+  const result = await pool.query<BlogRow>(
+    `${articleSelect}
+     where a.id = $1 and a.class_id in ('blog', '31') and a.deleted_at is null
+     limit 1`,
+    [id],
+  );
+  const row = result.rows[0];
+  return row ? { ...rowToArticle(row), status: row.status, categoryName: row.category_name } : null;
+}
+
+export async function updateBlogArticleStatus(id: string, status: "draft" | "published" | "archived", actor = "admin") {
+  const pool = requirePool();
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    const result = await client.query(
+      `update articles set status = $2,
        published_at = case when $2 = 'published' then coalesce(published_at, now()) else published_at end,
        updated_at = now()
      where id = $1 and class_id in ('blog', '31') and deleted_at is null`,
     [id, status],
-  );
+    );
+    if (result.rowCount !== 1) throw new Error("Blog article was not found.");
+    await client.query(
+      `insert into audit_logs (action, module, target_id, metadata)
+       values ('update_status', 'blog', $1, $2::jsonb)`,
+      [id, JSON.stringify({ actor, status })],
+    );
+    await client.query("commit");
+  } catch (error) {
+    await client.query("rollback");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+export async function updateAdminBlogArticle(input: {
+  id: string;
+  title: string;
+  authorId: string;
+  content: string;
+  imageUrl: string;
+  status: "draft" | "published" | "archived";
+  actor: string;
+}) {
+  const pool = requirePool();
+  const title = input.title.trim().slice(0, 220);
+  const authorId = input.authorId.trim().slice(0, 120) || "Cowin Materials";
+  const contentHtml = sanitizeContent(input.content);
+  if (!title || !contentHtml) throw new Error("Title and article content are required.");
+  const coverImageUrl = normalizeImageUrl(input.imageUrl);
+  const excerpt = excerptFromHtml(contentHtml);
+  const client = await pool.connect();
+
+  try {
+    await client.query("begin");
+    const result = await client.query<BlogRow>(
+      `update articles set title_en = $2, author_id = $3, body_html = $4, excerpt_en = $5,
+       cover_image_url = $6, status = $7,
+       published_at = case when $7 = 'published' then coalesce(published_at, now()) else published_at end,
+       updated_at = now()
+       where id = $1 and class_id in ('blog', '31') and deleted_at is null
+       returning id, slug, class_id, title_en, body_html, excerpt_en, author_id, cover_image_url,
+       status, published_at, updated_at, 'Blog'::text as category_name`,
+      [input.id, title, authorId, contentHtml, excerpt, coverImageUrl, input.status],
+    );
+    const row = result.rows[0];
+    if (!row) throw new Error("Blog article was not found.");
+    await client.query(
+      `insert into audit_logs (action, module, target_id, metadata)
+       values ('update_article', 'blog', $1, $2::jsonb)`,
+      [input.id, JSON.stringify({ actor: input.actor, changed: ["title", "author", "content", "cover_image", "status"] })],
+    );
+    await client.query("commit");
+    return { ...rowToArticle(row), status: row.status, categoryName: row.category_name };
+  } catch (error) {
+    await client.query("rollback");
+    throw error;
+  } finally {
+    client.release();
+  }
 }

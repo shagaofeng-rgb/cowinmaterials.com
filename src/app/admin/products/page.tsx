@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AdminNotice, AdminShell } from "@/components/admin-shell";
+import { AdminSyncStatus } from "@/components/admin-sync-status";
 import { getAdminProducts } from "@/lib/admin-data";
 import { requireAdminSession } from "@/lib/admin-auth";
 import { getProductPath } from "@/lib/data";
@@ -22,8 +23,9 @@ export default async function AdminProductsPage({
   return (
     <AdminShell title="产品管理">
       <AdminNotice>
-        数据来源：官网已发布产品目录。列表仅显示当前对外可见的正式产品信息。
+        <strong>数据来源：Git 版本化技术资料。</strong> 产品官网与后台读取同一份受版本控制的正式目录；为避免“保存成功但官网不变”，当前不提供脱离发布流程的在线编辑。
       </AdminNotice>
+      <AdminSyncStatus status="Up to date" label="产品官网内容" />
 
       <section className="admin-panel">
         <form className="admin-toolbar">
@@ -45,9 +47,9 @@ export default async function AdminProductsPage({
                 <th>产品名称</th>
                 <th>SKU</th>
                 <th>分类</th>
+                <th>关联应用</th>
                 <th>状态</th>
-                <th>语言</th>
-                <th>SEO标题</th>
+                <th>数据来源</th>
                 <th>操作</th>
               </tr>
             </thead>
@@ -60,15 +62,13 @@ export default async function AdminProductsPage({
                   </td>
                   <td>{product.code}</td>
                   <td>{product.category}</td>
+                  <td>{product.applications.length}</td>
                   <td>
                     <span className="admin-badge">{product.status}</span>
                   </td>
-                  <td>{product.language}</td>
-                  <td>{product.seoTitle}</td>
+                  <td><small>Git 版本化技术资料</small></td>
                   <td>
-                    <Link href={getProductPath(product)} target="_blank">
-                      预览
-                    </Link>
+                    <div className="admin-inline-links"><Link href={`/admin/products/${product.slug}`}>详情</Link><Link href={getProductPath(product)} target="_blank">官网预览</Link></div>
                   </td>
                 </tr>
               ))}

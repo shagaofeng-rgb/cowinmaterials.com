@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AdminEmpty, AdminNotice, AdminShell } from "@/components/admin-shell";
-import { adminModules } from "@/lib/admin-data";
+import { AdminSyncStatus } from "@/components/admin-sync-status";
+import { adminNav, formatAdminDate, getAdminModuleData } from "@/lib/admin-data";
 import { requireAdminSession } from "@/lib/admin-auth";
-
-type ModuleKey = keyof typeof adminModules;
 
 export const metadata: Metadata = {
   title: "管理模块 | Cowin Materials 后台",
@@ -12,22 +12,23 @@ export const metadata: Metadata = {
 };
 
 export function generateStaticParams() {
-  return Object.keys(adminModules).map((module) => ({ module }));
+  return adminNav.filter((item) => item.href !== "/admin" && item.href !== "/admin/products" && item.href !== "/admin/blog").map((item) => ({ module: item.href.replace("/admin/", "") }));
 }
 
 export default async function AdminModulePage({ params }: { params: Promise<{ module: string }> }) {
   await requireAdminSession();
   const { module } = await params;
 
-  if (!(module in adminModules)) {
-    notFound();
-  }
-
-  const page = adminModules[module as ModuleKey];
+  const page = await getAdminModuleData(module);
+  if (!page) notFound();
 
   return (
     <AdminShell title={page.title}>
-      <AdminNotice>{page.description}</AdminNotice>
+      <AdminNotice>
+        <strong>数据来源：</strong>{page.source}<br />
+        {page.description}
+      </AdminNotice>
+      <AdminSyncStatus status={page.status} lastSyncedAt={page.lastSyncedAt} />
       <section className="admin-panel">
         {page.rows.length ? (
           <div className="admin-table-wrap">
@@ -37,18 +38,20 @@ export default async function AdminModulePage({ params }: { params: Promise<{ mo
                   <th>名称</th>
                   <th>状态</th>
                   <th>信息</th>
+                  <th>最近更新</th>
+                  <th>操作</th>
                 </tr>
               </thead>
               <tbody>
                 {page.rows.map((row, index) => (
                   <tr key={`${row.name}-${index}`}>
-                    <td>
-                      <strong>{row.name}</strong>
-                    </td>
+                    <td><strong>{row.name}</strong><small>{row.source}</small></td>
                     <td>
                       <span className="admin-badge">{row.status}</span>
                     </td>
                     <td>{row.value}</td>
+                    <td>{formatAdminDate(row.updatedAt)}</td>
+                    <td>{row.href ? <Link href={row.href}>查看详情</Link> : <span className="admin-muted">仅供查看</span>}</td>
                   </tr>
                 ))}
               </tbody>

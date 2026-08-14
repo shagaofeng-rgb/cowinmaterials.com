@@ -18,16 +18,18 @@ export default async function AdminBlogPage() {
         {articles.length ? (
           <div className="admin-table-wrap">
             <table className="admin-table">
-              <thead><tr><th>标题</th><th>分类 / 作者</th><th>状态</th><th>发布时间</th><th>操作</th></tr></thead>
+              <thead><tr><th>标题 / Slug</th><th>分类 / 作者</th><th>状态</th><th>发布时间</th><th>SEO / 同步</th><th>操作</th></tr></thead>
               <tbody>
                 {articles.map((article) => (
                   <tr key={article.id}>
-                    <td><strong>{article.title}</strong><span>{article.slug}</span></td>
-                    <td>{article.categoryName}<span>{article.authorId}</span></td>
+                    <td><strong>{article.title}</strong><small>{article.slug}</small></td>
+                    <td>{article.categoryName}<small>{article.authorId}</small></td>
                     <td><span className="admin-badge">{article.status}</span></td>
                     <td>{new Date(article.publishedAt).toLocaleString("zh-CN")}</td>
+                    <td><small>详情页可核对 SEO 与官网发布状态</small></td>
                     <td>
                       <div className="admin-row-actions">
+                        <Link href={`/admin/blog/${article.id}`}>详情</Link>
                         {article.status === "published" ? <Link href={`/blog/${article.slug}`} target="_blank">查看</Link> : null}
                         <form action={updateBlogStatusAction}>
                           <input type="hidden" name="id" value={article.id} />
@@ -48,4 +50,3 @@ export default async function AdminBlogPage() {
     </AdminShell>
   );
 }
-
