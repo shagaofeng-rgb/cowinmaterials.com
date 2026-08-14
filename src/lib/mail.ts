@@ -71,6 +71,15 @@ function formatHtmlRow(label: string, value?: string) {
   return `<tr><th align="left" style="padding:8px 12px;border-bottom:1px solid #e5e7eb;background:#f8fafc;width:170px;">${escapeHtml(label)}</th><td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;">${escapeHtml(value?.trim() || "-")}</td></tr>`;
 }
 
+function getInquiryCcRecipients() {
+  const recipients = (process.env.MAIL_CC || "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter((value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value));
+
+  return recipients.length ? recipients : undefined;
+}
+
 export async function sendInquiryEmail(payload: InquiryPayload) {
   const to = process.env.MAIL_TO || site.email;
   const from = process.env.MAIL_FROM || `${site.name} Website <${getEnv("SMTP_USER")}>`;
@@ -133,6 +142,7 @@ export async function sendInquiryEmail(payload: InquiryPayload) {
   await getTransporter().sendMail({
     from,
     to,
+    cc: getInquiryCcRecipients(),
     replyTo: payload.email,
     subject: `[${site.name}] New inquiry from ${payload.name}`,
     text,

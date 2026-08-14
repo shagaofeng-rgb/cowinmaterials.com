@@ -40,6 +40,9 @@ assert.ok(adminBlog.includes("sanitizeContent(input.content)"), "Blog updates mu
 const inquiryStore = readFileSync(join(root, "src/lib/database.ts"), "utf8");
 assert.ok(inquiryStore.includes("updateAdminInquiryStatus"), "Inquiry status must be updated server-side");
 assert.ok(inquiryStore.includes("source: \"website_form\""), "Website form records must append a non-PII audit event");
+const mail = readFileSync(join(root, "src/lib/mail.ts"), "utf8");
+assert.ok(mail.includes("getInquiryCcRecipients"), "Inquiry notifications must support a configured CC recipient");
+assert.match(mail, /cc:\s*getInquiryCcRecipients\(\)/, "Inquiry notifications must pass configured CC recipients to SMTP");
 const adminProxy = readFileSync(join(root, "src/proxy.ts"), "utf8");
 assert.ok(adminProxy.includes("x-pathname"), "Protected admin details must preserve the post-login return path");
 assert.ok(adminProxy.includes("/admin/:path*"), "Admin return-path support must cover nested routes");
