@@ -4,9 +4,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ChevronDown, Menu, Search, X } from "lucide-react";
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
-import { applicationPages, getProductFamilyPath, megaMenus, navItems, productFamilies, site } from "@/lib/data";
+import { applicationPages, companyMenuItems, getProductFamilyPath, megaMenus, navItems, productFamilies, site } from "@/lib/data";
 
-type PanelName = "Products" | "Applications" | null;
+type PanelName = "Products" | "Applications" | "Company" | null;
 
 function focusableElements(container: HTMLElement) {
   return [...container.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')]
@@ -87,7 +87,7 @@ export function Header() {
 
           <nav className="desktop-nav" aria-label="Primary navigation">
             {navItems.map((item) => {
-              const panel = item.label === "Products" || item.label === "Applications" ? item.label : null;
+              const panel = item.label === "Products" || item.label === "Applications" || item.label === "Company" ? item.label : null;
               const isOpen = activePanel === panel;
               return (
                 <div className="nav-cluster" key={item.href}>
@@ -105,9 +105,13 @@ export function Header() {
                           <Link href={getProductFamilyPath(family)} key={family.slug} onClick={() => setActivePanel(null)}>
                             <strong>{family.title}</strong><span>{family.intent}</span>
                           </Link>
-                        )) : applicationPages.map((application) => (
+                        )) : panel === "Applications" ? applicationPages.map((application) => (
                           <Link href={`/applications/${application.slug}`} key={application.slug} onClick={() => setActivePanel(null)}>
                             <strong>{application.shortTitle}</strong><span>{application.challenges.slice(0, 2).join(" · ")}</span>
+                          </Link>
+                        )) : companyMenuItems.map((entry) => (
+                          <Link href={entry.href} key={entry.href} onClick={() => setActivePanel(null)}>
+                            <strong>{entry.label}</strong><span>{entry.note}</span>
                           </Link>
                         ))}
                       </div>
@@ -131,6 +135,7 @@ export function Header() {
       <noscript>
         <nav className="fallback-nav" aria-label="Site navigation">
           {navItems.map((item) => <a href={item.href} key={item.href}>{item.label}</a>)}
+          {companyMenuItems.map((item) => <a href={item.href} key={item.href}>{item.label}</a>)}
         </nav>
       </noscript>
 
@@ -152,7 +157,7 @@ export function Header() {
             <section className="drawer-group"><h2>Explore Products</h2>{productFamilies.map((family) => <Link href={getProductFamilyPath(family)} key={family.slug} onClick={closeDrawer}><strong>{family.title}</strong><span>{family.intent}</span></Link>)}</section>
             <section className="drawer-group"><h2>Explore Applications</h2>{applicationPages.map((application) => <Link href={`/applications/${application.slug}`} key={application.slug} onClick={closeDrawer}><strong>{application.shortTitle}</strong><span>{application.challenges.slice(0, 2).join(" · ")}</span></Link>)}</section>
             <section className="drawer-group"><h2>Resources</h2>{megaMenus.Resources.map((resource) => <Link href={resource.href} key={resource.href} onClick={closeDrawer}><strong>{resource.label}</strong><span>{resource.note}</span></Link>)}<Link href="/resources" onClick={closeDrawer}><strong>Technical resources</strong><span>Reviewed documentation and application guidance</span></Link></section>
-            <section className="drawer-group drawer-company"><h2>Company</h2><Link href="/about" onClick={closeDrawer}>About Quzhou Qiying</Link><Link href="/locations" onClick={closeDrawer}>Locations</Link><Link href="/quality" onClick={closeDrawer}>Quality</Link><Link href="/contact" onClick={closeDrawer}>Contact</Link><Link href="/search" onClick={closeDrawer}><Search size={16} aria-hidden="true" /> Search the site</Link></section>
+            <section className="drawer-group drawer-company"><h2>Company</h2>{companyMenuItems.map((entry) => <Link href={entry.href} key={entry.href} onClick={closeDrawer}><strong>{entry.label}</strong><span>{entry.note}</span></Link>)}<Link href="/search" onClick={closeDrawer}><Search size={16} aria-hidden="true" /> Search the site</Link></section>
           </div>
           <div className="drawer-footer"><Link className="primary-button" href="/request-quote" onClick={closeDrawer}>Request a Quote <ArrowRight size={18} aria-hidden="true" /></Link><a href={`mailto:${site.email}`}>{site.email}</a></div>
         </div>

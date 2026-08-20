@@ -8,6 +8,7 @@ for (const path of requiredPaths) assert.ok(existsSync(join(root, path)), `Missi
 
 const data = readFileSync(join(root, "src/lib/data.ts"), "utf8");
 for (const item of ["Quzhou Qiying Import & Export Co., Ltd.", "davidsha@cowinmaterials.com", "+86 176 0125 2505", "manufacturingFacilityAddress", "aerogel-powders-granules", "fireproof-waterproof-solutions"]) assert.ok(data.includes(item), `Missing official site datum: ${item}`);
+for (const item of ["label: \"Company\"", "href: \"/about\"", "href: \"/contact\"", "href: \"/news\"", "href: \"/blog\""]) assert.ok(data.includes(item), `Missing Company navigation route: ${item}`);
 
 const source = readFileSync(join(root, "next.config.ts"), "utf8");
 assert.ok(source.includes("/products/aerogel-powder-and-slurry"), "Missing legacy product redirect.");
@@ -25,6 +26,8 @@ assert.match(newsAutomation, /sourceAlreadyUsed/, "News automation must deduplic
 
 const llms = readFileSync(join(root, "src/app/llms.txt/route.ts"), "utf8");
 assert.match(llms, /\/news/);
+assert.ok(existsSync(join(root, "src/app/blog/page.tsx")), "Missing public Blog listing page");
+assert.ok(existsSync(join(root, "src/app/blog/[slug]/page.tsx")), "Missing public Blog detail page");
 const webhook = readFileSync(join(root, "src/app/api/webhook/send_article/route.ts"), "utf8");
 assert.ok(webhook.includes("WEBHOOK_ARTICLE_SIGN"), "Webhook must use the server-only WEBHOOK_ARTICLE_SIGN variable");
 assert.ok(webhook.includes("logBlogWebhookEvent"), "Webhook must persist publication outcomes without exposing its API key");

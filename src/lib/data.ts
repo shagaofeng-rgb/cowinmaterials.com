@@ -28,12 +28,19 @@ export const site = {
 };
 
 export const navItems = [
-  { href: "/", label: "Home" },
   { href: "/products", label: "Products" },
   { href: "/applications", label: "Applications" },
-  { href: "/resources", label: "Technical Resources" },
-  { href: "/about", label: "About" },
-  { href: "/contact", label: "Contact" },
+  { href: "/resources", label: "Resources" },
+  { href: "/about", label: "Company" },
+];
+
+export const companyMenuItems = [
+  { href: "/about", label: "About Cowin Materials", note: "Our material focus and technical support approach" },
+  { href: "/contact", label: "Contact", note: "Discuss product selection or project conditions" },
+  { href: "/news", label: "News", note: "Source-linked industry briefs for technical buyers" },
+  { href: "/blog", label: "Blog", note: "Technical articles and material-selection guidance" },
+  { href: "/locations", label: "Locations", note: "Office and manufacturing facility information" },
+  { href: "/quality", label: "Quality", note: "Product documentation and evaluation support" },
 ];
 
 export const megaMenus = {
@@ -52,7 +59,6 @@ export const megaMenus = {
     { href: "/applications/concrete-masonry-waterproofing", label: "Concrete waterproofing", note: "Porous mineral substrates" },
   ],
   Resources: [
-    { href: "/news", label: "Industry News", note: "Source-linked aerogel market briefs" },
     { href: "/resources#tds", label: "Technical Data Sheets", note: "Request product-specific TDS" },
     { href: "/resources#sds", label: "Safety Data Sheets", note: "Request applicable SDS" },
     { href: "/resources#data-highlights", label: "Test Data", note: "Review data in context" },
@@ -60,6 +66,7 @@ export const megaMenus = {
     { href: "/resources#selection-guide", label: "Product Selection Guide", note: "Choose by conditions" },
     { href: "/resources#faq", label: "FAQ", note: "Common buyer questions" },
   ],
+  Company: companyMenuItems,
 };
 
 export const productCategories = [

@@ -36,8 +36,8 @@ export function Footer() {
                 {item.label}
               </Link>
             ))}
-            <Link href="/resources">Technical Resources</Link>
-            <Link href="/news">Industry News</Link>
+            <Link href="/news">News</Link>
+            <Link href="/blog">Blog</Link>
             <Link href="/locations">Locations</Link>
             <Link href="/search">Search</Link>
           </div>
