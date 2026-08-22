@@ -5,7 +5,7 @@ import { getPool } from "@/lib/database";
 import { getProductPath } from "@/lib/data";
 import { absoluteUrl } from "@/lib/seo";
 import type { NewsAutomationResult, NewsCandidate, NewsRelatedProduct } from "./types";
-import { buildNewsArticleHtml, canonicalizeSourceUrl, createSourceFingerprint, hashText, isWithinLookback, readXmlTag, rssItemsFromXml, scoreCandidateAgainstProducts, slugifyNewsTitle, sourcePublisherFromUrl, stripHtml } from "./utils";
+import { buildNewsArticleHtml, canonicalizeSourceUrl, createSourceFingerprint, hasDirectMaterialRelevance, hashText, isWithinLookback, readXmlTag, rssItemsFromXml, scoreCandidateAgainstProducts, slugifyNewsTitle, sourcePublisherFromUrl, stripHtml } from "./utils";
 
 const defaultFeeds = [
   "https://www.energy.gov/eere/buildings/listings/buildings-news/rss.xml",
@@ -55,10 +55,6 @@ export async function collectNewsCandidates() {
   return groups.flat().sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
 }
 
-function hasDirectMaterialRelevance(candidate: NewsCandidate) {
-  return /\b(aerogel|silica aerogel|thermal insulation|thermal barrier|thermal management|battery (?:thermal|energy storage|storage)|energy storage system|cryogenic|lng|intumescent|fireproof|fire protection|water repellent|waterproofing|concrete|masonry)\b/i.test(`${candidate.title} ${candidate.summary}`);
-}
-
 async function sourceAlreadyUsed(canonicalUrl: string, fingerprint: string) {
   const pool = getPool(); if (!pool) return true;
   const result = await pool.query<{ id: string }>(`select id from news_articles where canonical_source_url = $1 or source_fingerprint = $2 limit 1`, [canonicalUrl, fingerprint]);
@@ -73,7 +69,7 @@ async function saveArticle(candidate: NewsCandidate, relatedProducts: NewsRelate
   const excerpt = `Cowin Materials buyer brief: a recent ${candidate.publisher} update considered in the context of ${primary?.category.toLowerCase() || "advanced insulation material"} evaluation.`;
   const contentHtml = buildNewsArticleHtml(candidate, relatedProducts);
   const result = await pool.query<{ id: string }>(
-    `insert into news_articles (title, slug, excerpt, content_html, status, language, category, tags, published_at, updated_at, author_name, seo_title, seo_description, canonical_url, primary_keyword, secondary_keywords, geo_summary, key_takeaways, cover_image_url, cover_image_source_url, cover_image_page_url, cover_image_alt, cover_image_status, cover_image_fetched_at, cover_image_hash, source_title, source_author, source_publisher, source_url, canonical_source_url, source_language, source_published_at, source_fetched_at, source_timezone, source_fingerprint, relevance_score, credibility_score, generation_model, generation_prompt_version) values ($1, $2, $3, $4, 'published', 'en', 'Industry Insights', $5, now(), now(), 'Cowin Materials Editorial Team', $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, 'verified', now(), $17, $1, null, $18, $19, $20, 'en', $21, now(), 'UTC', $22, $23, 0.75, 'deterministic-editorial-template', 'news-direct-publish-v2') on conflict (slug) do nothing returning id`,
+    `insert into news_articles (title, slug, excerpt, content_html, status, seo_indexable, language, category, tags, published_at, updated_at, author_name, seo_title, seo_description, canonical_url, primary_keyword, secondary_keywords, geo_summary, key_takeaways, cover_image_url, cover_image_source_url, cover_image_page_url, cover_image_alt, cover_image_status, cover_image_fetched_at, cover_image_hash, source_title, source_author, source_publisher, source_url, canonical_source_url, source_language, source_published_at, source_fetched_at, source_timezone, source_fingerprint, relevance_score, credibility_score, generation_model, generation_prompt_version) values ($1, $2, $3, $4, 'published', true, 'en', 'Industry Insights', $5, now(), now(), 'Cowin Materials Editorial Team', $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, 'verified', now(), $17, $1, null, $18, $19, $20, 'en', $21, now(), 'UTC', $22, $23, 0.75, 'deterministic-editorial-template', 'news-direct-publish-v3') on conflict (slug) do nothing returning id`,
     [candidate.title, slug, excerpt, contentHtml, ["aerogel", "insulation", "battery", "fire protection"].filter((tag) => `${candidate.title} ${candidate.summary}`.toLowerCase().includes(tag)), `${candidate.title.slice(0, 72)} | Cowin Materials News`, excerpt.slice(0, 155), absoluteUrl(`/news/${slug}`), primary?.category || "silica aerogel materials", relatedProducts.map((product) => product.name), `Technical context for international evaluation of ${primary?.category || "advanced insulation materials"}.`, ["Automatically selected from a recent, product-relevant public source.", "Published directly after source, freshness, relevance and duplicate checks.", "This is not a product certification or project-specific conclusion."], imageUrl, absoluteUrl(imageUrl), primary ? absoluteUrl(getProductPath(primary)) : absoluteUrl("/products"), candidate.title, hashText(imageUrl), candidate.publisher, candidate.url, canonicalSourceUrl, new Date(candidate.publishedAt), fingerprint, primary?.relevanceScore || 0],
   );
   const articleId = result.rows[0]?.id; if (!articleId) return null;
@@ -92,7 +88,7 @@ export async function runNewsAutomation(): Promise<NewsAutomationResult> {
       const fingerprint = createSourceFingerprint(candidate); const canonicalUrl = canonicalizeSourceUrl(candidate.url);
       if (seen.has(fingerprint) || !isWithinLookback(candidate.publishedAt, candidate.fetchedAt, getLookbackHours()) || await sourceAlreadyUsed(canonicalUrl, fingerprint)) { rejected += 1; continue; }
       seen.add(fingerprint);
-      if (!hasDirectMaterialRelevance(candidate)) { rejected += 1; await insertAudit(jobId, "candidate_rejected", "info", "Candidate did not mention a direct aerogel, thermal-management, fire-protection or waterproofing topic.", { sourceUrl: canonicalUrl }); continue; }
+      if (!hasDirectMaterialRelevance(candidate)) { rejected += 1; await insertAudit(jobId, "candidate_rejected", "info", "Candidate did not demonstrate a direct material, thermal-safety, fire-protection or waterproofing topic.", { sourceUrl: canonicalUrl }); continue; }
       const relatedProducts = scoreCandidateAgainstProducts(candidate);
       if (!relatedProducts.length) { rejected += 1; await insertAudit(jobId, "candidate_rejected", "info", "Candidate did not meet product-relevance threshold.", { sourceUrl: canonicalUrl }); continue; }
       const articleId = await saveArticle(candidate, relatedProducts);

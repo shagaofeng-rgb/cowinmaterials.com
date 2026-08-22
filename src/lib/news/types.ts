@@ -40,6 +40,7 @@ export type NewsArticle = {
   excerpt: string;
   contentHtml: string;
   status: "draft" | "review" | "published" | "rejected" | "archived";
+  indexable: boolean;
   language: "en";
   category: string;
   tags: string[];

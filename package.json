@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "eslint",
     "test:self": "node scripts/site-self-check.mjs",
+    "test:news": "node --experimental-strip-types --test scripts/news-relevance-self-test.ts",
     "test:sitemap": "node --experimental-strip-types --test scripts/sitemap-self-test.ts",
     "test:smoke": "node scripts/full-site-smoke.mjs",
     "sitemap:generate": "node scripts/sitemap-generate.mjs"

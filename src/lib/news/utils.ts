@@ -26,6 +26,8 @@ export function isWithinLookback(publishedAt: string, fetchedAt: string, hours: 
   return Number.isFinite(difference) && difference >= 0 && difference <= hours * 3_600_000;
 }
 
+export { hasDirectMaterialRelevance } from "./relevance";
+
 export function stripHtml(value: string) {
   return value.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ")
     .replace(/<!\[CDATA\[|\]\]>/g, "").replace(/&nbsp;/gi, " ").replace(/&amp;/gi, "&").replace(/&quot;/gi, '"')

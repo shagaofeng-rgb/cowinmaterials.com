@@ -295,7 +295,7 @@ create table if not exists news_articles (
   content_html text not null, status text not null default 'draft' check (status in ('draft', 'review', 'published', 'rejected', 'archived')),
   language text not null default 'en', category text not null default 'Industry News', tags text[] not null default '{}',
   published_at timestamptz, scheduled_at timestamptz, updated_at timestamptz not null default now(), deleted_at timestamptz,
-  author_name text not null default 'Cowin Materials Editorial Team', seo_title text, seo_description text, canonical_url text,
+  author_name text not null default 'Cowin Materials Editorial Team', seo_title text, seo_description text, canonical_url text, seo_indexable boolean not null default true,
   primary_keyword text, secondary_keywords text[] not null default '{}', geo_summary text, key_takeaways text[] not null default '{}',
   cover_image_url text not null default '', cover_image_source_url text, cover_image_page_url text, cover_image_alt text not null default '',
   cover_image_width integer, cover_image_height integer, cover_image_hash text,
@@ -318,6 +318,7 @@ create table if not exists news_publication_audits (
   message text not null, metadata jsonb not null default '{}'::jsonb, created_at timestamptz not null default now()
 );
 create index if not exists idx_news_articles_status_published on news_articles(status, published_at desc) where deleted_at is null;
+create index if not exists idx_news_articles_indexable_published on news_articles(seo_indexable, published_at desc) where deleted_at is null;
 create index if not exists idx_news_articles_source_fingerprint on news_articles(source_fingerprint);
 create index if not exists idx_news_products_slug on news_products(product_slug);
 create index if not exists idx_news_jobs_started_at on news_jobs(started_at desc);
