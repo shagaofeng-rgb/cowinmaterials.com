@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AnalyticsEvents } from "@/components/analytics-events";
+import { WhatsAppFloat } from "@/components/whatsapp-float";
 import { organizationJsonLd, siteUrl, websiteJsonLd } from "@/lib/seo";
 import "./globals.css";
 
@@ -58,6 +59,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         {children}
+        <WhatsAppFloat />
         <AnalyticsEvents />
         {gaMeasurementId ? (
           <>

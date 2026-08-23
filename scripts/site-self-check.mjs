@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const root = process.cwd();
-const requiredPaths = ["src/app/resources/page.tsx", "src/app/locations/page.tsx", "src/app/quality/page.tsx", "src/app/request-quote/page.tsx", "src/app/thank-you/page.tsx", "src/app/news/page.tsx", "src/app/news/[slug]/page.tsx", "src/app/news/rss.xml/route.ts", "src/app/api/news/route.ts", "src/app/api/cron/news-automation/route.ts", "src/lib/news/automation.ts", "src/lib/news/store.ts", "src/app/api/webhook/send_article/route.ts", "src/app/api/cron/sitemap-maintenance/route.ts", "src/app/sitemap.xml/route.ts", "src/app/sitemaps/[file]/route.ts", "src/app/admin/products/[slug]/page.tsx", "src/app/admin/blog/[id]/page.tsx", "src/app/admin/inquiries/[id]/page.tsx", "src/components/admin-sync-status.tsx", "database/migrations/20260811-add-blog-webhook-audit.sql", "database/schema.sql", "vercel.json"];
+const requiredPaths = ["src/app/resources/page.tsx", "src/app/locations/page.tsx", "src/app/quality/page.tsx", "src/app/request-quote/page.tsx", "src/app/thank-you/page.tsx", "src/app/news/page.tsx", "src/app/news/[slug]/page.tsx", "src/app/news/rss.xml/route.ts", "src/app/api/news/route.ts", "src/app/api/cron/news-automation/route.ts", "src/lib/news/automation.ts", "src/lib/news/store.ts", "src/app/api/webhook/send_article/route.ts", "src/app/api/analytics/event/route.ts", "src/app/api/cron/sitemap-maintenance/route.ts", "src/app/sitemap.xml/route.ts", "src/app/sitemaps/[file]/route.ts", "src/app/admin/products/[slug]/page.tsx", "src/app/admin/blog/[id]/page.tsx", "src/app/admin/inquiries/[id]/page.tsx", "src/components/admin-sync-status.tsx", "src/components/whatsapp-float.tsx", "database/migrations/20260811-add-blog-webhook-audit.sql", "database/migrations/20260823-add-whatsapp-click-analytics.sql", "database/schema.sql", "vercel.json"];
 for (const path of requiredPaths) assert.ok(existsSync(join(root, path)), `Missing required path: ${path}`);
 
 const data = readFileSync(join(root, "src/lib/data.ts"), "utf8");
@@ -43,6 +43,10 @@ assert.ok(adminBlog.includes("sanitizeContent(input.content)"), "Blog updates mu
 const inquiryStore = readFileSync(join(root, "src/lib/database.ts"), "utf8");
 assert.ok(inquiryStore.includes("updateAdminInquiryStatus"), "Inquiry status must be updated server-side");
 assert.ok(inquiryStore.includes("source: \"website_form\""), "Website form records must append a non-PII audit event");
+assert.ok(inquiryStore.includes("recordAnalyticsEvent"), "WhatsApp analytics events must be written through the database layer");
+const whatsappRoute = readFileSync(join(root, "src/app/api/analytics/event/route.ts"), "utf8");
+assert.ok(whatsappRoute.includes("whatsapp_click"), "WhatsApp analytics API must accept only the named contact event");
+assert.ok(whatsappRoute.includes("Invalid request origin"), "WhatsApp analytics API must validate request origin");
 const mail = readFileSync(join(root, "src/lib/mail.ts"), "utf8");
 assert.ok(mail.includes("getInquiryCcRecipients"), "Inquiry notifications must support a configured CC recipient");
 assert.match(mail, /cc:\s*getInquiryCcRecipients\(\)/, "Inquiry notifications must pass configured CC recipients to SMTP");

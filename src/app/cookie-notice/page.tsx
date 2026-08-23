@@ -23,8 +23,10 @@ export default function CookieNoticePage() {
           <p>This website does not use a complex cookie consent system because non-essential advertising cookies are not currently configured in the codebase.</p>
           <h2>Basic operation</h2>
           <p>Hosting, security and form submission systems may process standard technical information such as browser, device and request data.</p>
+          <h2>Contact-entry measurement</h2>
+          <p>When a visitor selects the WhatsApp contact entry, the website records the page path, entry placement and event time to measure contact-channel use. It does not store the visitor&apos;s WhatsApp account, message content, or enquiry details as part of this event.</p>
           <h2>Future analytics</h2>
-          <p>If analytics or advertising tracking is added later, this notice should be updated according to the target market and applicable legal requirements.</p>
+          <p>If additional analytics or advertising tracking is added later, this notice will be updated according to the target market and applicable legal requirements.</p>
           <h2>Contact</h2>
           <p>For cookie questions, contact {site.email}.</p>
         </section>

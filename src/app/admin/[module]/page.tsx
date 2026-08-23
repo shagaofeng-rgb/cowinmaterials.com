@@ -29,6 +29,17 @@ export default async function AdminModulePage({ params }: { params: Promise<{ mo
         {page.description}
       </AdminNotice>
       <AdminSyncStatus status={page.status} lastSyncedAt={page.lastSyncedAt} />
+      {page.metrics?.length ? (
+        <section className="admin-metric-grid" aria-label={`${page.title} 摘要`}>
+          {page.metrics.map((metric) => (
+            <article className="admin-metric" key={metric.label}>
+              <span>{metric.label}</span>
+              <strong>{metric.value}</strong>
+              <small>{metric.note}</small>
+            </article>
+          ))}
+        </section>
+      ) : null}
       <section className="admin-panel">
         {page.rows.length ? (
           <div className="admin-table-wrap">

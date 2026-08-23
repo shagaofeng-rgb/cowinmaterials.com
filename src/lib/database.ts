@@ -119,6 +119,29 @@ export async function saveInquiryRecord(payload: InquiryPayload) {
   }
 }
 
+type AnalyticsEventInput = {
+  eventId: string;
+  eventName: "whatsapp_click";
+  pagePath: string;
+  source: "website";
+  placement: "floating_whatsapp";
+};
+
+export async function recordAnalyticsEvent(input: AnalyticsEventInput) {
+  const activePool = getPool();
+  if (!activePool) return { recorded: false, duplicate: false };
+
+  const result = await activePool.query<{ id: string }>(
+    `insert into analytics_events (event_id, event_name, page_path, source, occurred_at, metadata)
+     values ($1, $2, $3, $4, now(), $5::jsonb)
+     on conflict (event_id) do nothing
+     returning id`,
+    [input.eventId, input.eventName, input.pagePath, input.source, JSON.stringify({ placement: input.placement })],
+  );
+
+  return { recorded: Boolean(result.rows[0]?.id), duplicate: result.rowCount === 0 };
+}
+
 export type AdminInquiry = {
   id: string;
   name: string;

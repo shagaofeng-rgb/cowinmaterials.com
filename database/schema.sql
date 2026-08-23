@@ -166,6 +166,7 @@ create table if not exists media_assets (
 
 create table if not exists analytics_events (
   id uuid primary key default gen_random_uuid(),
+  event_id text unique,
   event_name text not null,
   page_path text,
   product_slug text,
@@ -228,6 +229,7 @@ create index if not exists idx_articles_category_status on articles(category_id,
 create index if not exists idx_articles_class_status on articles(class_id, status, published_at desc) where deleted_at is null;
 create index if not exists idx_inquiries_created_at on inquiries(created_at desc) where deleted_at is null;
 create index if not exists idx_analytics_occurred_at on analytics_events(occurred_at desc);
+create index if not exists idx_analytics_events_name_occurred_at on analytics_events(event_name, occurred_at desc);
 create index if not exists idx_audit_logs_created_at on audit_logs(created_at desc);
 
 create table if not exists blog_webhook_events (

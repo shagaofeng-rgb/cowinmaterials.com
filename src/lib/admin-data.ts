@@ -43,6 +43,7 @@ export type AdminModuleData = {
   rows: AdminModuleRow[];
   status?: AdminStatus;
   lastSyncedAt?: string | null;
+  metrics?: { label: string; value: string | number; note: string }[];
 };
 
 function parsePage(value?: string) {
@@ -217,8 +218,25 @@ export async function getAdminModuleData(module: string): Promise<AdminModuleDat
     return { title: "客户表单", description: "官网询盘的真实数据库记录。客户原文仅在受保护详情页中显示。", source: databaseSource, rows: rows.map((row) => ({ id: row.id, name: row.name, status: row.status, value: [row.company, row.country, row.request_type, row.product].filter(Boolean).join(" · ") || row.email, updatedAt: row.created_at.toISOString(), href: `/admin/inquiries/${row.id}`, source: databaseSource })), status: "Up to date" };
   }
   if (module === "analytics") {
-    const rows = await queryRows<{ event_name: string; page_path: string | null; occurred_at: Date }>("select event_name, page_path, occurred_at from analytics_events order by occurred_at desc limit 100");
-    return { title: "访问分析", description: "仅显示数据库中已采集的内部事件；未接入 GA4 或 Vercel Analytics 时不会生成访问量。", source: databaseSource, rows: rows.map((row, index) => ({ id: `${row.event_name}-${index}`, name: row.event_name, status: "已记录", value: row.page_path || "未记录页面路径", updatedAt: row.occurred_at.toISOString(), source: databaseSource })), status: rows.length ? "Up to date" : "Not connected" };
+    const [rows, summary] = await Promise.all([
+      queryRows<{ event_name: string; page_path: string | null; placement: string | null; occurred_at: Date }>("select event_name, page_path, metadata->>'placement' as placement, occurred_at from analytics_events where event_name = 'whatsapp_click' order by occurred_at desc limit 100"),
+      queryRows<{ total: string; last24Hours: string; last7Days: string; last30Days: string; latest: Date | null }>("select count(*) as total, count(*) filter (where occurred_at >= now() - interval '24 hours') as \"last24Hours\", count(*) filter (where occurred_at >= now() - interval '7 days') as \"last7Days\", count(*) filter (where occurred_at >= now() - interval '30 days') as \"last30Days\", max(occurred_at) as latest from analytics_events where event_name = 'whatsapp_click'"),
+    ]);
+    const totals = summary[0] || { total: "0", last24Hours: "0", last7Days: "0", last30Days: "0", latest: null };
+    return {
+      title: "WhatsApp 点击分析",
+      description: "仅统计右侧 WhatsApp 悬浮入口的真实点击。记录时间、来源页面和入口位置，不保存访客联系方式或聊天内容。",
+      source: databaseSource,
+      metrics: [
+        { label: "累计点击", value: Number(totals.total), note: "自功能上线后" },
+        { label: "近 24 小时", value: Number(totals.last24Hours), note: "滚动时间窗口" },
+        { label: "近 7 天", value: Number(totals.last7Days), note: "滚动时间窗口" },
+        { label: "近 30 天", value: Number(totals.last30Days), note: "最近一次：" + formatDate(totals.latest) },
+      ],
+      rows: rows.map((row, index) => ({ id: `${row.event_name}-${index}`, name: "WhatsApp 悬浮入口", status: "已记录", value: [row.page_path || "未记录页面路径", row.placement === "floating_whatsapp" ? "右侧悬浮入口" : null].filter(Boolean).join(" · "), updatedAt: row.occurred_at.toISOString(), source: databaseSource })),
+      status: "Up to date",
+      lastSyncedAt: totals.latest?.toISOString() || null,
+    };
   }
   if (module === "logs") {
     const rows = await queryRows<{ id: string; action: string; module: string; target_id: string | null; created_at: Date }>("select id, action, module, target_id, created_at from audit_logs order by created_at desc limit 200");
