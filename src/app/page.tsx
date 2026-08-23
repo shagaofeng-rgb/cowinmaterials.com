@@ -4,7 +4,8 @@ import { ArrowRight, FileCheck2, Layers3, PackageCheck } from "lucide-react";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { SectionHeading } from "@/components/section-heading";
-import { applicationPages, capabilityItems, evaluationSteps, getProductFamilyPath, getProductsForFamily, productFamilies, site } from "@/lib/data";
+import { applicationPages, applicationTechnicalProfiles, capabilityItems, evaluationSteps, getProductFamilyPath, getProductPath, getProductsForFamily, productFamilies, products, site } from "@/lib/data";
+import { getProductFamilyPreview } from "@/lib/product-family-content";
 import { createPageMetadata } from "@/lib/seo";
 
 export const metadata = createPageMetadata({
@@ -21,11 +22,11 @@ export default function Home() {
       <main>
         <section className="hero">
           <div className="hero-copy">
-            <span className="eyebrow">Quzhou Qiying Import & Export Co., Ltd.</span>
-            <h1>Aerogel materials for practical project evaluation</h1>
-            <p>Technical material options for insulation, battery thermal control, fire-protection coatings and mineral-substrate waterproofing. Start with the operating conditions, then select the system.</p>
-            <div className="hero-actions"><Link className="primary-button" href="/products">Browse products <ArrowRight size={18} aria-hidden="true" /></Link><Link className="secondary-button" href="/request-quote">Request a quote</Link></div>
-            <p className="microcopy">Share temperature, substrate, available thickness and applicable standard to begin a technical review.</p>
+            <span className="eyebrow">Cowin Materials</span>
+            <h1>Silica aerogel systems for demanding thermal projects</h1>
+            <p>Documented material routes for thermal insulation, battery barriers, steel fire-protection evaluation and mineral-substrate waterproofing.</p>
+            <div className="hero-actions"><Link className="primary-button" href="/request-quote?request=Ask%20for%20Product%20Selection">Discuss a project <ArrowRight size={18} aria-hidden="true" /></Link><Link className="secondary-button" href="/products">Explore product families</Link></div>
+            <p className="microcopy">Start with service temperature, substrate, available thickness and the required standard or validation plan.</p>
           </div>
           <div className="hero-media"><Image src="/images/fire-test-lab.jpg" alt="Controlled aerogel coating thermal test setup" width={1280} height={860} priority /><div className="hero-media-caption"><span>Technical evaluation</span><strong>Material data, stated conditions and project fit</strong></div></div>
         </section>
@@ -35,7 +36,10 @@ export default function Home() {
         <section className="section">
           <SectionHeading eyebrow="Product categories" title="Start with the material form" intro="Four documented categories help buyers compare individual grades and product forms without transferring data across systems." />
           <div className="product-family-grid home-family-grid">
-            {productFamilies.map((family, index) => <article className="product-family-card" key={family.slug}><span className="family-index">{String(index + 1).padStart(2, "0")}</span><h2>{family.title}</h2><p>{family.description}</p><small>{getProductsForFamily(family.slug).map((product) => product.code).join(" · ")}</small><Link className="text-link" href={getProductFamilyPath(family)}>View category <ArrowRight size={16} aria-hidden="true" /></Link></article>)}
+            {productFamilies.map((family) => {
+              const preview = getProductFamilyPreview(family.slug);
+              return <article className="product-family-card" key={family.slug}><h2>{family.title}</h2><p>{family.description}</p>{preview ? <><dl className="family-evidence">{preview.highlights.map((highlight) => <div key={highlight.label}><dt>{highlight.label}</dt><dd>{highlight.value}</dd></div>)}</dl><small className="family-source-note">{preview.sourceNote}</small></> : null}<small>{getProductsForFamily(family.slug).map((product) => product.code).join(" · ")}</small><div className="card-link-row"><Link className="text-link" href={getProductFamilyPath(family)}>View category <ArrowRight size={16} aria-hidden="true" /></Link><Link className="text-link" href={`/request-quote?request=Request%20Technical%20Data&product=${encodeURIComponent(family.title)}`}>Request TDS <ArrowRight size={16} aria-hidden="true" /></Link></div></article>;
+            })}
           </div>
           <div className="section-action"><Link className="secondary-button" href="/products">View all product families</Link></div>
         </section>
@@ -43,7 +47,11 @@ export default function Home() {
         <section className="section muted">
           <SectionHeading eyebrow="Applications" title="Navigate by project challenge" intro="Each application page begins with the conditions that determine whether a material route should be evaluated." />
           <div className="application-cards">
-            {applicationPages.map((application) => <article className="application-card" key={application.slug}><Layers3 size={21} aria-hidden="true" /><h2>{application.shortTitle}</h2><p>{application.challenges.slice(0, 3).join(" · ")}</p><Link className="text-link" href={`/applications/${application.slug}`}>Explore solution <ArrowRight size={16} aria-hidden="true" /></Link></article>)}
+            {applicationPages.map((application) => {
+              const profile = applicationTechnicalProfiles[application.slug];
+              const productRoutes = products.filter((product) => profile?.recommendedProductSlugs.includes(product.slug));
+              return <article className="application-card" key={application.slug}><Layers3 size={21} aria-hidden="true" /><h2>{application.shortTitle}</h2><p>{application.challenges.slice(0, 3).join(" · ")}</p><div className="application-card-routes"><strong>Consider</strong>{productRoutes.map((product) => <Link key={product.slug} href={getProductPath(product)}>{product.code}</Link>)}</div><small className="application-card-requirements">Start with: {application.requiredInfo.slice(0, 2).join(" · ")}</small><Link className="text-link" href={`/applications/${application.slug}`}>Explore solution <ArrowRight size={16} aria-hidden="true" /></Link></article>;
+            })}
           </div>
         </section>
 
@@ -52,9 +60,9 @@ export default function Home() {
           <aside className="qualification-panel"><span className="eyebrow">Resources</span><h2>Need technical documents?</h2><p>Tell us the product or project condition, and we will identify the applicable data scope and next evaluation step.</p><Link className="primary-button" href="/resources">View technical resources <ArrowRight size={18} aria-hidden="true" /></Link></aside>
         </section>
 
-        <section className="section process-section"><SectionHeading eyebrow="Project Process" title="A practical route from conditions to evaluation" /><ol className="positioning-table">{evaluationSteps.map((step, index) => <li key={step.title}><span>{String(index + 1).padStart(2, "0")}</span><strong>{step.title}</strong><p>{step.text}</p></li>)}</ol></section>
+        <section className="section process-section"><SectionHeading eyebrow="Project Process" title="A practical route from conditions to evaluation" intro="The document, sample and supply discussion follows the evaluation route rather than a generic product enquiry." /><ol className="positioning-table">{evaluationSteps.map((step, index) => <li key={step.title}><span>{String(index + 1).padStart(2, "0")}</span><strong>{step.title}</strong><p>{step.text}</p></li>)}</ol><div className="sample-supply-grid"><article><h3>For a sample discussion</h3><p>Share the product route, destination, intended test or trial, and the sample quantity needed for that evaluation.</p></article><article><h3>For a supply discussion</h3><p>Share the product grade, quantity, packaging needs, destination, target schedule and required export documents.</p></article></div></section>
 
-        <section className="section brand-proof-section muted"><div><SectionHeading eyebrow="Cowin Materials" title="Material systems presented with stated limits" intro="Cowin Materials supports international technical buyers with product information, application guidance, sample discussion and export documentation." />{site.legalRelationshipText ? <p className="relationship-note">{site.legalRelationshipText}</p> : null}</div><div className="about-evidence-panel"><span className="eyebrow">Evidence-led selection</span><h2>Clear product scope before project claims.</h2><p>Core pages identify the product form, technical evidence, conditions and limits relevant to an evaluation.</p><Link className="text-link" href="/about">About Cowin Materials <ArrowRight size={16} aria-hidden="true" /></Link></div></section>
+        <section className="section brand-proof-section muted"><div><SectionHeading eyebrow="Cowin Materials" title="Material systems presented with stated limits" intro="Cowin Materials supports international technical buyers with product information, application guidance, sample discussion and export documentation." />{site.legalRelationshipText ? <p className="relationship-note">{site.legalRelationshipText}</p> : null}</div><div className="about-evidence-panel"><h2>Clear product scope before project claims.</h2><p>Core pages identify the product form, technical evidence, conditions and limits relevant to an evaluation.</p><Link className="text-link" href="/resources#faq">Review selection questions <ArrowRight size={16} aria-hidden="true" /></Link></div></section>
 
         <section className="cta-section"><div><span className="eyebrow">Project review</span><h2>Bring us the conditions. We will help structure the material evaluation.</h2><p>Start with substrate, operating temperature, target performance and applicable standard.</p></div><div className="hero-actions"><Link className="primary-button" href="/request-quote">Request a quote <ArrowRight size={18} aria-hidden="true" /></Link><Link className="secondary-button" href="/contact">Contact our team</Link></div></section>
       </main>

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Send } from "lucide-react";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { trackAnalyticsEvent } from "@/components/analytics-events";
 
 const customerTypes = [
@@ -24,6 +24,35 @@ const requestTypes = [
   "Distribution Enquiry",
 ];
 
+const requestTypeAliases: Record<string, string> = {
+  "Request TDS": "Request TDS or SDS",
+  "Request SDS": "Request TDS or SDS",
+  "Request Technical Data": "Request TDS or SDS",
+  "Request Test Information": "Technical Question",
+  "Request Installation Guide": "Technical Question",
+  "Ask an Engineer": "Ask for Product Selection",
+  "View FAQ": "Technical Question",
+};
+
+function getRequestType(value: string | null) {
+  if (!value) return "Request a Quote";
+  if (requestTypes.includes(value)) return value;
+  return requestTypeAliases[value] || "Request a Quote";
+}
+
+function subscribeToLocation(onStoreChange: () => void) {
+  window.addEventListener("popstate", onStoreChange);
+  return () => window.removeEventListener("popstate", onStoreChange);
+}
+
+function getLocationSearch() {
+  return window.location.search;
+}
+
+function getServerLocationSearch() {
+  return "";
+}
+
 const applications = [
   "Building Energy Retrofit",
   "Industrial Pipe & Equipment Insulation",
@@ -37,20 +66,17 @@ const applications = [
 export function InquiryForm() {
   const router = useRouter();
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
-  const [defaults] = useState(() => {
-    if (typeof window === "undefined") {
-      return { request: "Request a Quote", product: "", application: applications[0] };
-    }
-    const params = new URLSearchParams(window.location.search);
-    return {
-      request: params.get("request") || "Request a Quote",
-      product: params.get("product") || "",
-      application: params.get("application") || applications[0],
-    };
-  });
+  const search = useSyncExternalStore(subscribeToLocation, getLocationSearch, getServerLocationSearch);
+  const params = new URLSearchParams(search);
+  const defaults = {
+    request: getRequestType(params.get("request")),
+    product: params.get("product") || "",
+    application: params.get("application") || applications[0],
+  };
 
   return (
     <form
+      key={`${defaults.request}:${defaults.product}:${defaults.application}`}
       className="inquiry-form"
       onSubmit={async (event) => {
         event.preventDefault();

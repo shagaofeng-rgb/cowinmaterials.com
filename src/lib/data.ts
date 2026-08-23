@@ -39,7 +39,7 @@ export const companyMenuItems = [
   { href: "/contact", label: "Contact", note: "Discuss product selection or project conditions" },
   { href: "/news", label: "News", note: "Source-linked industry briefs for technical buyers" },
   { href: "/blog", label: "Blog", note: "Technical articles and material-selection guidance" },
-  { href: "/locations", label: "Locations", note: "Office and manufacturing facility information" },
+  { href: "/locations", label: "Locations", note: "Office location and contact details" },
   { href: "/quality", label: "Quality", note: "Product documentation and evaluation support" },
 ];
 

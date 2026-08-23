@@ -3625,6 +3625,46 @@ body.drawer-open { overflow: hidden; }
 .product-family-card p,
 .application-card p { color: var(--ink-soft); }
 .product-family-card small { margin-top: auto; color: var(--ink-soft); font-family: "Geist Mono", monospace; font-size: 12px; line-height: 1.45; }
+.product-family-card .family-source-note { margin-top: 0; font-family: inherit; }
+.family-evidence { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 2px 0 0; }
+.family-evidence div { min-width: 0; border-top: 1px solid var(--line); padding-top: 10px; }
+.family-evidence dt { color: var(--ink-soft); font-size: 12px; line-height: 1.4; }
+.family-evidence dd { margin: 4px 0 0; color: var(--ink); font-size: 14px; font-weight: 780; line-height: 1.35; }
+.card-link-row { display: flex; flex-wrap: wrap; gap: 14px; margin-top: auto; }
+.application-card-routes { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; color: var(--ink-soft); font-size: 13px; line-height: 1.45; }
+.application-card-routes strong { margin-right: 2px; color: var(--ink); font-size: 12px; text-transform: uppercase; }
+.application-card-routes a { border-bottom: 1px solid #9dc8ce; color: var(--ink); font-weight: 760; }
+.application-card-routes a:hover { border-bottom-color: var(--green); color: var(--teal-dark); }
+.application-card-requirements { margin-top: auto; color: var(--ink-soft); font-family: inherit; font-size: 12px; line-height: 1.5; }
+.application-card .text-link { display: inline-flex; align-items: center; gap: 7px; }
+.application-card .text-link a { color: inherit; }
+.sample-supply-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 16px; }
+.sample-supply-grid article { padding: 22px 24px; border-top: 2px solid var(--green); background: #ffffff; }
+.sample-supply-grid h3 { margin: 0; color: var(--ink); font-size: 17px; line-height: 1.35; }
+.sample-supply-grid p { margin: 8px 0 0; color: var(--ink-soft); line-height: 1.6; }
+.family-evaluation-section { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: clamp(28px, 5vw, 64px); align-items: start; padding-top: 44px; padding-bottom: 44px; }
+.family-evaluation-heading { max-width: 560px; }
+.family-evaluation-heading h2 { margin: 0; color: var(--ink); font-size: clamp(27px, 3vw, 38px); line-height: 1.16; }
+.family-evaluation-heading p { margin: 14px 0 0; color: var(--ink-soft); line-height: 1.65; }
+.family-evaluation-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; margin: 0; background: var(--line); }
+.family-evaluation-facts div { padding: 22px; background: #ffffff; }
+.family-evaluation-facts dt { color: var(--ink-soft); font-size: 13px; }
+.family-evaluation-facts dd { margin: 7px 0 0; color: var(--ink); font-size: 20px; font-weight: 820; line-height: 1.3; }
+.family-comparison-section { padding-top: 56px; }
+.family-comparison-table { margin-top: 30px; overflow-x: auto; border: 1px solid var(--line); background: #ffffff; }
+.family-comparison-table table { width: 100%; min-width: 760px; border-collapse: collapse; }
+.family-comparison-table th,
+.family-comparison-table td { padding: 16px 18px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.family-comparison-table th { color: var(--ink); font-size: 13px; line-height: 1.45; }
+.family-comparison-table td { color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
+.family-comparison-table thead th { background: var(--ink); color: #ffffff; }
+.family-comparison-table tr > :last-child { border-right: 0; }
+.family-comparison-table tbody tr:last-child > * { border-bottom: 0; }
+.documentation-path-section { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: clamp(28px, 5vw, 64px); background: #e7f0f2; }
+.documentation-path-list { display: grid; align-content: start; gap: 0; border-top: 1px solid #aec7ce; }
+.documentation-path-list div { display: grid; grid-template-columns: minmax(130px, 0.55fr) minmax(0, 1fr); gap: 18px; padding: 18px 0; border-bottom: 1px solid #aec7ce; }
+.documentation-path-list strong { color: var(--ink); font-size: 14px; }
+.documentation-path-list span { color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
 .section-action { display: flex; margin-top: 26px; }
 .technical-support-section,
 .brand-proof-section { display: grid; grid-template-columns: minmax(0, 7fr) minmax(300px, 5fr); gap: clamp(32px, 5vw, 72px); align-items: stretch; }
@@ -3731,6 +3771,8 @@ body.drawer-open { overflow: hidden; }
   .positioning-table li:nth-child(4),
   .positioning-table li:nth-child(5) { border-top: 1px solid #d6e1e7; }
   .footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .family-evaluation-section,
+  .documentation-path-section { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 767px) {
@@ -3770,6 +3812,9 @@ body.drawer-open { overflow: hidden; }
   .proof-item:last-child { border-bottom: 0; }
   .product-family-card,
   .application-card { min-height: 0; padding: 20px; }
+  .sample-supply-grid,
+  .family-evaluation-facts { grid-template-columns: 1fr; }
+  .documentation-path-list div { grid-template-columns: 1fr; gap: 6px; }
   .product-selection { padding-top: 36px; }
   .product-selection-heading { display: grid; align-items: start; }
   .product-selection-heading .secondary-button { width: fit-content; }

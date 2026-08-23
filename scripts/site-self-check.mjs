@@ -7,7 +7,7 @@ const requiredPaths = ["src/app/resources/page.tsx", "src/app/locations/page.tsx
 for (const path of requiredPaths) assert.ok(existsSync(join(root, path)), `Missing required path: ${path}`);
 
 const data = readFileSync(join(root, "src/lib/data.ts"), "utf8");
-for (const item of ["Quzhou Qiying Import & Export Co., Ltd.", "davidsha@cowinmaterials.com", "+86 176 0125 2505", "manufacturingFacilityAddress", "aerogel-powders-granules", "fireproof-waterproof-solutions"]) assert.ok(data.includes(item), `Missing official site datum: ${item}`);
+for (const item of ["Quzhou Qiying Import & Export Co., Ltd.", "davidsha@cowinmaterials.com", "+86 176 0125 2505", "officeAddress", "aerogel-powders-granules", "fireproof-waterproof-solutions"]) assert.ok(data.includes(item), `Missing official site datum: ${item}`);
 for (const item of ["label: \"Company\"", "href: \"/about\"", "href: \"/contact\"", "href: \"/news\"", "href: \"/blog\""]) assert.ok(data.includes(item), `Missing Company navigation route: ${item}`);
 
 const source = readFileSync(join(root, "next.config.ts"), "utf8");

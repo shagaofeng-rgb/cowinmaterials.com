@@ -76,8 +76,8 @@ export function Header() {
     <>
       <header className="site-header">
         <div className="top-strip">
-          <span>Quzhou Qiying Import & Export Co., Ltd. · {site.phone}</span>
-          <a href={`mailto:${site.email}`}>{site.email}</a>
+          <span>International technical materials support</span>
+          <a href={`tel:${site.phoneHref}`}>{site.phone}</a>
         </div>
         <div className="nav-shell">
           <Link className="brand" href="/" aria-label="Cowin Materials home">

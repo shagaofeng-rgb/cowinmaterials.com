@@ -3,7 +3,7 @@ import { ArrowRight, Layers3 } from "lucide-react";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { SectionHeading } from "@/components/section-heading";
-import { applicationPages } from "@/lib/data";
+import { applicationPages, applicationTechnicalProfiles, getProductPath, products } from "@/lib/data";
 import { createPageMetadata } from "@/lib/seo";
 
 export const metadata = createPageMetadata({
@@ -29,17 +29,22 @@ export default function ApplicationsPage() {
         </section>
         <section className="section">
           <div className="application-cards">
-            {applicationPages.map((item) => (
-              <Link className="application-card" href={`/applications/${item.slug}`} key={item.slug}>
-                <Layers3 size={22} />
+            {applicationPages.map((item) => {
+              const profile = applicationTechnicalProfiles[item.slug];
+              const productRoutes = products.filter((product) => profile?.recommendedProductSlugs.includes(product.slug));
+              return (
+              <article className="application-card" key={item.slug}>
+                <Layers3 size={22} aria-hidden="true" />
                 <h2>{item.shortTitle}</h2>
                 <p>{item.challenges.slice(0, 3).join(" · ")}</p>
+                <div className="application-card-routes"><strong>Relevant products</strong>{productRoutes.map((product) => <Link href={getProductPath(product)} key={product.slug}>{product.code}</Link>)}</div>
+                <small className="application-card-requirements">Start with: {item.requiredInfo.slice(0, 2).join(" · ")}</small>
                 <span className="text-link">
-                  Explore solution
+                  <Link href={`/applications/${item.slug}`}>Explore solution</Link>
                   <ArrowRight size={16} />
                 </span>
-              </Link>
-            ))}
+              </article>
+            )})}
           </div>
         </section>
       </main>

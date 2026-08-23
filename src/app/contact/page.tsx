@@ -44,10 +44,6 @@ export default function ContactPage() {
                 <MapPin size={18} />
                 <span><strong>Office:</strong> {site.officeAddress}</span>
               </li>
-              <li>
-                <MapPin size={18} />
-                <span><strong>Manufacturing facility address:</strong> {site.manufacturingFacilityAddress}</span>
-              </li>
             </ul>
             <div className="contact-note">
               <strong>Useful information to include</strong>

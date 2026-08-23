@@ -69,10 +69,6 @@ export function Footer() {
               <MapPin size={16} />
               <span><strong>Office:</strong> {site.officeAddress}</span>
             </li>
-            <li>
-              <MapPin size={16} />
-              <span><strong>Manufacturing facility address:</strong> {site.manufacturingFacilityAddress}</span>
-            </li>
           </ul>
         </div>
       </div>

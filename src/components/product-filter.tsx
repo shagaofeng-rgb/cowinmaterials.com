@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { getProductFamilyPath, getProductPath, getProductsForFamily, productFamilies, products } from "@/lib/data";
+import { getProductFamilyPreview } from "@/lib/product-family-content";
 
 type ProductCatalogProps = {
   familySlug?: string;
@@ -18,11 +19,13 @@ export function ProductFilter({ familySlug, includeFamilyOverview = true }: Prod
         <div className="product-family-grid" aria-label="Product categories">
           {productFamilies.map((family, index) => {
             const familyProducts = getProductsForFamily(family.slug);
+            const preview = getProductFamilyPreview(family.slug);
             return (
               <article className="product-family-card" key={family.slug}>
                 <span className="family-index">{String(index + 1).padStart(2, "0")}</span>
                 <h2>{family.title}</h2>
                 <p>{family.intent}</p>
+                {preview ? <dl className="family-evidence">{preview.highlights.map((highlight) => <div key={highlight.label}><dt>{highlight.label}</dt><dd>{highlight.value}</dd></div>)}</dl> : null}
                 <small>{familyProducts.map((product) => product.code).join(" · ")}</small>
                 <Link className="text-link" href={getProductFamilyPath(family)}>
                   View category <ArrowRight size={16} aria-hidden="true" />
