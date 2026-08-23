@@ -75,10 +75,6 @@ export function Header() {
   return (
     <>
       <header className="site-header">
-        <div className="top-strip">
-          <span>International technical materials support</span>
-          <a href={`tel:${site.phoneHref}`}>{site.phone}</a>
-        </div>
         <div className="nav-shell">
           <Link className="brand" href="/" aria-label="Cowin Materials home">
             <Image className="brand-logo" src="/brand/cowin-cy-logo.png" alt="Cowin Materials" width={48} height={48} priority />
