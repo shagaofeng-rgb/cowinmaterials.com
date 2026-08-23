@@ -234,7 +234,7 @@ export async function getAdminModuleData(module: string): Promise<AdminModuleDat
         { label: "累计页面访问", value: pageViews, note: "公共页面匿名访问事件" },
         { label: "近 7 天访问", value: Number(totals.pageViews7Days), note: "滚动时间窗口" },
         { label: "WhatsApp 点击", value: whatsappClicks, note: "右侧悬浮入口" },
-        { label: "WhatsApp 点击率", value: `${whatsappRate.toFixed(1)}%`, note: "点击 / 已记录页面访问" },
+        { label: "WhatsApp 点击率", value: pageViews ? `${whatsappRate.toFixed(1)}%` : "—", note: pageViews ? "点击 / 已记录页面访问" : "等待页面访问数据" },
       ],
       rows: rows.map((row) => ({ id: row.id, name: row.event_name === "whatsapp_click" ? "WhatsApp 悬浮入口" : "页面访问", status: row.event_name === "whatsapp_click" ? "转化" : "访问", value: [row.page_path || "未记录页面路径", row.placement === "floating_whatsapp" ? "右侧悬浮入口" : null].filter(Boolean).join(" · "), updatedAt: row.occurred_at.toISOString(), source: "PostgreSQL 匿名事件" })),
       status: "Up to date",
