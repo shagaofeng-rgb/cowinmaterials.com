@@ -2,19 +2,26 @@ import { applications, products, resourceSections, site } from "@/lib/data";
 import { getDatabaseHealth, getPool } from "@/lib/database";
 
 export const adminNav = [
-  { href: "/admin", label: "数据概览" },
-  { href: "/admin/products", label: "产品管理" },
-  { href: "/admin/categories", label: "产品分类" },
-  { href: "/admin/blog", label: "Blog文章管理" },
-  { href: "/admin/inquiries", label: "客户表单" },
-  { href: "/admin/analytics", label: "访问分析" },
-  { href: "/admin/seo", label: "SEO数据" },
-  { href: "/admin/media", label: "媒体库" },
-  { href: "/admin/users", label: "用户与权限" },
-  { href: "/admin/logs", label: "操作日志" },
-  { href: "/admin/settings", label: "系统设置" },
-  { href: "/admin/sync", label: "数据同步" },
+  { href: "/admin", label: "数据概览", group: "运营" },
+  { href: "/admin/inquiries", label: "客户线索", group: "运营" },
+  { href: "/admin/analytics", label: "访问与转化", group: "运营" },
+  { href: "/admin/products", label: "产品管理", group: "内容" },
+  { href: "/admin/categories", label: "产品分类", group: "内容" },
+  { href: "/admin/blog", label: "Blog文章", group: "内容" },
+  { href: "/admin/news", label: "News运营", group: "内容" },
+  { href: "/admin/documents", label: "技术资料", group: "内容" },
+  { href: "/admin/media", label: "媒体库", group: "内容" },
+  { href: "/admin/seo", label: "SEO中心", group: "增长" },
+  { href: "/admin/sync", label: "运行与同步", group: "系统" },
+  { href: "/admin/logs", label: "操作日志", group: "系统" },
+  { href: "/admin/users", label: "用户与权限", group: "系统" },
+  { href: "/admin/settings", label: "系统设置", group: "系统" },
 ] as const;
+
+export const adminNavGroups = ["运营", "内容", "增长", "系统"].map((label) => ({
+  label,
+  items: adminNav.filter((item) => item.group === label),
+}));
 
 export type AdminModuleKey = (typeof adminNav)[number]["href"] extends `/admin/${infer Key}` ? Key : never;
 
@@ -145,11 +152,12 @@ export async function getAdminDashboard() {
     };
   }
 
-  const [blogPublished, blogDraft, inquiriesNew, inquiriesOverdue, syncFailed, syncPending, analyticsCount, latestAudit] = await Promise.all([
+  const [blogPublished, blogDraft, inquiriesNew, inquiriesHighPriority, inquiriesOverdue, syncFailed, syncPending, analyticsCount, latestAudit] = await Promise.all([
     scalarCount("select count(*) from articles where class_id in ('blog', '31') and status = 'published' and deleted_at is null"),
     scalarCount("select count(*) from articles where class_id in ('blog', '31') and status = 'draft' and deleted_at is null"),
     scalarCount("select count(*) from inquiries where deleted_at is null and status = 'new' and is_spam = false"),
-    scalarCount("select count(*) from inquiries where deleted_at is null and status = 'new' and created_at < now() - interval '3 days' and is_spam = false"),
+    scalarCount("select count(*) from inquiries where deleted_at is null and priority in ('high', 'urgent') and status not in ('closed', 'spam')"),
+    scalarCount("select count(*) from inquiries where deleted_at is null and next_follow_up_at < now() and status not in ('closed', 'spam')"),
     scalarCount("select count(*) from sync_jobs where status = 'failed'"),
     scalarCount("select count(*) from sync_jobs where status in ('pending', 'running')"),
     scalarCount("select count(*) from analytics_events"),
@@ -171,12 +179,12 @@ export async function getAdminDashboard() {
     cards: [
       ...staticCards,
       { label: "Blog", value: blogPublished, note: `${blogDraft} 篇草稿`, href: "/admin/blog" },
-      { label: "客户表单", value: inquiriesNew, note: inquiriesOverdue ? `${inquiriesOverdue} 条待跟进` : "暂无逾期跟进", href: "/admin/inquiries" },
+      { label: "客户表单", value: inquiriesNew, note: `${inquiriesHighPriority} 条高优先级 · ${inquiriesOverdue} 条逾期`, href: "/admin/inquiries" },
       { label: "同步健康度", value: syncFailed ? "异常" : syncPending ? "待处理" : "正常", note: `${syncPending} 待处理 · ${syncFailed} 失败`, href: "/admin/sync" },
       { label: "访问事件", value: analyticsCount || "未连接", note: analyticsCount ? "内部事件记录" : "暂无真实分析事件", href: "/admin/analytics" },
     ],
     workItems: [
-      { label: "新询盘", value: `${inquiriesNew} 条需要处理`, href: "/admin/inquiries" },
+      { label: "新询盘", value: `${inquiriesNew} 条新线索 · ${inquiriesHighPriority} 条高优先级`, href: "/admin/inquiries" },
       { label: "同步任务", value: syncFailed ? `${syncFailed} 个失败任务` : syncPending ? `${syncPending} 个待处理任务` : "当前没有待处理任务", href: "/admin/sync" },
       { label: "Blog 草稿", value: `${blogDraft} 篇草稿`, href: "/admin/blog" },
     ],

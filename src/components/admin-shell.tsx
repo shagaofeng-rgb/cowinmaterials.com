@@ -1,8 +1,18 @@
 import Link from "next/link";
 import Image from "next/image";
+import type { ComponentType } from "react";
+import { BarChart3, BookOpenText, Boxes, ChartNoAxesCombined, ClipboardList, FileStack, FolderOpen, ImageIcon, Newspaper, RefreshCw, ScrollText, SearchCheck, Settings, ShieldCheck, UsersRound } from "lucide-react";
 import { logoutAction } from "@/app/admin/actions";
-import { adminNav } from "@/lib/admin-data";
+import { adminNavGroups } from "@/lib/admin-data";
 import { site } from "@/lib/data";
+
+const navIcons: Record<string, ComponentType<{ size?: number; strokeWidth?: number }>> = {
+  "/admin": BarChart3, "/admin/inquiries": ClipboardList, "/admin/analytics": ChartNoAxesCombined,
+  "/admin/products": Boxes, "/admin/categories": FolderOpen, "/admin/blog": BookOpenText,
+  "/admin/news": Newspaper, "/admin/documents": FileStack, "/admin/media": ImageIcon,
+  "/admin/seo": SearchCheck, "/admin/sync": RefreshCw, "/admin/logs": ScrollText,
+  "/admin/users": UsersRound, "/admin/settings": Settings,
+};
 
 export function AdminShell({ children, title }: { children: React.ReactNode; title: string }) {
   return (
@@ -25,11 +35,15 @@ export function AdminShell({ children, title }: { children: React.ReactNode; tit
           </span>
           <em>中文管理后台</em>
         </Link>
-        <nav>
-          {adminNav.map((item) => (
-            <Link href={item.href} key={item.href}>
-              {item.label}
-            </Link>
+        <nav aria-label="后台主导航" className="admin-nav-groups">
+          {adminNavGroups.map((group) => (
+            <section key={group.label}>
+              <p>{group.label}</p>
+              {group.items.map((item) => {
+                const Icon = navIcons[item.href] || ShieldCheck;
+                return <Link href={item.href} key={item.href}><Icon size={16} strokeWidth={1.9} /><span>{item.label}</span></Link>;
+              })}
+            </section>
           ))}
         </nav>
       </aside>

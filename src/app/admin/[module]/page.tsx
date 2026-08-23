@@ -12,7 +12,8 @@ export const metadata: Metadata = {
 };
 
 export function generateStaticParams() {
-  return adminNav.filter((item) => item.href !== "/admin" && item.href !== "/admin/products" && item.href !== "/admin/blog").map((item) => ({ module: item.href.replace("/admin/", "") }));
+  const dedicatedRoutes = new Set(["/admin", "/admin/products", "/admin/blog", "/admin/inquiries", "/admin/news", "/admin/documents", "/admin/seo", "/admin/sync"]);
+  return adminNav.filter((item) => !dedicatedRoutes.has(item.href)).map((item) => ({ module: item.href.replace("/admin/", "") }));
 }
 
 export default async function AdminModulePage({ params }: { params: Promise<{ module: string }> }) {

@@ -143,10 +143,24 @@ create table if not exists inquiries (
   status text not null default 'new',
   tags text[] not null default '{}',
   assigned_to uuid references admin_users(id),
+  project_details jsonb not null default '{}'::jsonb,
+  priority text not null default 'normal',
+  lead_stage text not null default 'new',
+  next_follow_up_at timestamptz,
+  last_contacted_at timestamptz,
+  internal_summary text,
   is_spam boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   deleted_at timestamptz
+);
+
+create table if not exists inquiry_notes (
+  id uuid primary key default gen_random_uuid(),
+  inquiry_id uuid not null references inquiries(id) on delete cascade,
+  note text not null,
+  author_label text not null default 'admin',
+  created_at timestamptz not null default now()
 );
 
 create table if not exists media_assets (
@@ -228,6 +242,8 @@ create index if not exists idx_articles_status on articles(status) where deleted
 create index if not exists idx_articles_category_status on articles(category_id, status, published_at desc) where deleted_at is null;
 create index if not exists idx_articles_class_status on articles(class_id, status, published_at desc) where deleted_at is null;
 create index if not exists idx_inquiries_created_at on inquiries(created_at desc) where deleted_at is null;
+create index if not exists idx_inquiries_stage_follow_up on inquiries(lead_stage, next_follow_up_at) where deleted_at is null;
+create index if not exists idx_inquiry_notes_inquiry_created_at on inquiry_notes(inquiry_id, created_at desc);
 create index if not exists idx_analytics_occurred_at on analytics_events(occurred_at desc);
 create index if not exists idx_analytics_events_name_occurred_at on analytics_events(event_name, occurred_at desc);
 create index if not exists idx_audit_logs_created_at on audit_logs(created_at desc);
