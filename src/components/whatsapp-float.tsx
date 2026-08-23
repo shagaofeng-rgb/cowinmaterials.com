@@ -2,36 +2,19 @@
 
 import { MessageCircle } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { trackAnalyticsEvent } from "@/components/analytics-events";
+import { recordStoredAnalyticsEvent, trackAnalyticsEvent } from "@/components/analytics-events";
 
 const whatsappUrl = "https://wa.me/8613732512581";
 
-function eventId() {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
-  return `whatsapp-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
-}
-
 function recordWhatsappClick() {
-  const payload = JSON.stringify({
-    event_id: eventId(),
-    event_name: "whatsapp_click",
-    page_path: window.location.pathname,
-    placement: "floating_whatsapp",
-  });
-
   trackAnalyticsEvent("whatsapp_click", {
     placement: "floating_whatsapp",
     page_path: window.location.pathname,
   });
-
-  const body = new Blob([payload], { type: "application/json" });
-  if (navigator.sendBeacon?.("/api/analytics/event", body)) return;
-
-  void fetch("/api/analytics/event", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: payload,
-    keepalive: true,
+  recordStoredAnalyticsEvent({
+    eventName: "whatsapp_click",
+    pagePath: window.location.pathname,
+    placement: "floating_whatsapp",
   });
 }
 

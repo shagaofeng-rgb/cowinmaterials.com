@@ -219,21 +219,24 @@ export async function getAdminModuleData(module: string): Promise<AdminModuleDat
   }
   if (module === "analytics") {
     const [rows, summary] = await Promise.all([
-      queryRows<{ event_name: string; page_path: string | null; placement: string | null; occurred_at: Date }>("select event_name, page_path, metadata->>'placement' as placement, occurred_at from analytics_events where event_name = 'whatsapp_click' order by occurred_at desc limit 100"),
-      queryRows<{ total: string; last24Hours: string; last7Days: string; last30Days: string; latest: Date | null }>("select count(*) as total, count(*) filter (where occurred_at >= now() - interval '24 hours') as \"last24Hours\", count(*) filter (where occurred_at >= now() - interval '7 days') as \"last7Days\", count(*) filter (where occurred_at >= now() - interval '30 days') as \"last30Days\", max(occurred_at) as latest from analytics_events where event_name = 'whatsapp_click'"),
+      queryRows<{ id: string; event_name: "page_view" | "whatsapp_click"; page_path: string | null; placement: string | null; occurred_at: Date }>("select id, event_name, page_path, metadata->>'placement' as placement, occurred_at from analytics_events where event_name in ('page_view', 'whatsapp_click') order by occurred_at desc limit 100"),
+      queryRows<{ pageViews: string; pageViews7Days: string; whatsappClicks: string; latest: Date | null }>("select count(*) filter (where event_name = 'page_view') as \"pageViews\", count(*) filter (where event_name = 'page_view' and occurred_at >= now() - interval '7 days') as \"pageViews7Days\", count(*) filter (where event_name = 'whatsapp_click') as \"whatsappClicks\", max(occurred_at) as latest from analytics_events where event_name in ('page_view', 'whatsapp_click')"),
     ]);
-    const totals = summary[0] || { total: "0", last24Hours: "0", last7Days: "0", last30Days: "0", latest: null };
+    const totals = summary[0] || { pageViews: "0", pageViews7Days: "0", whatsappClicks: "0", latest: null };
+    const pageViews = Number(totals.pageViews);
+    const whatsappClicks = Number(totals.whatsappClicks);
+    const whatsappRate = pageViews ? (whatsappClicks / pageViews) * 100 : 0;
     return {
-      title: "WhatsApp 点击分析",
-      description: "仅统计右侧 WhatsApp 悬浮入口的真实点击。记录时间、来源页面和入口位置，不保存访客联系方式或聊天内容。",
+      title: "访问与 WhatsApp 转化",
+      description: "同步显示全站公共页面访问和右侧 WhatsApp 悬浮入口点击。数据直接写入官网 PostgreSQL 事件表，不保存访客联系方式、聊天内容或独立访客身份。",
       source: databaseSource,
       metrics: [
-        { label: "累计点击", value: Number(totals.total), note: "自功能上线后" },
-        { label: "近 24 小时", value: Number(totals.last24Hours), note: "滚动时间窗口" },
-        { label: "近 7 天", value: Number(totals.last7Days), note: "滚动时间窗口" },
-        { label: "近 30 天", value: Number(totals.last30Days), note: "最近一次：" + formatDate(totals.latest) },
+        { label: "累计页面访问", value: pageViews, note: "公共页面匿名访问事件" },
+        { label: "近 7 天访问", value: Number(totals.pageViews7Days), note: "滚动时间窗口" },
+        { label: "WhatsApp 点击", value: whatsappClicks, note: "右侧悬浮入口" },
+        { label: "WhatsApp 点击率", value: `${whatsappRate.toFixed(1)}%`, note: "点击 / 已记录页面访问" },
       ],
-      rows: rows.map((row, index) => ({ id: `${row.event_name}-${index}`, name: "WhatsApp 悬浮入口", status: "已记录", value: [row.page_path || "未记录页面路径", row.placement === "floating_whatsapp" ? "右侧悬浮入口" : null].filter(Boolean).join(" · "), updatedAt: row.occurred_at.toISOString(), source: databaseSource })),
+      rows: rows.map((row) => ({ id: row.id, name: row.event_name === "whatsapp_click" ? "WhatsApp 悬浮入口" : "页面访问", status: row.event_name === "whatsapp_click" ? "转化" : "访问", value: [row.page_path || "未记录页面路径", row.placement === "floating_whatsapp" ? "右侧悬浮入口" : null].filter(Boolean).join(" · "), updatedAt: row.occurred_at.toISOString(), source: "PostgreSQL 匿名事件" })),
       status: "Up to date",
       lastSyncedAt: totals.latest?.toISOString() || null,
     };

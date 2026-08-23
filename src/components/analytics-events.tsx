@@ -1,8 +1,12 @@
 "use client";
 
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 
 type AnalyticsParams = Record<string, string | number | boolean | undefined>;
+type StoredAnalyticsEvent =
+  | { eventName: "page_view"; pagePath: string }
+  | { eventName: "whatsapp_click"; pagePath: string; placement: "floating_whatsapp" };
 
 declare global {
   interface Window {
@@ -13,6 +17,30 @@ declare global {
 export function trackAnalyticsEvent(eventName: string, params: AnalyticsParams = {}) {
   window.dispatchEvent(new CustomEvent("cowin:analytics", { detail: { eventName, params } }));
   window.gtag?.("event", eventName, params);
+}
+
+function eventId(prefix: string) {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
+}
+
+export function recordStoredAnalyticsEvent(event: StoredAnalyticsEvent) {
+  const payload = JSON.stringify({
+    event_id: eventId(event.eventName),
+    event_name: event.eventName,
+    page_path: event.pagePath,
+    ...(event.eventName === "whatsapp_click" ? { placement: event.placement } : {}),
+  });
+
+  const body = new Blob([payload], { type: "application/json" });
+  if (navigator.sendBeacon?.("/api/analytics/event", body)) return;
+
+  void fetch("/api/analytics/event", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: payload,
+    keepalive: true,
+  });
 }
 
 function eventForLink(link: HTMLAnchorElement) {
@@ -26,6 +54,13 @@ function eventForLink(link: HTMLAnchorElement) {
 }
 
 export function AnalyticsEvents() {
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (!pathname || pathname.startsWith("/admin") || pathname.startsWith("/api")) return;
+    recordStoredAnalyticsEvent({ eventName: "page_view", pagePath: pathname });
+  }, [pathname]);
+
   useEffect(() => {
     const handleClick = (event: MouseEvent) => {
       const target = event.target;

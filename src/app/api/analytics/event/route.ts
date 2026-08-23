@@ -4,8 +4,9 @@ import { recordAnalyticsEvent } from "@/lib/database";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const eventName = "whatsapp_click";
-const placement = "floating_whatsapp";
+const whatsappEventName = "whatsapp_click";
+const pageViewEventName = "page_view";
+const whatsappPlacement = "floating_whatsapp";
 
 function readString(value: unknown, maxLength: number) {
   return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
@@ -37,16 +38,18 @@ export async function POST(request: Request) {
     const receivedEventId = readString(body?.event_id, 120);
     const pagePath = readString(body?.page_path, 260);
 
-    if (receivedEventName !== eventName || receivedPlacement !== placement || !isValidEventId(receivedEventId) || !isValidPagePath(pagePath)) {
+    const isPageView = receivedEventName === pageViewEventName;
+    const isWhatsappClick = receivedEventName === whatsappEventName && receivedPlacement === whatsappPlacement;
+    if ((!isPageView && !isWhatsappClick) || !isValidEventId(receivedEventId) || !isValidPagePath(pagePath)) {
       return NextResponse.json({ error: "Invalid analytics event." }, { status: 400 });
     }
 
     const result = await recordAnalyticsEvent({
       eventId: receivedEventId,
-      eventName,
+      eventName: isPageView ? pageViewEventName : whatsappEventName,
       pagePath,
       source: "website",
-      placement,
+      placement: isWhatsappClick ? whatsappPlacement : undefined,
     });
 
     if (!result.recorded && !result.duplicate) {

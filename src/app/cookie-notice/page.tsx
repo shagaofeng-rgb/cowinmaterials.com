@@ -24,7 +24,7 @@ export default function CookieNoticePage() {
           <h2>Basic operation</h2>
           <p>Hosting, security and form submission systems may process standard technical information such as browser, device and request data.</p>
           <h2>Contact-entry measurement</h2>
-          <p>When a visitor selects the WhatsApp contact entry, the website records the page path, entry placement and event time to measure contact-channel use. It does not store the visitor&apos;s WhatsApp account, message content, or enquiry details as part of this event.</p>
+          <p>To measure website use, the website records anonymous public page paths and event times. When a visitor selects the WhatsApp contact entry, it also records the page path and entry placement. These events do not store a visitor&apos;s WhatsApp account, message content, enquiry details, or a persistent visitor identity.</p>
           <h2>Future analytics</h2>
           <p>If additional analytics or advertising tracking is added later, this notice will be updated according to the target market and applicable legal requirements.</p>
           <h2>Contact</h2>

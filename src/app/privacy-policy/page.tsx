@@ -24,7 +24,7 @@ export default function PrivacyPolicyPage() {
           <h2>How we use information</h2>
           <p>We use submitted information to respond to enquiries, recommend products, provide technical documents, prepare quotations and coordinate business communication.</p>
           <h2>Contact-entry measurement</h2>
-          <p>To understand which website pages generate contact interest, we record the time, page path and fixed entry placement when a visitor selects the WhatsApp contact link. This event does not include WhatsApp account details, message content, or enquiry form data.</p>
+          <p>To understand website use and which pages generate contact interest, we record anonymous public page paths and event times. When a visitor selects the WhatsApp contact link, we also record its fixed entry placement. These events do not include WhatsApp account details, message content, enquiry form data, or a persistent visitor identity.</p>
           <h2>Sharing</h2>
           <p>We do not sell enquiry information. Information may be shared with service providers only when needed to operate email, hosting or business communication systems.</p>
           <h2>Contact</h2>

@@ -43,10 +43,11 @@ assert.ok(adminBlog.includes("sanitizeContent(input.content)"), "Blog updates mu
 const inquiryStore = readFileSync(join(root, "src/lib/database.ts"), "utf8");
 assert.ok(inquiryStore.includes("updateAdminInquiryStatus"), "Inquiry status must be updated server-side");
 assert.ok(inquiryStore.includes("source: \"website_form\""), "Website form records must append a non-PII audit event");
-assert.ok(inquiryStore.includes("recordAnalyticsEvent"), "WhatsApp analytics events must be written through the database layer");
+assert.ok(inquiryStore.includes("recordAnalyticsEvent"), "Website analytics events must be written through the database layer");
 const whatsappRoute = readFileSync(join(root, "src/app/api/analytics/event/route.ts"), "utf8");
-assert.ok(whatsappRoute.includes("whatsapp_click"), "WhatsApp analytics API must accept only the named contact event");
-assert.ok(whatsappRoute.includes("Invalid request origin"), "WhatsApp analytics API must validate request origin");
+assert.ok(whatsappRoute.includes("whatsapp_click"), "Analytics API must accept the WhatsApp contact event");
+assert.ok(whatsappRoute.includes("page_view"), "Analytics API must accept the public page-view event");
+assert.ok(whatsappRoute.includes("Invalid request origin"), "Analytics API must validate request origin");
 const mail = readFileSync(join(root, "src/lib/mail.ts"), "utf8");
 assert.ok(mail.includes("getInquiryCcRecipients"), "Inquiry notifications must support a configured CC recipient");
 assert.match(mail, /cc:\s*getInquiryCcRecipients\(\)/, "Inquiry notifications must pass configured CC recipients to SMTP");
