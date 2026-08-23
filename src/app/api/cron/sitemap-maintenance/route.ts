@@ -6,7 +6,15 @@ export const maxDuration = 300;
 
 export async function GET(request: Request) {
   const secret = process.env.CRON_SECRET;
-  if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`) {
+  const authorization = request.headers.get("authorization");
+  if (!secret || authorization !== `Bearer ${secret}`) {
+    console.warn(JSON.stringify({
+      event: "sitemap_maintenance_unauthorized",
+      secretConfigured: Boolean(secret),
+      secretLength: secret?.length || 0,
+      authorizationPresent: Boolean(authorization),
+      authorizationLength: authorization?.length || 0,
+    }));
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
