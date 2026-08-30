@@ -17,8 +17,8 @@ export async function getNewsOperations() {
     rows<{ published: string; review: string; failed: string; latest: Date | null }>(
       "select count(*) filter (where status = 'published')::text as published, count(*) filter (where status in ('draft', 'review'))::text as review, count(*) filter (where status in ('rejected', 'archived'))::text as failed, max(updated_at) as latest from news_articles where deleted_at is null",
     ),
-    rows<{ id: string; status: string; records_collected: number; records_rejected: number; records_published: number; message: string | null; started_at: Date; finished_at: Date | null }>(
-      "select id, status, records_collected, records_rejected, records_published, message, started_at, finished_at from news_jobs order by started_at desc limit 20",
+    rows<{ id: string; status: string; records_collected: number; records_rejected: number; records_published: number; message: string | null; metadata: Record<string, unknown>; started_at: Date; finished_at: Date | null }>(
+      "select id, status, records_collected, records_rejected, records_published, message, metadata, started_at, finished_at from news_jobs order by started_at desc limit 20",
     ),
     rows<{ id: string; title: string; slug: string; status: string; source_publisher: string; published_at: Date | null; updated_at: Date }>(
       "select id, title, slug, status, source_publisher, published_at, updated_at from news_articles where deleted_at is null order by updated_at desc limit 20",

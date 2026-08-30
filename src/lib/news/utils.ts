@@ -28,11 +28,33 @@ export function isWithinLookback(publishedAt: string, fetchedAt: string, hours: 
 
 export { hasDirectMaterialRelevance } from "./relevance";
 
-export function stripHtml(value: string) {
-  return value.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ")
-    .replace(/<!\[CDATA\[|\]\]>/g, "").replace(/&nbsp;/gi, " ").replace(/&amp;/gi, "&").replace(/&quot;/gi, '"')
+function decodeHtmlEntities(value: string) {
+  return value.replace(/&nbsp;/gi, " ").replace(/&amp;/gi, "&").replace(/&quot;/gi, '"')
     .replace(/&apos;|&#39;/gi, "'").replace(/&lt;/gi, "<").replace(/&gt;/gi, ">")
+    .replace(/&#x([0-9a-f]+);/gi, (_, value: string) => String.fromCodePoint(Number.parseInt(value, 16)))
+    .replace(/&#(\d+);/g, (_, value: string) => String.fromCodePoint(Number(value)));
+}
+
+export function stripHtml(value: string) {
+  const decoded = decodeHtmlEntities(decodeHtmlEntities(value));
+  return decoded.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ")
+    .replace(/<!\[CDATA\[|\]\]>/g, "")
     .replace(/\s+/g, " ").trim();
+}
+
+export function normalizeNewsTitle(title: string, publisher: string) {
+  const cleanTitle = stripHtml(title);
+  const cleanPublisher = stripHtml(publisher);
+  if (!cleanPublisher) return cleanTitle;
+  const suffix = ` - ${cleanPublisher}`;
+  return cleanTitle.toLowerCase().endsWith(suffix.toLowerCase()) ? cleanTitle.slice(0, -suffix.length).trim() : cleanTitle;
+}
+
+export function normalizeSyndicatedSummary(summary: string, title: string, publisher: string) {
+  const cleanSummary = stripHtml(summary);
+  const comparison = cleanSummary.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  const titleAndPublisher = `${title} ${publisher}`.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  return comparison === titleAndPublisher || comparison === title.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim() ? "" : cleanSummary;
 }
 
 export function escapeHtml(value: string) {
@@ -48,16 +70,26 @@ function tokenSet(value: string) {
 }
 
 export function scoreCandidateAgainstProducts(candidate: NewsCandidate): NewsRelatedProduct[] {
-  const candidateTokens = tokenSet([candidate.title, candidate.summary, candidate.publisher, ...(candidate.keywords || [])].join(" "));
+  const candidateText = [candidate.title, candidate.summary, candidate.publisher, ...(candidate.keywords || [])].join(" ");
+  const candidateTokens = tokenSet(candidateText);
+  const batterySafety = /\b(battery|batteries|cell|pack|ev|lithium|bess)\b/i.test(candidateText) && /\b(thermal|fire|heat|safety)\b/i.test(candidateText);
+  const fireProtection = /\b(intumescent|fireproof|fire protection|steel fire)\b/i.test(candidateText);
+  const rawAerogel = /\b(silica aerogel|aerogel powder|aerogel particles?|aerogel slurry)\b/i.test(candidateText);
   return products.map((product) => {
     const productTokens = tokenSet([product.name, product.code, product.category, product.summary, product.applications.join(" "), product.metrics.join(" "), product.detail.join(" ")].join(" "));
     let hits = 0;
     for (const token of productTokens) if (candidateTokens.has(token)) hits += token.length > 7 ? 1.5 : 1;
+    let domainBoost = 0;
+    if (batterySafety && product.slug === "battery-thermal-pads") domainBoost += 0.5;
+    if (batterySafety && product.slug === "aerogel-blanket-and-thermal-pads") domainBoost += 0.25;
+    if (batterySafety && product.slug === "aerogel-fireproof-coating") domainBoost += 0.15;
+    if (fireProtection && ["aerogel-fireproof-coating", "non-intumescent-fire-protection-coating"].includes(product.slug)) domainBoost += 0.5;
+    if (rawAerogel && product.slug === "aerogel-powder-and-slurry") domainBoost += 0.45;
     return {
       slug: product.slug, name: product.name, category: product.category, summary: product.summary,
       image: product.image || "/images/fire-test-lab.jpg",
       relationshipReason: `Matched terms relevant to ${product.category.toLowerCase()} evaluation.`,
-      relevanceScore: Number(Math.min(1, hits / 12).toFixed(3)),
+      relevanceScore: Number(Math.min(1, hits / 12 + domainBoost).toFixed(3)),
     };
   }).filter((item) => item.relevanceScore >= Number(process.env.NEWS_RELEVANCE_THRESHOLD || 0.12)).sort((a, b) => b.relevanceScore - a.relevanceScore).slice(0, 3);
 }
@@ -78,6 +110,12 @@ export function buildNewsArticleHtml(candidate: NewsCandidate, relatedProducts: 
 export function rssItemsFromXml(xml: string) { return [...xml.matchAll(/<item\b[\s\S]*?<\/item>/gi)].map((match) => match[0]); }
 export function readXmlTag(item: string, tag: string) {
   return item.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "i"))?.[1]?.replace(/<!\[CDATA\[/g, "").replace(/\]\]>/g, "").trim();
+}
+
+export function readXmlTags(item: string, tag: string) {
+  return [...item.matchAll(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "gi"))]
+    .map((match) => stripHtml(match[1] || ""))
+    .filter(Boolean);
 }
 
 export function sourcePublisherFromUrl(value: string) {

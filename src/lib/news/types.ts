@@ -74,13 +74,25 @@ export type NewsCandidate = {
   keywords?: string[];
 };
 
+export type NewsFeedHealth = {
+  label: string;
+  url: string;
+  status: "ok" | "empty" | "http_error" | "fetch_error";
+  httpStatus?: number;
+  itemCount: number;
+  candidateCount: number;
+  message?: string;
+};
+
 export type NewsAutomationResult = {
   ok: boolean;
-  status: "completed" | "configuration_required" | "no_publishable_items" | "failed";
+  status: "completed" | "configuration_required" | "no_publishable_items" | "source_unavailable" | "failed";
   checkedAt: string;
   collected: number;
   rejected: number;
   published: number;
   message: string;
   warnings: string[];
+  feeds?: NewsFeedHealth[];
+  rejectionReasons?: Record<string, number>;
 };

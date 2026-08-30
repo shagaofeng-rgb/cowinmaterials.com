@@ -5,16 +5,8 @@ import { getPool } from "@/lib/database";
 import { getProductPath } from "@/lib/data";
 import { absoluteUrl } from "@/lib/seo";
 import type { NewsAutomationResult, NewsCandidate, NewsRelatedProduct } from "./types";
-import { buildNewsArticleHtml, canonicalizeSourceUrl, createSourceFingerprint, hasDirectMaterialRelevance, hashText, isWithinLookback, readXmlTag, rssItemsFromXml, scoreCandidateAgainstProducts, slugifyNewsTitle, sourcePublisherFromUrl, stripHtml } from "./utils";
-
-const defaultFeeds = [
-  "https://www.energy.gov/eere/buildings/listings/buildings-news/rss.xml",
-  "https://www.energy.gov/eere/vehicles/articles/rss.xml",
-  "https://www.energy-storage.news/feed/",
-  "https://www.pv-magazine.com/feed/",
-];
-
-function getFeedUrls() { return (process.env.NEWS_SOURCE_FEEDS || defaultFeeds.join(",")).split(",").map((value) => value.trim()).filter(Boolean); }
+import { collectNewsCandidates } from "./sources";
+import { buildNewsArticleHtml, canonicalizeSourceUrl, createSourceFingerprint, hasDirectMaterialRelevance, hashText, isWithinLookback, scoreCandidateAgainstProducts, slugifyNewsTitle } from "./utils";
 function getLookbackHours() { return Math.min(24 * 30, Math.max(24, Number(process.env.NEWS_LOOKBACK_HOURS || 336))); }
 function getPublishLimit() { return Math.min(3, Math.max(1, Number(process.env.NEWS_MAX_PUBLISH_PER_RUN || 1))); }
 
@@ -30,29 +22,6 @@ async function finishJob(id: string | null, status: string, message: string, met
 async function insertAudit(jobId: string | null, eventType: string, severity: string, message: string, metadata: Record<string, unknown>) {
   const pool = getPool(); if (!pool) return;
   await pool.query(`insert into news_publication_audits (job_id, event_type, severity, message, metadata) values ($1, $2, $3, $4, $5::jsonb)`, [jobId, eventType, severity, message, JSON.stringify(metadata)]);
-}
-
-export async function collectNewsCandidates() {
-  const fetchedAt = new Date().toISOString();
-  const groups = await Promise.all(getFeedUrls().map(async (feedUrl) => {
-    try {
-      const response = await fetch(feedUrl, { headers: { "user-agent": "CowinMaterialsNewsBot/1.1 (+https://www.cowinmaterials.com/news)" }, cache: "no-store", signal: AbortSignal.timeout(12_000) });
-      if (!response.ok) return [] as NewsCandidate[];
-      const xml = await response.text(); const fallbackPublisher = sourcePublisherFromUrl(feedUrl);
-      return rssItemsFromXml(xml).slice(0, 20).flatMap((item) => {
-        try {
-          const title = stripHtml(readXmlTag(item, "title") || "");
-          const url = canonicalizeSourceUrl(stripHtml(readXmlTag(item, "link") || ""));
-          const summary = stripHtml(readXmlTag(item, "description") || readXmlTag(item, "content:encoded") || "");
-          const date = readXmlTag(item, "pubDate") || readXmlTag(item, "published") || readXmlTag(item, "dc:date");
-          const publishedAt = date ? new Date(date).toISOString() : "";
-          if (!title || !url || !publishedAt || !Number.isFinite(new Date(publishedAt).getTime())) return [];
-          return [{ title, url, summary, publisher: stripHtml(readXmlTag(item, "source") || "") || fallbackPublisher, publishedAt, fetchedAt, sourceTimezone: "UTC" }];
-        } catch { return []; }
-      });
-    } catch { return [] as NewsCandidate[]; }
-  }));
-  return groups.flat().sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
 }
 
 async function sourceAlreadyUsed(canonicalUrl: string, fingerprint: string) {
@@ -82,24 +51,36 @@ export async function runNewsAutomation(): Promise<NewsAutomationResult> {
   if (!getPool()) return { ok: false, status: "configuration_required", checkedAt, collected: 0, rejected: 0, published: 0, message: "DATABASE_URL is not configured; automated News cannot publish durable content.", warnings: ["Configure the production PostgreSQL connection and apply the News schema."] };
   const jobId = await createJob(); let collected = 0; let rejected = 0; let published = 0;
   try {
-    const candidates = await collectNewsCandidates(); collected = candidates.length; const seen = new Set<string>();
+    const collection = await collectNewsCandidates(); const candidates = collection.candidates; collected = candidates.length; const seen = new Set<string>();
+    const warnings = collection.feeds.filter((feed) => feed.status !== "ok").map((feed) => `${feed.label}: ${feed.message || feed.status}`);
+    const rejectionReasons: Record<string, number> = { repeatedInRun: 0, outsideLookback: 0, alreadyPublished: 0, unrelated: 0, belowProductThreshold: 0, insertConflict: 0 };
+    for (const feed of collection.feeds.filter((item) => item.status === "http_error" || item.status === "fetch_error")) {
+      await insertAudit(jobId, "source_failed", "warning", `${feed.label} could not be collected.`, { feed });
+    }
+    if (!collection.feeds.some((feed) => feed.status === "ok")) {
+      const message = "All configured News sources were unavailable or empty.";
+      await finishJob(jobId, "source_unavailable", message, { collected, rejected, published, feeds: collection.feeds });
+      return { ok: false, status: "source_unavailable", checkedAt, collected, rejected, published, message, warnings, feeds: collection.feeds, rejectionReasons };
+    }
     for (const candidate of candidates) {
       if (published >= getPublishLimit()) break;
       const fingerprint = createSourceFingerprint(candidate); const canonicalUrl = canonicalizeSourceUrl(candidate.url);
-      if (seen.has(fingerprint) || !isWithinLookback(candidate.publishedAt, candidate.fetchedAt, getLookbackHours()) || await sourceAlreadyUsed(canonicalUrl, fingerprint)) { rejected += 1; continue; }
+      if (seen.has(fingerprint)) { rejected += 1; rejectionReasons.repeatedInRun += 1; continue; }
+      if (!isWithinLookback(candidate.publishedAt, candidate.fetchedAt, getLookbackHours())) { rejected += 1; rejectionReasons.outsideLookback += 1; continue; }
+      if (await sourceAlreadyUsed(canonicalUrl, fingerprint)) { rejected += 1; rejectionReasons.alreadyPublished += 1; continue; }
       seen.add(fingerprint);
-      if (!hasDirectMaterialRelevance(candidate)) { rejected += 1; await insertAudit(jobId, "candidate_rejected", "info", "Candidate did not demonstrate a direct material, thermal-safety, fire-protection or waterproofing topic.", { sourceUrl: canonicalUrl }); continue; }
+      if (!hasDirectMaterialRelevance(candidate)) { rejected += 1; rejectionReasons.unrelated += 1; await insertAudit(jobId, "candidate_rejected", "info", "Candidate did not demonstrate a direct material, thermal-safety, fire-protection or waterproofing topic.", { sourceUrl: canonicalUrl }); continue; }
       const relatedProducts = scoreCandidateAgainstProducts(candidate);
-      if (!relatedProducts.length) { rejected += 1; await insertAudit(jobId, "candidate_rejected", "info", "Candidate did not meet product-relevance threshold.", { sourceUrl: canonicalUrl }); continue; }
+      if (!relatedProducts.length) { rejected += 1; rejectionReasons.belowProductThreshold += 1; await insertAudit(jobId, "candidate_rejected", "info", "Candidate did not meet product-relevance threshold.", { sourceUrl: canonicalUrl }); continue; }
       const articleId = await saveArticle(candidate, relatedProducts);
-      if (!articleId) { rejected += 1; await insertAudit(jobId, "candidate_duplicate", "info", "Candidate was not inserted because an equivalent article already exists.", { sourceUrl: canonicalUrl }); continue; }
+      if (!articleId) { rejected += 1; rejectionReasons.insertConflict += 1; await insertAudit(jobId, "candidate_duplicate", "info", "Candidate was not inserted because an equivalent article already exists.", { sourceUrl: canonicalUrl }); continue; }
       published += 1; await insertAudit(jobId, "article_published", "info", "Article passed automatic checks and was published directly.", { articleId, sourceUrl: canonicalUrl, relatedProducts: relatedProducts.map((product) => product.slug) });
     }
     const status = published ? "completed" : "no_publishable_items";
     const message = published ? `${published} News article${published === 1 ? "" : "s"} published directly.` : "No new source met freshness, relevance and duplicate checks.";
-    await finishJob(jobId, status, message, { collected, rejected, published, lookbackHours: getLookbackHours(), directPublish: true });
-    if (published) { revalidatePath("/news"); revalidatePath("/sitemap.xml"); }
-    return { ok: true, status, checkedAt, collected, rejected, published, message, warnings: [] };
+    await finishJob(jobId, status, message, { collected, rejected, published, lookbackHours: getLookbackHours(), directPublish: true, feeds: collection.feeds, rejectionReasons });
+    if (published) { revalidatePath("/news"); revalidatePath("/news/rss.xml"); revalidatePath("/sitemap.xml"); }
+    return { ok: true, status, checkedAt, collected, rejected, published, message, warnings, feeds: collection.feeds, rejectionReasons };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unexpected News automation failure.";
     await finishJob(jobId, "failed", message, { collected, rejected, published });
