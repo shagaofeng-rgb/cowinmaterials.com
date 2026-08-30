@@ -38,7 +38,7 @@ export default async function BlogPage() {
                     <Link className="news-image" href={`/blog/${article.slug}`}>
                       {/* Remote publisher images cannot use Next Image without a fixed host allowlist. */}
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={article.imageUrl} alt="" loading="lazy" />
+                      <img src={article.imageUrl} alt={`${article.title} cover`} loading="lazy" />
                     </Link>
                   ) : null}
                   <div className="news-card-body">

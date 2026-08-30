@@ -66,6 +66,7 @@ const applications = [
 export function InquiryForm() {
   const router = useRouter();
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
+  const [fileName, setFileName] = useState("No file selected");
   const search = useSyncExternalStore(subscribeToLocation, getLocationSearch, getServerLocationSearch);
   const params = new URLSearchParams(search);
   const defaults = {
@@ -209,9 +210,19 @@ export function InquiryForm() {
         />
       </label>
 
-      <label>
+      <label className="file-upload-field">
         File Upload
-        <input name="file" type="file" accept=".pdf,.docx,.xlsx,.jpg,.jpeg,.png" />
+        <span className="file-upload-control">
+          <span className="file-upload-button">Choose file</span>
+          <span className="file-upload-name">{fileName}</span>
+        </span>
+        <input
+          className="file-upload-input"
+          name="file"
+          type="file"
+          accept=".pdf,.docx,.xlsx,.jpg,.jpeg,.png"
+          onChange={(event) => setFileName(event.currentTarget.files?.[0]?.name || "No file selected")}
+        />
         <small>PDF, DOCX, XLSX, JPG or PNG. Maximum 5 MB.</small>
       </label>
 

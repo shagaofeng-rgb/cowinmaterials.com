@@ -1,12 +1,21 @@
 import { NextResponse } from "next/server";
-import { recordAnalyticsEvent } from "@/lib/database";
+import { recordAnalyticsEvent, type AnalyticsEventName } from "@/lib/database";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const whatsappEventName = "whatsapp_click";
-const pageViewEventName = "page_view";
 const whatsappPlacement = "floating_whatsapp";
+const allowedEventNames = new Set<AnalyticsEventName>([
+  "page_view",
+  "whatsapp_click",
+  "form_submit",
+  "email_click",
+  "phone_click",
+  "request_tds",
+  "request_sample",
+  "request_quote",
+]);
+const automatedAgentPattern = /bot|crawler|spider|headlesschrome|playwright|lighthouse|pagespeed|google-inspectiontool/i;
 
 function readString(value: unknown, maxLength: number) {
   return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
@@ -32,24 +41,30 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Use JSON to record an analytics event." }, { status: 415 });
     }
 
+    if (automatedAgentPattern.test(request.headers.get("user-agent") || "")) {
+      return NextResponse.json({ ok: true, ignored: true });
+    }
+
     const body = await request.json().catch(() => null) as Record<string, unknown> | null;
     const receivedEventName = readString(body?.event_name, 80);
     const receivedPlacement = readString(body?.placement, 80);
+    const requestType = readString(body?.request_type, 160);
     const receivedEventId = readString(body?.event_id, 120);
     const pagePath = readString(body?.page_path, 260);
 
-    const isPageView = receivedEventName === pageViewEventName;
-    const isWhatsappClick = receivedEventName === whatsappEventName && receivedPlacement === whatsappPlacement;
-    if ((!isPageView && !isWhatsappClick) || !isValidEventId(receivedEventId) || !isValidPagePath(pagePath)) {
+    const isAllowedEvent = allowedEventNames.has(receivedEventName as AnalyticsEventName);
+    const isValidWhatsapp = receivedEventName !== "whatsapp_click" || receivedPlacement === whatsappPlacement;
+    if (!isAllowedEvent || !isValidWhatsapp || !isValidEventId(receivedEventId) || !isValidPagePath(pagePath)) {
       return NextResponse.json({ error: "Invalid analytics event." }, { status: 400 });
     }
 
     const result = await recordAnalyticsEvent({
       eventId: receivedEventId,
-      eventName: isPageView ? pageViewEventName : whatsappEventName,
+      eventName: receivedEventName as AnalyticsEventName,
       pagePath,
       source: "website",
-      placement: isWhatsappClick ? whatsappPlacement : undefined,
+      placement: receivedEventName === "whatsapp_click" ? whatsappPlacement : undefined,
+      requestType: receivedEventName === "form_submit" ? requestType : undefined,
     });
 
     if (!result.recorded && !result.duplicate) {

@@ -127,12 +127,23 @@ export async function saveInquiryRecord(payload: InquiryPayload) {
   }
 }
 
+export type AnalyticsEventName =
+  | "page_view"
+  | "whatsapp_click"
+  | "form_submit"
+  | "email_click"
+  | "phone_click"
+  | "request_tds"
+  | "request_sample"
+  | "request_quote";
+
 type AnalyticsEventInput = {
   eventId: string;
-  eventName: "page_view" | "whatsapp_click";
+  eventName: AnalyticsEventName;
   pagePath: string;
   source: "website";
   placement?: "floating_whatsapp";
+  requestType?: string;
 };
 
 export async function recordAnalyticsEvent(input: AnalyticsEventInput) {
@@ -144,10 +155,30 @@ export async function recordAnalyticsEvent(input: AnalyticsEventInput) {
      values ($1, $2, $3, $4, now(), $5::jsonb)
      on conflict (event_id) do nothing
      returning id`,
-    [input.eventId, input.eventName, input.pagePath, input.source, JSON.stringify(input.placement ? { placement: input.placement } : {})],
+    [
+      input.eventId,
+      input.eventName,
+      input.pagePath,
+      input.source,
+      JSON.stringify({
+        ...(input.placement ? { placement: input.placement } : {}),
+        ...(input.requestType ? { request_type: input.requestType } : {}),
+      }),
+    ],
   );
 
   return { recorded: Boolean(result.rows[0]?.id), duplicate: result.rowCount === 0 };
+}
+
+export async function recordInquiryNotificationResult(inquiryId: string, result: "sent" | "failed") {
+  const activePool = getPool();
+  if (!activePool) return;
+
+  await activePool.query(
+    `insert into audit_logs (action, module, target_id, metadata)
+     values ($1, 'inquiries', $2, $3::jsonb)`,
+    [`notification_${result}`, inquiryId, JSON.stringify({ channel: "email", result })],
+  );
 }
 
 export type AdminInquiry = {

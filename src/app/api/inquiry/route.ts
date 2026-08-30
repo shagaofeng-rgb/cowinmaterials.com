@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { sendInquiryEmail } from "@/lib/mail";
-import { saveInquiryRecord } from "@/lib/database";
+import { recordInquiryNotificationResult, saveInquiryRecord } from "@/lib/database";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -110,15 +110,29 @@ export async function POST(request: Request) {
       attachment,
     };
 
-    await saveInquiryRecord(payload);
-    await sendInquiryEmail(payload);
+    const stored = await saveInquiryRecord(payload);
+    if (!stored.saved || !stored.id) {
+      return NextResponse.json({ error: "Unable to save enquiry right now." }, { status: 503 });
+    }
+
+    try {
+      await sendInquiryEmail(payload);
+      await recordInquiryNotificationResult(stored.id, "sent").catch(() => undefined);
+    } catch (error) {
+      await recordInquiryNotificationResult(stored.id, "failed").catch(() => undefined);
+      console.error("Inquiry notification failed after durable storage", {
+        inquiryId: stored.id,
+        reason: error instanceof Error ? error.message : "Unknown notification error",
+      });
+      return NextResponse.json({ ok: true, notification: "deferred" }, { status: 202 });
+    }
 
     return NextResponse.json({ ok: true });
   } catch (error) {
     if (error instanceof InquiryValidationError) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
-    console.error("Inquiry email failed", error);
-    return NextResponse.json({ error: "Unable to send inquiry right now." }, { status: 500 });
+    console.error("Inquiry submission failed", error);
+    return NextResponse.json({ error: "Unable to submit enquiry right now." }, { status: 500 });
   }
 }

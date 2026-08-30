@@ -85,7 +85,8 @@ export async function createAdminSession(remember: boolean) {
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     maxAge,
-    path: "/admin",
+    // Admin pages call protected /api/admin routes, so the session must cover both trees.
+    path: "/",
   });
 }
 

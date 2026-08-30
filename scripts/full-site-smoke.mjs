@@ -30,8 +30,8 @@ const urlFailures = urlChecks.filter((item) => item.status !== 200);
 assert.deepEqual(urlFailures, [], `Sitemap contains unavailable URLs: ${JSON.stringify(urlFailures)}`);
 assert.ok(publicPaths.includes("/news"), "News index must be present in the sitemap.");
 
-const [robots, llms, home, products, resources, locationsPage, quote, search, news, newsRss, adminHealth, sitemapCron, newsCron, blogWebhook, invalidInquiry] = await Promise.all([
-  request("/robots.txt"), request("/llms.txt"), request("/"), request("/products"), request("/resources"), request("/locations"), request("/request-quote"), request("/search?q=aerogel"), request("/news"), request("/news/rss.xml"), request("/api/admin/health"), request("/api/cron/sitemap-maintenance"), request("/api/cron/news-automation"), request("/api/webhook/send_article", { method: "POST", body: new URLSearchParams({ sign: "invalid" }) }), request("/api/inquiry", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }),
+const [robots, llms, home, products, resources, locationsPage, quote, search, news, newsRss, adminHealth, sitemapCron, newsCron, blogWebhook, invalidInquiry, botAnalytics] = await Promise.all([
+  request("/robots.txt"), request("/llms.txt"), request("/"), request("/products"), request("/resources"), request("/locations"), request("/request-quote"), request("/search?q=aerogel"), request("/news"), request("/news/rss.xml"), request("/api/admin/health"), request("/api/cron/sitemap-maintenance"), request("/api/cron/news-automation"), request("/api/webhook/send_article"), request("/api/inquiry", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }), request("/api/analytics/event", { method: "POST", headers: { "content-type": "application/json", "user-agent": "HeadlessChrome Cowin smoke audit" }, body: JSON.stringify({ event_id: "smoke-headless-analytics-event", event_name: "page_view", page_path: "/" }) }),
 ]);
 
 assert.match(robots.body, /Sitemap: https:\/\/www\.cowinmaterials\.com\/sitemap\.xml/);
@@ -49,7 +49,8 @@ assert.match(newsRss.type, /application\/rss\+xml/);
 assert.equal(adminHealth.status, 401);
 assert.equal(sitemapCron.status, 401);
 assert.equal(newsCron.status, 401);
-assert.equal(JSON.parse(blogWebhook.body).code, 0, "Blog webhook must reject an invalid API key.");
+assert.equal(blogWebhook.status, 405, "Blog webhook must reject unsupported GET requests without writing an audit record.");
 assert.equal(invalidInquiry.status, 415, "Inquiry endpoint must reject an unsupported content type without invoking email delivery.");
+assert.deepEqual(JSON.parse(botAnalytics.body), { ok: true, ignored: true }, "Automated smoke traffic must not enter production analytics.");
 
-console.log(JSON.stringify({ ok: true, siteUrl, sitemapFiles: childPaths.length, publicUrls: urlChecks.length, urlFailures, news: news.status, protectedRoutes: { adminHealth: adminHealth.status, sitemapCron: sitemapCron.status, newsCron: newsCron.status, blogWebhookCode: JSON.parse(blogWebhook.body).code }, corePages: [home, products, resources, locationsPage, quote, search, news].map((page) => ({ path: page.path, status: page.status })) }, null, 2));
+console.log(JSON.stringify({ ok: true, siteUrl, sitemapFiles: childPaths.length, publicUrls: urlChecks.length, urlFailures, news: news.status, protectedRoutes: { adminHealth: adminHealth.status, sitemapCron: sitemapCron.status, newsCron: newsCron.status, blogWebhook: blogWebhook.status }, corePages: [home, products, resources, locationsPage, quote, search, news].map((page) => ({ path: page.path, status: page.status })) }, null, 2));

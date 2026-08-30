@@ -2,7 +2,7 @@
 
 import { MessageCircle } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { recordStoredAnalyticsEvent, trackAnalyticsEvent } from "@/components/analytics-events";
+import { trackAnalyticsEvent } from "@/components/analytics-events";
 
 const whatsappUrl = "https://wa.me/8613732512581";
 
@@ -10,11 +10,6 @@ function recordWhatsappClick() {
   trackAnalyticsEvent("whatsapp_click", {
     placement: "floating_whatsapp",
     page_path: window.location.pathname,
-  });
-  recordStoredAnalyticsEvent({
-    eventName: "whatsapp_click",
-    pagePath: window.location.pathname,
-    placement: "floating_whatsapp",
   });
 }
 

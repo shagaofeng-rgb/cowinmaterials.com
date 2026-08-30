@@ -47,7 +47,7 @@ export default async function BlogDetailPage({ params }: BlogDetailProps) {
             <figure className="article-cover">
               {/* The publishing API accepts arbitrary HTTPS image hosts, so Next Image cannot use a fixed allowlist. */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={article.imageUrl} alt="" />
+              <img src={article.imageUrl} alt={`${article.title} cover`} />
             </figure>
           ) : null}
           <div className="article-body" dangerouslySetInnerHTML={{ __html: article.contentHtml }} />

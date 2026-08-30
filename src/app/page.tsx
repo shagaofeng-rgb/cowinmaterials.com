@@ -23,7 +23,7 @@ export default function Home() {
         <section className="hero">
           <div className="hero-copy">
             <span className="eyebrow">Cowin Materials</span>
-            <h1>Silica aerogel systems for demanding thermal projects</h1>
+            <h1>Silica aerogel systems for thermal projects</h1>
             <p>Documented material routes for thermal insulation, battery barriers, steel fire-protection evaluation and mineral-substrate waterproofing.</p>
             <div className="hero-actions"><Link className="primary-button" href="/request-quote?request=Ask%20for%20Product%20Selection">Discuss a project <ArrowRight size={18} aria-hidden="true" /></Link><Link className="secondary-button" href="/products">Explore product families</Link></div>
             <p className="microcopy">Start with service temperature, substrate, available thickness and the required standard or validation plan.</p>

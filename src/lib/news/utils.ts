@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import { getProductPath, products, site } from "@/lib/data";
 import type { NewsCandidate, NewsRelatedProduct } from "./types";
+export { buildNewsSeoTitle } from "./seo-title";
 
 const trackingParams = new Set(["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "utm_id", "fbclid", "gclid", "mc_cid", "mc_eid", "ref"]);
 

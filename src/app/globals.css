@@ -1153,6 +1153,51 @@ label small {
   resize: vertical;
 }
 
+.file-upload-field { position: relative; }
+.file-upload-input {
+  position: absolute;
+  width: 1px !important;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.file-upload-control {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  min-height: 46px;
+  overflow: hidden;
+  border: 1px solid #c4d2dc;
+  border-radius: 5px;
+  background: #ffffff;
+  cursor: pointer;
+}
+.file-upload-button {
+  align-self: stretch;
+  display: inline-flex;
+  align-items: center;
+  border-right: 1px solid #c4d2dc;
+  background: #edf4f7;
+  padding: 0 14px;
+  color: var(--ink);
+  font-weight: 760;
+}
+.file-upload-name {
+  min-width: 0;
+  overflow: hidden;
+  padding: 0 13px;
+  color: var(--ink-soft);
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.file-upload-field:focus-within .file-upload-control {
+  border-color: #087fc2;
+  box-shadow: 0 0 0 3px rgba(8, 127, 194, 0.12);
+}
+
 .form-success {
   margin: 0;
   border-radius: 8px;
@@ -3657,6 +3702,7 @@ body.drawer-open { overflow: hidden; }
 
 .product-family-grid,
 .application-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 34px; }
+.home-family-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .product-family-card,
 .application-card { display: grid; align-content: start; min-height: 270px; gap: 14px; border: 1px solid #d6e1e7; border-radius: 6px; background: #ffffff; padding: 24px; }
 .product-family-card:hover,

@@ -50,6 +50,10 @@ const whatsappRoute = readFileSync(join(root, "src/app/api/analytics/event/route
 assert.ok(whatsappRoute.includes("whatsapp_click"), "Analytics API must accept the WhatsApp contact event");
 assert.ok(whatsappRoute.includes("page_view"), "Analytics API must accept the public page-view event");
 assert.ok(whatsappRoute.includes("Invalid request origin"), "Analytics API must validate request origin");
+assert.ok(whatsappRoute.includes("form_submit"), "Analytics API must store enquiry conversion events");
+assert.ok(whatsappRoute.includes("headlesschrome"), "Analytics API must exclude automated browser traffic");
+const adminAuth = readFileSync(join(root, "src/lib/admin-auth.ts"), "utf8");
+assert.match(adminAuth, /path:\s*"\/"/, "Admin session must cover protected admin API routes");
 const mail = readFileSync(join(root, "src/lib/mail.ts"), "utf8");
 assert.ok(mail.includes("getInquiryCcRecipients"), "Inquiry notifications must support a configured CC recipient");
 assert.match(mail, /cc:\s*getInquiryCcRecipients\(\)/, "Inquiry notifications must pass configured CC recipients to SMTP");

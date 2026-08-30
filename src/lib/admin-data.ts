@@ -227,24 +227,40 @@ export async function getAdminModuleData(module: string): Promise<AdminModuleDat
   }
   if (module === "analytics") {
     const [rows, summary] = await Promise.all([
-      queryRows<{ id: string; event_name: "page_view" | "whatsapp_click"; page_path: string | null; placement: string | null; occurred_at: Date }>("select id, event_name, page_path, metadata->>'placement' as placement, occurred_at from analytics_events where event_name in ('page_view', 'whatsapp_click') order by occurred_at desc limit 100"),
-      queryRows<{ pageViews: string; pageViews7Days: string; whatsappClicks: string; latest: Date | null }>("select count(*) filter (where event_name = 'page_view') as \"pageViews\", count(*) filter (where event_name = 'page_view' and occurred_at >= now() - interval '7 days') as \"pageViews7Days\", count(*) filter (where event_name = 'whatsapp_click') as \"whatsappClicks\", max(occurred_at) as latest from analytics_events where event_name in ('page_view', 'whatsapp_click')"),
+      queryRows<{ id: string; event_name: string; page_path: string | null; placement: string | null; request_type: string | null; occurred_at: Date }>("select id, event_name, page_path, metadata->>'placement' as placement, metadata->>'request_type' as request_type, occurred_at from analytics_events where event_name in ('page_view', 'whatsapp_click', 'form_submit', 'email_click', 'phone_click', 'request_tds', 'request_sample', 'request_quote') order by occurred_at desc limit 100"),
+      queryRows<{ pageViews: string; pageViews7Days: string; whatsappClicks: string; formSubmits: string; contactActions: string; latest: Date | null }>("select count(*) filter (where event_name = 'page_view') as \"pageViews\", count(*) filter (where event_name = 'page_view' and occurred_at >= now() - interval '7 days') as \"pageViews7Days\", count(*) filter (where event_name = 'whatsapp_click') as \"whatsappClicks\", count(*) filter (where event_name = 'form_submit') as \"formSubmits\", count(*) filter (where event_name in ('whatsapp_click', 'form_submit', 'email_click', 'phone_click', 'request_tds', 'request_sample', 'request_quote')) as \"contactActions\", max(occurred_at) as latest from analytics_events where event_name in ('page_view', 'whatsapp_click', 'form_submit', 'email_click', 'phone_click', 'request_tds', 'request_sample', 'request_quote')"),
     ]);
-    const totals = summary[0] || { pageViews: "0", pageViews7Days: "0", whatsappClicks: "0", latest: null };
+    const totals = summary[0] || { pageViews: "0", pageViews7Days: "0", whatsappClicks: "0", formSubmits: "0", contactActions: "0", latest: null };
     const pageViews = Number(totals.pageViews);
     const whatsappClicks = Number(totals.whatsappClicks);
-    const whatsappRate = pageViews ? (whatsappClicks / pageViews) * 100 : 0;
+    const contactActions = Number(totals.contactActions);
+    const conversionRate = pageViews ? (contactActions / pageViews) * 100 : 0;
+    const eventLabels: Record<string, [string, string]> = {
+      page_view: ["页面访问", "访问"],
+      whatsapp_click: ["WhatsApp 悬浮入口", "转化"],
+      form_submit: ["客户表单提交", "转化"],
+      email_click: ["邮箱链接点击", "意向"],
+      phone_click: ["电话链接点击", "意向"],
+      request_tds: ["TDS 请求入口", "意向"],
+      request_sample: ["样品请求入口", "意向"],
+      request_quote: ["报价请求入口", "意向"],
+    };
     return {
-      title: "访问与 WhatsApp 转化",
-      description: "同步显示全站公共页面访问和右侧 WhatsApp 悬浮入口点击。数据直接写入官网 PostgreSQL 事件表，不保存访客联系方式、聊天内容或独立访客身份。",
+      title: "访问与转化",
+      description: "同步显示全站公共页面访问、表单提交及联系入口点击。数据直接写入官网 PostgreSQL 事件表，不保存访客联系方式、聊天内容或独立访客身份。",
       source: databaseSource,
       metrics: [
         { label: "累计页面访问", value: pageViews, note: "公共页面匿名访问事件" },
         { label: "近 7 天访问", value: Number(totals.pageViews7Days), note: "滚动时间窗口" },
+        { label: "表单提交", value: Number(totals.formSubmits), note: "服务端确认接收后记录" },
         { label: "WhatsApp 点击", value: whatsappClicks, note: "右侧悬浮入口" },
-        { label: "WhatsApp 点击率", value: pageViews ? `${whatsappRate.toFixed(1)}%` : "—", note: pageViews ? "点击 / 已记录页面访问" : "等待页面访问数据" },
+        { label: "联系意向事件", value: contactActions, note: "表单、WhatsApp、邮箱、电话与请求入口" },
+        { label: "意向事件率", value: pageViews ? `${conversionRate.toFixed(1)}%` : "—", note: pageViews ? "意向事件 / 已记录页面访问" : "等待页面访问数据" },
       ],
-      rows: rows.map((row) => ({ id: row.id, name: row.event_name === "whatsapp_click" ? "WhatsApp 悬浮入口" : "页面访问", status: row.event_name === "whatsapp_click" ? "转化" : "访问", value: [row.page_path || "未记录页面路径", row.placement === "floating_whatsapp" ? "右侧悬浮入口" : null].filter(Boolean).join(" · "), updatedAt: row.occurred_at.toISOString(), source: "PostgreSQL 匿名事件" })),
+      rows: rows.map((row) => {
+        const [name, status] = eventLabels[row.event_name] || [row.event_name, "事件"];
+        return { id: row.id, name, status, value: [row.page_path || "未记录页面路径", row.placement === "floating_whatsapp" ? "右侧悬浮入口" : null, row.request_type || null].filter(Boolean).join(" · "), updatedAt: row.occurred_at.toISOString(), source: "PostgreSQL 匿名事件" };
+      }),
       status: "Up to date",
       lastSyncedAt: totals.latest?.toISOString() || null,
     };
