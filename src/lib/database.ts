@@ -29,7 +29,7 @@ export function getPool() {
   if (!pool) {
     pool = new Pool({
       connectionString: normalizedConnectionString(process.env.DATABASE_URL),
-      connectionTimeoutMillis: 3000,
+      connectionTimeoutMillis: 8000,
       max: 5,
       ssl: process.env.DATABASE_SSL === "false" ? false : { rejectUnauthorized: false },
     });

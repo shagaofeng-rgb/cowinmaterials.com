@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { cache } from "react";
 import sanitizeHtml from "sanitize-html";
 import { getPool } from "@/lib/database";
 import type { BlogArticle } from "./types";
@@ -189,7 +190,7 @@ export async function logBlogWebhookEvent(event: BlogWebhookEvent) {
   }
 }
 
-export async function getBlogArticles() {
+export const getBlogArticles = cache(async function getBlogArticles() {
   const pool = getPool();
   if (!pool) return [];
   const result = await pool.query<BlogRow>(
@@ -200,9 +201,9 @@ export async function getBlogArticles() {
      limit 1000`,
   );
   return result.rows.map(rowToArticle);
-}
+});
 
-export async function getBlogArticle(slug: string) {
+export const getBlogArticle = cache(async function getBlogArticle(slug: string) {
   const pool = getPool();
   if (!pool) return null;
   const result = await pool.query<BlogRow>(
@@ -213,7 +214,7 @@ export async function getBlogArticle(slug: string) {
     [slug],
   );
   return result.rows[0] ? rowToArticle(result.rows[0]) : null;
-}
+});
 
 export async function getAdminBlogArticles() {
   const pool = requirePool();

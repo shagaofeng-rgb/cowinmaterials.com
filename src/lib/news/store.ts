@@ -1,5 +1,6 @@
 import "server-only";
 
+import { cache } from "react";
 import { getPool } from "@/lib/database";
 import { absoluteUrl } from "@/lib/seo";
 import type { NewsArticle, NewsListResult, NewsRelatedProduct } from "./types";
@@ -36,10 +37,10 @@ export async function getPublishedNews({ page = 1, pageSize = 12, productSlug }:
   } catch { return { articles: [], total: 0, page: safePage, pageSize: safePageSize }; }
 }
 
-export async function getPublishedNewsBySlug(slug: string) {
+export const getPublishedNewsBySlug = cache(async function getPublishedNewsBySlug(slug: string) {
   const pool = getPool(); if (!pool) return null;
   try { const result = await pool.query<NewsRow>(`${articleSelect} where ${publishedClause} and a.slug = $1 group by a.id limit 1`, [slug]); return result.rows[0] ? rowToArticle(result.rows[0]) : null; } catch { return null; }
-}
+});
 
 export async function getPublishedNewsSitemapSummary() {
   const pool = getPool(); if (!pool) return { count: 0, lastModified: new Date().toISOString() };

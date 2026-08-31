@@ -4,16 +4,16 @@ const siteUrl = (process.env.SITE_URL || "http://127.0.0.1:3010").replace(/\/$/,
 
 async function request(path, init) {
   let lastError;
-  for (let attempt = 0; attempt < 3; attempt += 1) {
+  for (let attempt = 0; attempt < 5; attempt += 1) {
     try {
       const response = await fetch(new URL(path, siteUrl), { redirect: "manual", signal: AbortSignal.timeout(20_000), ...init });
       return { path, status: response.status, type: response.headers.get("content-type") || "", body: init?.method === "HEAD" ? "" : await response.text() };
     } catch (error) {
       lastError = error;
-      if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 250 * (attempt + 1)));
+      if (attempt < 4) await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
     }
   }
-  throw lastError;
+  throw new Error(`Request failed after retries: ${path}`, { cause: lastError });
 }
 
 function locations(xml) {
@@ -36,9 +36,10 @@ for (const path of childPaths) {
 
 const uniquePublicPaths = [...new Set(publicPaths)];
 const urlChecks = [];
-for (let index = 0; index < uniquePublicPaths.length; index += 8) {
-  const batch = uniquePublicPaths.slice(index, index + 8);
+for (let index = 0; index < uniquePublicPaths.length; index += 4) {
+  const batch = uniquePublicPaths.slice(index, index + 4);
   urlChecks.push(...await Promise.all(batch.map(async (path) => ({ path, status: (await request(path, { method: "HEAD" })).status }))));
+  if (index + 4 < uniquePublicPaths.length) await new Promise((resolve) => setTimeout(resolve, 100));
 }
 const urlFailures = urlChecks.filter((item) => item.status !== 200);
 assert.deepEqual(urlFailures, [], `Sitemap contains unavailable URLs: ${JSON.stringify(urlFailures)}`);
