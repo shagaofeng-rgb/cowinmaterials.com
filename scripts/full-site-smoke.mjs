@@ -3,8 +3,17 @@ import assert from "node:assert/strict";
 const siteUrl = (process.env.SITE_URL || "http://127.0.0.1:3010").replace(/\/$/, "");
 
 async function request(path, init) {
-  const response = await fetch(new URL(path, siteUrl), { redirect: "manual", signal: AbortSignal.timeout(20_000), ...init });
-  return { path, status: response.status, type: response.headers.get("content-type") || "", body: init?.method === "HEAD" ? "" : await response.text() };
+  let lastError;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      const response = await fetch(new URL(path, siteUrl), { redirect: "manual", signal: AbortSignal.timeout(20_000), ...init });
+      return { path, status: response.status, type: response.headers.get("content-type") || "", body: init?.method === "HEAD" ? "" : await response.text() };
+    } catch (error) {
+      lastError = error;
+      if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 250 * (attempt + 1)));
+    }
+  }
+  throw lastError;
 }
 
 function locations(xml) {
@@ -25,7 +34,12 @@ for (const path of childPaths) {
   publicPaths.push(...locations(child.body));
 }
 
-const urlChecks = await Promise.all([...new Set(publicPaths)].map(async (path) => ({ path, status: (await request(path, { method: "HEAD" })).status })));
+const uniquePublicPaths = [...new Set(publicPaths)];
+const urlChecks = [];
+for (let index = 0; index < uniquePublicPaths.length; index += 8) {
+  const batch = uniquePublicPaths.slice(index, index + 8);
+  urlChecks.push(...await Promise.all(batch.map(async (path) => ({ path, status: (await request(path, { method: "HEAD" })).status }))));
+}
 const urlFailures = urlChecks.filter((item) => item.status !== 200);
 assert.deepEqual(urlFailures, [], `Sitemap contains unavailable URLs: ${JSON.stringify(urlFailures)}`);
 assert.ok(publicPaths.includes("/news"), "News index must be present in the sitemap.");
