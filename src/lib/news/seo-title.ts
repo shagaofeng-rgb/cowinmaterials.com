@@ -5,6 +5,8 @@ export function buildNewsSeoTitle(title: string, maxLength = 65) {
   if (cleanTitle.length <= available) return `${cleanTitle}${suffix}`;
   const candidate = cleanTitle.slice(0, available + 1);
   const boundary = candidate.lastIndexOf(" ");
-  const shortened = (boundary >= Math.floor(available * 0.6) ? candidate.slice(0, boundary) : cleanTitle.slice(0, available)).trim();
+  const shortened = (boundary >= Math.floor(available * 0.6) ? candidate.slice(0, boundary) : cleanTitle.slice(0, available))
+    .trim()
+    .replace(/[,:;.!?\-–—]+$/u, "");
   return `${shortened}${suffix}`;
 }

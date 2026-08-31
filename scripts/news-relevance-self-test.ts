@@ -21,4 +21,5 @@ test("builds concise News SEO titles without cutting a word", () => {
   assert.ok(title.length <= 65);
   assert.match(title, / \| Cowin Materials News$/);
   assert.equal(title.includes("enginee |"), false);
+  assert.equal(buildNewsSeoTitle("Battery safety, misinformation, and a very long market update").includes(", |"), false);
 });
