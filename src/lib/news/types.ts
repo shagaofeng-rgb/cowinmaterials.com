@@ -79,6 +79,7 @@ export type NewsFeedHealth = {
   url: string;
   status: "ok" | "empty" | "http_error" | "fetch_error";
   httpStatus?: number;
+  attempts?: number;
   itemCount: number;
   candidateCount: number;
   message?: string;

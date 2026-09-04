@@ -24,6 +24,32 @@ const trustedSyndicatedPublishers = new Set([
   "Wiley Online Library",
 ]);
 
+const feedRequestAttempts = 3;
+const retryableStatusCodes = new Set([429, 500, 502, 503, 504]);
+
+const wait = (milliseconds: number) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+
+async function fetchFeed(url: string) {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= feedRequestAttempts; attempt += 1) {
+    try {
+      const response = await fetch(url, {
+        headers: { "user-agent": "CowinMaterialsNewsBot/1.2 (+https://www.cowinmaterials.com/news)" },
+        cache: "no-store",
+        signal: AbortSignal.timeout(12_000),
+      });
+      if (!retryableStatusCodes.has(response.status) || attempt === feedRequestAttempts) {
+        return { response, attempts: attempt };
+      }
+    } catch (error) {
+      lastError = error;
+      if (attempt === feedRequestAttempts) throw error;
+    }
+    await wait(attempt * 500);
+  }
+  throw lastError instanceof Error ? lastError : new Error("News feed request failed.");
+}
+
 function getFeedSources() {
   const configured = process.env.NEWS_SOURCE_FEEDS?.split(",").map((value) => value.trim()).filter(Boolean);
   return configured?.length ? configured.map((url, index) => ({ label: `Configured source ${index + 1}`, url })) : defaultFeeds;
@@ -33,8 +59,8 @@ export async function collectNewsCandidates() {
   const fetchedAt = new Date().toISOString();
   const groups = await Promise.all(getFeedSources().map(async (feed) => {
     try {
-      const response = await fetch(feed.url, { headers: { "user-agent": "CowinMaterialsNewsBot/1.2 (+https://www.cowinmaterials.com/news)" }, cache: "no-store", signal: AbortSignal.timeout(12_000) });
-      if (!response.ok) return { candidates: [] as NewsCandidate[], health: { label: feed.label, url: feed.url, status: "http_error", httpStatus: response.status, itemCount: 0, candidateCount: 0, message: `Source returned HTTP ${response.status}.` } satisfies NewsFeedHealth };
+      const { response, attempts } = await fetchFeed(feed.url);
+      if (!response.ok) return { candidates: [] as NewsCandidate[], health: { label: feed.label, url: feed.url, status: "http_error", httpStatus: response.status, attempts, itemCount: 0, candidateCount: 0, message: `Source returned HTTP ${response.status} after ${attempts} attempt${attempts === 1 ? "" : "s"}.` } satisfies NewsFeedHealth };
       const xml = await response.text();
       const fallbackPublisher = sourcePublisherFromUrl(feed.url);
       const syndicated = new URL(feed.url).hostname === "news.google.com";
@@ -55,9 +81,9 @@ export async function collectNewsCandidates() {
           return [];
         }
       });
-      return { candidates, health: { label: feed.label, url: feed.url, status: items.length ? "ok" : "empty", httpStatus: response.status, itemCount: items.length, candidateCount: candidates.length, message: items.length ? undefined : "Source returned no RSS items." } satisfies NewsFeedHealth };
+      return { candidates, health: { label: feed.label, url: feed.url, status: items.length ? "ok" : "empty", httpStatus: response.status, attempts, itemCount: items.length, candidateCount: candidates.length, message: items.length ? undefined : "Source returned no RSS items." } satisfies NewsFeedHealth };
     } catch (error) {
-      return { candidates: [] as NewsCandidate[], health: { label: feed.label, url: feed.url, status: "fetch_error", itemCount: 0, candidateCount: 0, message: error instanceof Error ? error.message : "Source request failed." } satisfies NewsFeedHealth };
+      return { candidates: [] as NewsCandidate[], health: { label: feed.label, url: feed.url, status: "fetch_error", attempts: feedRequestAttempts, itemCount: 0, candidateCount: 0, message: error instanceof Error ? error.message : "Source request failed." } satisfies NewsFeedHealth };
     }
   }));
   return {
