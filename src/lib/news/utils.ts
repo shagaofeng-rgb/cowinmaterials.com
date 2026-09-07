@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import { getProductPath, products, site } from "@/lib/data";
 import type { NewsCandidate, NewsRelatedProduct } from "./types";
+import { getNewsProductRelevanceThreshold } from "./relevance";
 export { buildNewsSeoTitle } from "./seo-title";
 
 const trackingParams = new Set(["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "utm_id", "fbclid", "gclid", "mc_cid", "mc_eid", "ref"]);
@@ -92,7 +93,7 @@ export function scoreCandidateAgainstProducts(candidate: NewsCandidate): NewsRel
       relationshipReason: `Matched terms relevant to ${product.category.toLowerCase()} evaluation.`,
       relevanceScore: Number(Math.min(1, hits / 12 + domainBoost).toFixed(3)),
     };
-  }).filter((item) => item.relevanceScore >= Number(process.env.NEWS_RELEVANCE_THRESHOLD || 0.12)).sort((a, b) => b.relevanceScore - a.relevanceScore).slice(0, 3);
+  }).filter((item) => item.relevanceScore >= getNewsProductRelevanceThreshold()).sort((a, b) => b.relevanceScore - a.relevanceScore).slice(0, 3);
 }
 
 export function buildNewsArticleHtml(candidate: NewsCandidate, relatedProducts: NewsRelatedProduct[]) {

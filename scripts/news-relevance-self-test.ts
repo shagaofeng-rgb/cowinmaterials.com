@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { hasDirectMaterialRelevance } from "../src/lib/news/relevance.ts";
+import { getNewsProductRelevanceThreshold, hasDirectMaterialRelevance, isIndexableNewsCandidate } from "../src/lib/news/relevance.ts";
 import { buildNewsSeoTitle } from "../src/lib/news/seo-title.ts";
 
 test("accepts direct material and battery-safety news", () => {
@@ -14,6 +14,15 @@ test("rejects broad energy-market news", () => {
   assert.equal(hasDirectMaterialRelevance({ title: "Battery storage financing closes for a new grid project", summary: "" }), false);
   assert.equal(hasDirectMaterialRelevance({ title: "Carbon fiber recycling creates a lightweight aerogel", summary: "" }), false);
   assert.equal(hasDirectMaterialRelevance({ title: "Solar generation expands in regional markets", summary: "" }), false);
+});
+
+test("requires strong product relevance before automated News enters the sitemap", () => {
+  const directCandidate = { title: "Silica aerogel thermal insulation study for LNG piping", summary: "", keywords: [] };
+  assert.equal(isIndexableNewsCandidate(directCandidate, [{ relevanceScore: 0.82 }]), true);
+  assert.equal(isIndexableNewsCandidate({ title: "Battery storage market financing closes", summary: "", keywords: [] }, [{ relevanceScore: 0.85 }]), false);
+  assert.equal(isIndexableNewsCandidate(directCandidate, [{ relevanceScore: 0.54 }]), false);
+  assert.equal(getNewsProductRelevanceThreshold("0.12"), 0.55);
+  assert.equal(getNewsProductRelevanceThreshold("0.8"), 0.8);
 });
 
 test("builds concise News SEO titles without cutting a word", () => {

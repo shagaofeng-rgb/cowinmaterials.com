@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { getBlogArticle } from "@/lib/blog/store";
+import { getBlogTechnicalPaths } from "@/lib/blog/related";
 import { absoluteUrl, createPageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
@@ -19,6 +20,7 @@ export async function generateMetadata({ params }: BlogDetailProps) {
 export default async function BlogDetailPage({ params }: BlogDetailProps) {
   const article = await getBlogArticle((await params).slug);
   if (!article) notFound();
+  const technicalPaths = getBlogTechnicalPaths(article);
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "TechArticle",
@@ -30,6 +32,15 @@ export default async function BlogDetailPage({ params }: BlogDetailProps) {
     author: { "@type": "Organization", name: article.authorId },
     publisher: { "@type": "Organization", name: "Cowin Materials" },
     mainEntityOfPage: absoluteUrl(`/blog/${article.slug}`),
+  };
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: absoluteUrl("/") },
+      { "@type": "ListItem", position: 2, name: "Blog", item: absoluteUrl("/blog") },
+      { "@type": "ListItem", position: 3, name: article.title, item: absoluteUrl(`/blog/${article.slug}`) },
+    ],
   };
   return (
     <>
@@ -51,8 +62,16 @@ export default async function BlogDetailPage({ params }: BlogDetailProps) {
             </figure>
           ) : null}
           <div className="article-body" dangerouslySetInnerHTML={{ __html: article.contentHtml }} />
+          <section className="article-related">
+            <h2>Related technical paths</h2>
+            <p>Use the linked material and application pages to compare this topic against documented product scope and project conditions.</p>
+            <div className="related-news-products">
+              {technicalPaths.map((path) => <Link href={path.href} key={path.href}><strong>{path.label}</strong><span>{path.note}</span></Link>)}
+            </div>
+          </section>
         </article>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
       </main>
       <Footer />
     </>
