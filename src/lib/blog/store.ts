@@ -203,6 +203,24 @@ export const getBlogArticles = cache(async function getBlogArticles() {
   return result.rows.map(rowToArticle);
 });
 
+export async function getPublishedBlogPage({ page = 1, pageSize = 9 }: { page?: number; pageSize?: number } = {}) {
+  const pool = getPool();
+  const safePage = Math.max(1, Math.floor(page));
+  const safePageSize = Math.min(50, Math.max(1, Math.floor(pageSize)));
+  if (!pool) return { articles: [] as BlogArticle[], total: 0, page: safePage, pageSize: safePageSize };
+
+  const clause = "a.class_id in ('blog', '31') and a.status = 'published' and a.deleted_at is null and a.published_at <= now()";
+  try {
+    const [count, rows] = await Promise.all([
+      pool.query<{ count: string }>(`select count(*)::text as count from articles a where ${clause}`),
+      pool.query<BlogRow>(`${articleSelect} where ${clause} order by a.published_at desc, a.id desc limit $1 offset $2`, [safePageSize, (safePage - 1) * safePageSize]),
+    ]);
+    return { articles: rows.rows.map(rowToArticle), total: Number(count.rows[0]?.count || 0), page: safePage, pageSize: safePageSize };
+  } catch {
+    return { articles: [] as BlogArticle[], total: 0, page: safePage, pageSize: safePageSize };
+  }
+}
+
 export const getBlogArticle = cache(async function getBlogArticle(slug: string) {
   const pool = getPool();
   if (!pool) return null;

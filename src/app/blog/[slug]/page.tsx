@@ -3,8 +3,10 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
+import { ContentPanel, ContentPanels } from "@/components/content-panels";
 import { getBlogArticle } from "@/lib/blog/store";
 import { getBlogTechnicalPaths } from "@/lib/blog/related";
+import { splitArticleSections } from "@/lib/article-sections";
 import { absoluteUrl, createPageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
@@ -21,6 +23,7 @@ export default async function BlogDetailPage({ params }: BlogDetailProps) {
   const article = await getBlogArticle((await params).slug);
   if (!article) notFound();
   const technicalPaths = getBlogTechnicalPaths(article);
+  const sections = splitArticleSections(article.contentHtml);
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "TechArticle",
@@ -61,14 +64,10 @@ export default async function BlogDetailPage({ params }: BlogDetailProps) {
               <img src={article.imageUrl} alt={`${article.title} cover`} />
             </figure>
           ) : null}
-          <div className="article-body" dangerouslySetInnerHTML={{ __html: article.contentHtml }} />
-          <section className="article-related">
-            <h2>Related technical paths</h2>
-            <p>Use the linked material and application pages to compare this topic against documented product scope and project conditions.</p>
-            <div className="related-news-products">
-              {technicalPaths.map((path) => <Link href={path.href} key={path.href}><strong>{path.label}</strong><span>{path.note}</span></Link>)}
-            </div>
-          </section>
+          <ContentPanels label="Article sections">
+            {sections.map((section) => <ContentPanel id={section.id} label={section.label} key={section.id}><h2 className="content-panel-title">{section.label}</h2><div className="article-body" dangerouslySetInnerHTML={{ __html: section.html }} /></ContentPanel>)}
+            <ContentPanel id="related-paths" label="Related paths"><section className="article-related"><h2>Related technical paths</h2><p>Use the linked material and application pages to compare this topic against documented product scope and project conditions.</p><div className="related-news-products">{technicalPaths.map((path) => <Link href={path.href} key={path.href}><strong>{path.label}</strong><span>{path.note}</span></Link>)}</div></section></ContentPanel>
+          </ContentPanels>
         </article>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />

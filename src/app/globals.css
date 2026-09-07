@@ -3938,6 +3938,111 @@ body.drawer-open { overflow: hidden; }
   .technical-fact-grid { grid-template-columns: 1fr; }
 }
 
+/* Controlled content density: lists paginate while detailed material evidence is read in focused panels. */
+.content-pagination {
+  display: grid;
+  grid-template-columns: minmax(110px, 1fr) auto minmax(110px, 1fr);
+  align-items: center;
+  gap: 14px;
+  max-width: 660px;
+  margin: 40px auto 0;
+  padding-top: 24px;
+  border-top: 1px solid #d6e1e7;
+}
+
+.pagination-control,
+.pagination-pages a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 42px;
+  color: #0b3c5d;
+  font-size: 14px;
+  font-weight: 760;
+}
+
+.pagination-control { justify-self: start; }
+.pagination-next { justify-self: end; }
+.pagination-control[aria-disabled="true"] { color: #9aaab5; cursor: not-allowed; }
+.pagination-pages { display: flex; align-items: center; justify-content: center; gap: 4px; }
+.pagination-page-group { display: inline-flex; align-items: center; gap: 4px; }
+.pagination-pages a { width: 42px; border: 1px solid transparent; border-radius: 6px; }
+.pagination-pages a:hover { border-color: #9fc0d2; background: #edf6f7; }
+.pagination-pages a[aria-current="page"] { border-color: #0b3c5d; background: #0b3c5d; color: #ffffff; }
+.pagination-ellipsis { padding: 0 2px; color: #597080; }
+
+.content-panels {
+  max-width: 1240px;
+  margin: 32px auto 0;
+  padding: 0 24px;
+}
+
+.content-panel-tabs {
+  display: flex;
+  align-items: flex-end;
+  gap: 0;
+  overflow-x: auto;
+  border-bottom: 1px solid #c9dbe3;
+  scrollbar-width: thin;
+}
+
+.content-panel-tabs button {
+  position: relative;
+  flex: 0 0 auto;
+  min-height: 50px;
+  padding: 0 18px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: #597080;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 760;
+  cursor: pointer;
+}
+
+.content-panel-tabs button:hover { color: #0b3c5d; background: #f0f6f8; }
+.content-panel-tabs button[aria-selected="true"] { border-bottom-color: #1677b9; color: #0b3c5d; }
+.content-panel-tabs button:focus-visible,
+.content-panel-mobile-control select:focus-visible { outline: 3px solid #7bcad0; outline-offset: -3px; }
+.content-panel-stage { min-height: 360px; }
+.content-panel { padding: 36px 0 20px; outline: none; }
+.content-panel[hidden] { display: none; }
+.content-panel-title { margin: 0 0 20px; color: #0b3c5d; font-size: clamp(25px, 3vw, 36px); line-height: 1.18; }
+.content-panel-progress { margin: 14px 0 0; color: #708795; font-size: 12px; font-weight: 720; text-align: right; }
+.content-panel-mobile-control { display: none; }
+.panel-section { padding: 8px 0; }
+.panel-section.muted { margin: 0 -24px; padding: 36px 24px; }
+.document-panel { max-width: 760px; }
+.document-panel > h2 { margin: 0 0 22px; color: #0b3c5d; }
+.content-panel .article-body { max-width: 820px; }
+.content-panel .article-body > :first-child { margin-top: 0; }
+.content-panel .article-related,
+.content-panel .source-box { margin-top: 0; }
+
+@media (max-width: 767px) {
+  .content-pagination { grid-template-columns: 1fr auto 1fr; gap: 6px; margin-top: 30px; padding-top: 18px; }
+  .pagination-control { font-size: 13px; }
+  .pagination-pages a { width: 36px; min-height: 38px; }
+  .content-panels { margin-top: 24px; padding: 0 18px; }
+  .content-panel-tabs { display: none; }
+  .content-panel-mobile-control { display: grid; gap: 7px; }
+  .content-panel-mobile-control label { color: #597080; font-size: 12px; font-weight: 760; text-transform: uppercase; }
+  .content-panel-mobile-control select { width: 100%; min-height: 46px; border: 1px solid #a8c2cf; border-radius: 6px; background: #ffffff; color: #0b3c5d; padding: 0 12px; font: inherit; font-weight: 720; }
+  .content-panel-stage { min-height: 0; }
+  .content-panel { padding: 26px 0 14px; }
+  .content-panel-title { font-size: 27px; }
+  .panel-section.muted { margin: 0 -18px; padding: 28px 18px; }
+  .content-panel-progress { text-align: left; }
+
+  .nav-shell > *,
+  .product-hero > *,
+  .product-hero-copy h1,
+  .product-hero-copy > p { min-width: 0; max-width: 100%; }
+  .product-hero-copy h1 { overflow-wrap: anywhere; text-wrap: wrap; }
+}
+
 /* Persistent contact entry: centred on desktop, thumb-reachable on mobile. */
 .whatsapp-float {
   position: fixed;

@@ -3,15 +3,21 @@ import Link from "next/link";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { getProductFamilyPath, getProductPath, getProductsForFamily, productFamilies, products } from "@/lib/data";
 import { getProductFamilyPreview } from "@/lib/product-family-content";
+import { Pagination } from "@/components/pagination";
 
 type ProductCatalogProps = {
   familySlug?: string;
   includeFamilyOverview?: boolean;
+  page?: number;
 };
 
-export function ProductFilter({ familySlug, includeFamilyOverview = true }: ProductCatalogProps) {
+export function ProductFilter({ familySlug, includeFamilyOverview = true, page = 1 }: ProductCatalogProps) {
   const selected = familySlug ? productFamilies.find((family) => family.slug === familySlug) : undefined;
   const displayedProducts = selected ? getProductsForFamily(selected.slug) : products;
+  const pageSize = selected ? displayedProducts.length : 6;
+  const totalPages = Math.max(1, Math.ceil(displayedProducts.length / pageSize));
+  const currentPage = Math.min(Math.max(1, Math.floor(page)), totalPages);
+  const pagedProducts = displayedProducts.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
     <div className="product-explorer">
@@ -52,7 +58,7 @@ export function ProductFilter({ familySlug, includeFamilyOverview = true }: Prod
         </nav>
 
         <div className="product-grid">
-          {displayedProducts.map((product) => (
+          {pagedProducts.map((product) => (
             <article className="product-card" key={product.code}>
               <div className="product-card-media">
                 {product.image ? <Image src={product.image} alt={product.imageAlt || product.name} width={760} height={500} /> : <span className="product-card-technical-mark"><small>{product.category}</small><strong>{product.code}</strong></span>}
@@ -63,6 +69,7 @@ export function ProductFilter({ familySlug, includeFamilyOverview = true }: Prod
             </article>
           ))}
         </div>
+        <Pagination currentPage={currentPage} totalItems={displayedProducts.length} pageSize={pageSize} pathname={selected ? getProductFamilyPath(selected) : "/products"} label="Products" />
       </div>
     </div>
   );

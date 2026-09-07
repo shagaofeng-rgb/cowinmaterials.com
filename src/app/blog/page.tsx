@@ -3,23 +3,30 @@ import { ArrowRight, CalendarDays } from "lucide-react";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { getBlogArticles } from "@/lib/blog/store";
+import { getPublishedBlogPage } from "@/lib/blog/store";
+import { Pagination } from "@/components/pagination";
 import { createPageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata() {
+type BlogPageProps = { searchParams: Promise<{ page?: string }> };
+
+export async function generateMetadata({ searchParams }: BlogPageProps) {
   const articles = await getBlogArticles();
+  const page = Math.max(1, Number((await searchParams).page) || 1);
   return createPageMetadata({
-    title: "Aerogel Technical Blog | Cowin Materials",
+    title: page > 1 ? `Aerogel Technical Blog - Page ${page} | Cowin Materials` : "Aerogel Technical Blog | Cowin Materials",
     description: "Technical articles about silica aerogel insulation, fire protection, waterproofing and thermal-management applications.",
-    path: "/blog",
+    path: page > 1 ? `/blog?page=${page}` : "/blog",
     keywords: ["aerogel blog", "silica aerogel technical articles", "industrial insulation guidance"],
     index: articles.length > 0,
   });
 }
 
-export default async function BlogPage() {
-  const articles = await getBlogArticles();
+export default async function BlogPage({ searchParams }: BlogPageProps) {
+  const requestedPage = Math.max(1, Number((await searchParams).page) || 1);
+  const result = await getPublishedBlogPage({ page: requestedPage, pageSize: 9 });
+  const articles = result.articles;
   return (
     <>
       <Header />
@@ -31,6 +38,7 @@ export default async function BlogPage() {
         </section>
         <section className="section">
           {articles.length ? (
+            <>
             <div className="news-grid">
               {articles.map((article) => (
                 <article className="news-card" key={article.id}>
@@ -53,6 +61,8 @@ export default async function BlogPage() {
                 </article>
               ))}
             </div>
+            <Pagination currentPage={result.page} totalItems={result.total} pageSize={result.pageSize} pathname="/blog" label="Blog articles" />
+            </>
           ) : (
             <div className="empty-state-panel">
               <span className="eyebrow">Technical Library</span>
