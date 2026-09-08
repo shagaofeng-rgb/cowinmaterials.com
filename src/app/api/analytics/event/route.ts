@@ -29,6 +29,16 @@ function isValidPagePath(value: string) {
   return value.startsWith("/") && !value.startsWith("//") && value.length <= 260;
 }
 
+function isValidUuid(value: string) {
+  return !value || /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
+function readUtm(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const allowed = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"];
+  return Object.fromEntries(allowed.map((key) => [key, readString((value as Record<string, unknown>)[key], 120)]).filter(([, item]) => item));
+}
+
 export async function POST(request: Request) {
   try {
     const origin = request.headers.get("origin");
@@ -51,10 +61,15 @@ export async function POST(request: Request) {
     const requestType = readString(body?.request_type, 160);
     const receivedEventId = readString(body?.event_id, 120);
     const pagePath = readString(body?.page_path, 260);
+    const visitorKey = readString(body?.visitor_id, 64);
+    const sessionKey = readString(body?.session_id, 64);
+    const referrerPath = readString(body?.referrer_path, 260);
+    const referrerHost = readString(body?.referrer_host, 255);
+    const device = readString(body?.device, 24);
 
     const isAllowedEvent = allowedEventNames.has(receivedEventName as AnalyticsEventName);
     const isValidWhatsapp = receivedEventName !== "whatsapp_click" || receivedPlacement === whatsappPlacement;
-    if (!isAllowedEvent || !isValidWhatsapp || !isValidEventId(receivedEventId) || !isValidPagePath(pagePath)) {
+    if (!isAllowedEvent || !isValidWhatsapp || !isValidEventId(receivedEventId) || !isValidPagePath(pagePath) || !isValidUuid(visitorKey) || !isValidUuid(sessionKey) || (referrerPath && !isValidPagePath(referrerPath))) {
       return NextResponse.json({ error: "Invalid analytics event." }, { status: 400 });
     }
 
@@ -65,6 +80,12 @@ export async function POST(request: Request) {
       source: "website",
       placement: receivedEventName === "whatsapp_click" ? whatsappPlacement : undefined,
       requestType: receivedEventName === "form_submit" ? requestType : undefined,
+      visitorKey: visitorKey || undefined,
+      sessionKey: sessionKey || undefined,
+      referrerPath: referrerPath || undefined,
+      referrerHost: referrerHost || undefined,
+      utm: readUtm(body?.utm),
+      device: ["mobile", "tablet", "desktop"].includes(device) ? device : undefined,
     });
 
     if (!result.recorded && !result.duplicate) {

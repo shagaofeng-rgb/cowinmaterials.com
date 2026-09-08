@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Send } from "lucide-react";
 import { useState, useSyncExternalStore } from "react";
-import { trackAnalyticsEvent } from "@/components/analytics-events";
+import { getAnalyticsIdentity, trackAnalyticsEvent } from "@/components/analytics-events";
 
 const customerTypes = [
   "End User",
@@ -86,6 +86,9 @@ export function InquiryForm() {
         const form = event.currentTarget;
         const formData = new FormData(form);
         formData.set("page", window.location.href);
+        const identity = getAnalyticsIdentity();
+        formData.set("visitor_id", identity.visitorKey);
+        formData.set("session_id", identity.sessionKey);
         for (const key of ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"]) {
           const value = new URLSearchParams(window.location.search).get(key);
           if (value) formData.set(key, value);

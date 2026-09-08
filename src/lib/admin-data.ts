@@ -1,5 +1,6 @@
 import { applications, products, resourceSections, site } from "@/lib/data";
 import { getDatabaseHealth, getPool } from "@/lib/database";
+import { getAdminDateRange, paginate as paginateItems, parsePage, parsePageSize, type AdminDateRange, type AdminListParams as SharedAdminListParams } from "@/lib/admin-listing";
 
 export const adminNav = [
   { href: "/admin", label: "数据概览", group: "运营" },
@@ -25,11 +26,7 @@ export const adminNavGroups = ["运营", "内容", "增长", "系统"].map((labe
 
 export type AdminModuleKey = (typeof adminNav)[number]["href"] extends `/admin/${infer Key}` ? Key : never;
 
-export type AdminListParams = {
-  q?: string;
-  page?: string;
-  pageSize?: string;
-};
+export type AdminListParams = SharedAdminListParams;
 
 export type AdminStatus = "Up to date" | "Pending" | "Syncing" | "Failed" | "Not connected";
 
@@ -51,17 +48,9 @@ export type AdminModuleData = {
   status?: AdminStatus;
   lastSyncedAt?: string | null;
   metrics?: { label: string; value: string | number; note: string }[];
+  pagination?: { page: number; pageSize: number; total: number; pages: number };
+  range?: AdminDateRange;
 };
-
-function parsePage(value?: string) {
-  const page = Number(value || "1");
-  return Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
-}
-
-function parsePageSize(value?: string) {
-  const pageSize = Number(value || "20");
-  return [10, 20, 50, 100].includes(pageSize) ? pageSize : 20;
-}
 
 function formatDate(value?: Date | string | null) {
   if (!value) return "暂无记录";
@@ -73,14 +62,7 @@ function formatDate(value?: Date | string | null) {
 }
 
 export function paginate<T>(items: T[], params: AdminListParams) {
-  const page = parsePage(params.page);
-  const pageSize = parsePageSize(params.pageSize);
-  const total = items.length;
-  const pages = Math.max(1, Math.ceil(total / pageSize));
-  const current = Math.min(page, pages);
-  const start = (current - 1) * pageSize;
-
-  return { items: items.slice(start, start + pageSize), page: current, pageSize, total, pages };
+  return paginateItems(items, params);
 }
 
 export function getAdminProducts(params: AdminListParams) {
@@ -200,7 +182,7 @@ export async function getAdminDashboard() {
   };
 }
 
-export async function getAdminModuleData(module: string): Promise<AdminModuleData | null> {
+export async function getAdminModuleData(module: string, params: AdminListParams = {}): Promise<AdminModuleData | null> {
   const database = await getDatabaseHealth();
   const databaseSource = database.connected ? "PostgreSQL 实时查询" : "数据库未连接";
 
@@ -266,8 +248,22 @@ export async function getAdminModuleData(module: string): Promise<AdminModuleDat
     };
   }
   if (module === "logs") {
-    const rows = await queryRows<{ id: string; action: string; module: string; target_id: string | null; created_at: Date }>("select id, action, module, target_id, created_at from audit_logs order by created_at desc limit 200");
-    return { title: "操作日志", description: "仅追加的后台操作记录。敏感凭据、完整客户内容和密钥不会写入日志。", source: databaseSource, rows: rows.map((row) => ({ id: row.id, name: `${row.module} · ${row.action}`, status: "成功", value: row.target_id ? `记录 ${row.target_id}` : "系统记录", updatedAt: row.created_at.toISOString(), source: databaseSource })), status: "Up to date" };
+    const range = getAdminDateRange(params);
+    const values: unknown[] = [];
+    const clauses: string[] = [];
+    if (range.start) { values.push(range.start); clauses.push(`created_at >= $${values.length}`); }
+    if (range.end) { values.push(range.end); clauses.push(`created_at < $${values.length}`); }
+    const query = params.q?.trim();
+    if (query) { values.push(`%${query}%`); clauses.push(`(module ilike $${values.length} or action ilike $${values.length} or coalesce(target_id::text, '') ilike $${values.length})`); }
+    const where = clauses.length ? `where ${clauses.join(" and ")}` : "";
+    const count = await queryRows<{ count: string }>(`select count(*)::text as count from audit_logs ${where}`, values);
+    const total = Number(count[0]?.count || 0);
+    const pageSize = parsePageSize(params.pageSize);
+    const pages = Math.max(1, Math.ceil(total / pageSize));
+    const page = Math.min(parsePage(params.page), pages);
+    values.push(pageSize, (page - 1) * pageSize);
+    const rows = await queryRows<{ id: string; action: string; module: string; target_id: string | null; created_at: Date }>(`select id, action, module, target_id, created_at from audit_logs ${where} order by created_at desc limit $${values.length - 1} offset $${values.length}`, values);
+    return { title: "操作日志", description: "仅追加的后台操作记录。敏感凭据、完整客户内容和密钥不会写入日志。", source: databaseSource, rows: rows.map((row) => ({ id: row.id, name: `${row.module} · ${row.action}`, status: "成功", value: row.target_id ? `记录 ${row.target_id}` : "系统记录", updatedAt: row.created_at.toISOString(), source: databaseSource })), status: "Up to date", pagination: { page, pageSize, total, pages }, range };
   }
   if (module === "sync") {
     const rows = await queryRows<{ id: string; source: string; status: string; records_synced: number; error_message: string | null; started_at: Date | null; finished_at: Date | null }>("select id, source, status, records_synced, error_message, started_at, finished_at from sync_jobs order by created_at desc limit 100");

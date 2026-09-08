@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { cache } from "react";
 import sanitizeHtml from "sanitize-html";
 import { getPool } from "@/lib/database";
+import { getAdminDateRange, parsePage, parsePageSize, type AdminListParams } from "@/lib/admin-listing";
 import type { BlogArticle } from "./types";
 
 type BlogRow = {
@@ -17,6 +18,7 @@ type BlogRow = {
   category_name: string;
   published_at: Date | string | null;
   updated_at: Date | string;
+  created_at?: Date | string;
 };
 
 export type AdminBlogArticle = BlogArticle & { status: string; categoryName: string };
@@ -234,15 +236,37 @@ export const getBlogArticle = cache(async function getBlogArticle(slug: string) 
   return result.rows[0] ? rowToArticle(result.rows[0]) : null;
 });
 
-export async function getAdminBlogArticles() {
+export async function getAdminBlogArticles(filters: AdminListParams & { status?: string } = {}) {
   const pool = requirePool();
+  const range = getAdminDateRange(filters);
+  const pageSize = parsePageSize(filters.pageSize);
+  const requestedPage = parsePage(filters.page);
+  const clauses = ["a.class_id in ('blog', '31')", "a.deleted_at is null"];
+  const values: unknown[] = [];
+  const bind = (value: unknown) => { values.push(value); return `$${values.length}`; };
+  const query = filters.q?.trim();
+  if (query) {
+    const term = bind(`%${query}%`);
+    clauses.push(`(a.title_en ilike ${term} or a.slug ilike ${term} or a.author_id ilike ${term} or coalesce(c.name, '') ilike ${term})`);
+  }
+  if (["draft", "published", "archived"].includes(filters.status || "")) clauses.push(`a.status = ${bind(filters.status)}`);
+  if (range.start) clauses.push(`a.created_at >= ${bind(range.start)}`);
+  if (range.end) clauses.push(`a.created_at < ${bind(range.end)}`);
+  const where = clauses.join(" and ");
+  const count = await pool.query<{ count: string }>(`select count(*)::text as count from articles a left join article_categories c on c.id = a.category_id where ${where}`, values);
+  const total = Number(count.rows[0]?.count || 0);
+  const pages = Math.max(1, Math.ceil(total / pageSize));
+  const page = Math.min(requestedPage, pages);
+  const limit = bind(pageSize);
+  const offset = bind((page - 1) * pageSize);
   const result = await pool.query<BlogRow>(
     `${articleSelect}
-     where a.class_id in ('blog', '31') and a.deleted_at is null
+     where ${where}
      order by a.created_at desc
-     limit 500`,
+     limit ${limit} offset ${offset}`,
+    values,
   );
-  return result.rows.map((row) => ({ ...rowToArticle(row), status: row.status, categoryName: row.category_name }));
+  return { articles: result.rows.map((row) => ({ ...rowToArticle(row), status: row.status, categoryName: row.category_name })), total, page, pages, pageSize, range };
 }
 
 export async function getAdminBlogArticle(id: string) {

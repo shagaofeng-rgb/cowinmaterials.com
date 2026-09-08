@@ -12,6 +12,11 @@ type StoredAnalyticsEvent = {
   requestType?: string;
 };
 
+export type AnalyticsIdentity = {
+  visitorKey: string;
+  sessionKey: string;
+};
+
 const storedEventNames = new Set<StoredAnalyticsEventName>([
   "page_view", "whatsapp_click", "form_submit", "email_click", "phone_click", "request_tds", "request_sample", "request_quote",
 ]);
@@ -40,13 +45,90 @@ function eventId(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
 }
 
+const visitorStorageKey = "cowin.analytics.visitor";
+const sessionStorageKey = "cowin.analytics.session";
+const sessionIdleMs = 30 * 60 * 1000;
+let fallbackVisitorKey = "";
+let fallbackSessionKey = "";
+
+function readStoredId(storage: Storage, key: string) {
+  try {
+    const value = storage.getItem(key) || "";
+    return /^[0-9a-f-]{36}$/i.test(value) ? value : "";
+  } catch {
+    return "";
+  }
+}
+
+function storeId(storage: Storage, key: string, value: string) {
+  try {
+    storage.setItem(key, value);
+  } catch {
+    // Analytics remains optional when browser storage is unavailable.
+  }
+}
+
+function readStoredNumber(storage: Storage, key: string) {
+  try {
+    const value = Number(storage.getItem(key) || "0");
+    return Number.isFinite(value) ? value : 0;
+  } catch {
+    return 0;
+  }
+}
+
+export function getAnalyticsIdentity(): AnalyticsIdentity {
+  const visitorStored = readStoredId(window.localStorage, visitorStorageKey);
+  const visitorKey = visitorStored || fallbackVisitorKey || eventId("visitor");
+  fallbackVisitorKey = visitorKey;
+  if (!visitorStored) storeId(window.localStorage, visitorStorageKey, visitorKey);
+
+  const sessionStored = readStoredId(window.sessionStorage, sessionStorageKey);
+  const lastSeen = readStoredNumber(window.sessionStorage, `${sessionStorageKey}.seen`);
+  const sessionKey = sessionStored && Date.now() - lastSeen < sessionIdleMs ? sessionStored : eventId("session");
+  fallbackSessionKey = sessionKey || fallbackSessionKey || eventId("session");
+  storeId(window.sessionStorage, sessionStorageKey, fallbackSessionKey);
+  storeId(window.sessionStorage, `${sessionStorageKey}.seen`, String(Date.now()));
+
+  return { visitorKey, sessionKey: fallbackSessionKey };
+}
+
+function getReferrer() {
+  if (!document.referrer) return {};
+  try {
+    const referrer = new URL(document.referrer);
+    if (referrer.origin === window.location.origin) return { referrerPath: referrer.pathname };
+    return { referrerHost: referrer.hostname.slice(0, 255) };
+  } catch {
+    return {};
+  }
+}
+
+function getUtm() {
+  const params = new URLSearchParams(window.location.search);
+  return Object.fromEntries(["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"]
+    .map((key) => [key, (params.get(key) || "").slice(0, 120)])
+    .filter(([, value]) => value));
+}
+
+function getDevice() {
+  const width = window.innerWidth;
+  return width < 768 ? "mobile" : width < 1180 ? "tablet" : "desktop";
+}
+
 export function recordStoredAnalyticsEvent(event: StoredAnalyticsEvent) {
+  const identity = getAnalyticsIdentity();
   const payload = JSON.stringify({
     event_id: eventId(event.eventName),
     event_name: event.eventName,
     page_path: event.pagePath,
     ...(event.placement ? { placement: event.placement } : {}),
     ...(event.requestType ? { request_type: event.requestType } : {}),
+    visitor_id: identity.visitorKey,
+    session_id: identity.sessionKey,
+    ...getReferrer(),
+    utm: getUtm(),
+    device: getDevice(),
   });
 
   const body = new Blob([payload], { type: "application/json" });

@@ -21,6 +21,8 @@ export type InquiryPayload = {
   page?: string;
   submittedAt?: string;
   utm?: Record<string, string>;
+  visitorKey?: string;
+  sessionKey?: string;
   attachment?: {
     filename: string;
     content: Buffer;

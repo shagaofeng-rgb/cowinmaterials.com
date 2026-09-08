@@ -107,6 +107,8 @@ export async function POST(request: Request) {
         utm_term: clean(body.get("utm_term"), 120),
         utm_content: clean(body.get("utm_content"), 120),
       },
+      visitorKey: clean(body.get("visitor_id"), 64),
+      sessionKey: clean(body.get("session_id"), 64),
       attachment,
     };
 

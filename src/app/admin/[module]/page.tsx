@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AdminDateRangeFields, AdminPagination } from "@/components/admin-list-controls";
 import { AdminEmpty, AdminNotice, AdminShell } from "@/components/admin-shell";
 import { AdminSyncStatus } from "@/components/admin-sync-status";
 import { adminNav, formatAdminDate, getAdminModuleData } from "@/lib/admin-data";
@@ -12,15 +13,16 @@ export const metadata: Metadata = {
 };
 
 export function generateStaticParams() {
-  const dedicatedRoutes = new Set(["/admin", "/admin/products", "/admin/blog", "/admin/inquiries", "/admin/news", "/admin/documents", "/admin/seo", "/admin/sync"]);
+  const dedicatedRoutes = new Set(["/admin", "/admin/products", "/admin/blog", "/admin/inquiries", "/admin/analytics", "/admin/news", "/admin/documents", "/admin/seo", "/admin/sync"]);
   return adminNav.filter((item) => !dedicatedRoutes.has(item.href)).map((item) => ({ module: item.href.replace("/admin/", "") }));
 }
 
-export default async function AdminModulePage({ params }: { params: Promise<{ module: string }> }) {
+export default async function AdminModulePage({ params, searchParams }: { params: Promise<{ module: string }>; searchParams: Promise<{ q?: string; page?: string; pageSize?: string; range?: string; from?: string; to?: string }> }) {
   await requireAdminSession();
   const { module } = await params;
+  const query = await searchParams;
 
-  const page = await getAdminModuleData(module);
+  const page = await getAdminModuleData(module, query);
   if (!page) notFound();
 
   return (
@@ -42,6 +44,7 @@ export default async function AdminModulePage({ params }: { params: Promise<{ mo
         </section>
       ) : null}
       <section className="admin-panel">
+        {page.pagination && page.range ? <form className="admin-filter-grid admin-filter-grid-wide"><label className="admin-filter-field"><span>搜索</span><input name="q" defaultValue={query.q || ""} placeholder="模块、动作或记录 ID" /></label><AdminDateRangeFields range={page.range} /><label className="admin-filter-field"><span>每页显示</span><select name="pageSize" defaultValue={String(page.pagination.pageSize)}><option value="10">10条</option><option value="20">20条</option><option value="50">50条</option><option value="100">100条</option></select></label><button className="admin-primary-button" type="submit">查询记录</button><Link href={`/admin/${module}`}>重置</Link></form> : null}
         {page.rows.length ? (
           <div className="admin-table-wrap">
             <table className="admin-table">
@@ -72,6 +75,7 @@ export default async function AdminModulePage({ params }: { params: Promise<{ mo
         ) : (
           <AdminEmpty text="暂无记录" />
         )}
+        {page.pagination ? <AdminPagination pathname={`/admin/${module}`} page={page.pagination.page} pages={page.pagination.pages} pageSize={page.pagination.pageSize} total={page.pagination.total} query={{ q: query.q || undefined, range: page.range?.key, from: query.from || undefined, to: query.to || undefined }} /> : null}
       </section>
     </AdminShell>
   );

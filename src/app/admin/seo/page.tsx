@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AdminDateRangeFields, AdminPagination } from "@/components/admin-list-controls";
 import { AdminEmpty, AdminNotice, AdminShell } from "@/components/admin-shell";
 import { AdminSyncStatus } from "@/components/admin-sync-status";
 import { requireAdminSession } from "@/lib/admin-auth";
@@ -12,9 +13,10 @@ function displayTime(value?: Date | null) {
   return value ? new Date(value).toLocaleString("zh-CN") : "暂无记录";
 }
 
-export default async function AdminSeoPage() {
+export default async function AdminSeoPage({ searchParams }: { searchParams: Promise<{ page?: string; pageSize?: string; sitemapPage?: string; range?: string; from?: string; to?: string }> }) {
   await requireAdminSession();
-  const { sitemapRuns } = await getPublishingOperations();
+  const params = await searchParams;
+  const { sitemapRuns, range, pageSize, sitemapTotal, sitemapPaging } = await getPublishingOperations(params);
   const latest = sitemapRuns[0];
   const searchConsoleEnabled = process.env.GOOGLE_SEARCH_CONSOLE_ENABLED === "true";
   const failed = sitemapRuns.filter((run) => run.status === "failed" || run.urls_failed > 0).length;
@@ -24,6 +26,7 @@ export default async function AdminSeoPage() {
     <AdminShell title="SEO中心">
       <AdminNotice><strong>数据边界：</strong>这里仅展示站点实际产生的 Sitemap 维护记录和服务器配置状态。Google Search Console 未完成正式授权或未启用时，不显示虚构的排名、点击或收录数据。</AdminNotice>
       <AdminSyncStatus status={failed ? "Failed" : latest ? "Up to date" : "Not connected"} lastSyncedAt={latest?.finished_at?.toISOString() || null} label="Sitemap 与抓取准备" websiteHref="/sitemap.xml" />
+      <section className="admin-panel"><form className="admin-filter-grid admin-filter-grid-wide"><AdminDateRangeFields range={range} /><label className="admin-filter-field"><span>每页显示</span><select name="pageSize" defaultValue={String(pageSize)}><option value="10">10条</option><option value="20">20条</option><option value="50">50条</option><option value="100">100条</option></select></label><button className="admin-primary-button" type="submit">查询记录</button><Link href="/admin/seo">重置</Link></form></section>
       <section className="admin-metric-grid" aria-label="SEO 运行摘要">
         <article className="admin-metric"><span>Sitemap 维护记录</span><strong>{sitemapRuns.length}</strong><small>已落库的最近运行</small></article>
         <article className="admin-metric"><span>最近有效 URL</span><strong>{lastSuccessful?.urls_successful ?? "—"}</strong><small>最近一次成功维护</small></article>
@@ -36,7 +39,7 @@ export default async function AdminSeoPage() {
       </section>
       <section className="admin-panel">
         <div className="admin-panel-heading"><div><h2>最近 Sitemap 维护</h2><p>每次运行校验站点地图、robots 声明和公开 URL；提交状态仅代表 API 响应，不承诺搜索引擎收录。</p></div></div>
-        {sitemapRuns.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>时间</th><th>触发方式</th><th>状态</th><th>URL 结果</th><th>Search Console</th><th>说明</th></tr></thead><tbody>{sitemapRuns.map((run) => <tr key={run.id}><td>{displayTime(run.started_at)}</td><td>{run.trigger_type}</td><td><span className="admin-badge">{run.status}</span></td><td>{run.urls_successful} 成功 / {run.urls_failed} 失败</td><td>{run.search_console_submitted ? run.search_console_status || "已提交" : "本次未提交"}</td><td>{run.message || "—"}</td></tr>)}</tbody></table></div> : <AdminEmpty text="尚无 Sitemap 维护记录。可在“运行与同步”中发起一次受保护的维护。" />}
+        {sitemapRuns.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>时间</th><th>触发方式</th><th>状态</th><th>URL 结果</th><th>Search Console</th><th>说明</th></tr></thead><tbody>{sitemapRuns.map((run) => <tr key={run.id}><td>{displayTime(run.started_at)}</td><td>{run.trigger_type}</td><td><span className="admin-badge">{run.status}</span></td><td>{run.urls_successful} 成功 / {run.urls_failed} 失败</td><td>{run.search_console_submitted ? run.search_console_status || "已提交" : "本次未提交"}</td><td>{run.message || "—"}</td></tr>)}</tbody></table></div> : <AdminEmpty text="当前时间范围内尚无 Sitemap 维护记录。可在“运行与同步”中发起一次受保护的维护。" />}<AdminPagination pathname="/admin/seo" page={sitemapPaging.page} pages={sitemapPaging.pages} pageSize={pageSize} total={sitemapTotal} query={{ range: range.key, from: params.from || undefined, to: params.to || undefined }} />
       </section>
     </AdminShell>
   );
