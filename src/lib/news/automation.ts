@@ -2,12 +2,12 @@ import "server-only";
 
 import { revalidatePath } from "next/cache";
 import { getPool } from "@/lib/database";
-import { getProductPath } from "@/lib/data";
 import { absoluteUrl } from "@/lib/seo";
 import type { NewsAutomationResult, NewsCandidate, NewsRelatedProduct } from "./types";
 import { collectNewsCandidates } from "./sources";
 import { buildNewsArticleHtml, buildNewsSeoTitle, canonicalizeSourceUrl, createSourceFingerprint, hasDirectMaterialRelevance, hashText, isWithinLookback, scoreCandidateAgainstProducts, slugifyNewsTitle } from "./utils";
 import { isIndexableNewsCandidate } from "./relevance";
+import { getEditorialNewsImage } from "./editorial-images";
 function getLookbackHours() { return Math.min(24 * 30, Math.max(24, Number(process.env.NEWS_LOOKBACK_HOURS || 336))); }
 function getPublishLimit() { return Math.min(3, Math.max(1, Number(process.env.NEWS_MAX_PUBLISH_PER_RUN || 1))); }
 
@@ -35,12 +35,13 @@ async function saveArticle(candidate: NewsCandidate, relatedProducts: NewsRelate
   const pool = getPool(); if (!pool) return null;
   const canonicalSourceUrl = canonicalizeSourceUrl(candidate.url); const fingerprint = createSourceFingerprint(candidate);
   const slug = `${slugifyNewsTitle(candidate.title)}-${candidate.publishedAt.slice(0, 10)}`;
-  const primary = relatedProducts[0]; const imageUrl = primary?.image || "/images/fire-test-lab.jpg";
+  const primary = relatedProducts[0];
+  const editorialImage = getEditorialNewsImage({ title: candidate.title, summary: candidate.summary, seed: canonicalSourceUrl });
   const excerpt = `Cowin Materials buyer brief: a recent ${candidate.publisher} update considered in the context of ${primary?.category.toLowerCase() || "advanced insulation material"} evaluation.`;
   const contentHtml = buildNewsArticleHtml(candidate, relatedProducts);
   const result = await pool.query<{ id: string }>(
     `insert into news_articles (title, slug, excerpt, content_html, status, seo_indexable, language, category, tags, published_at, updated_at, author_name, seo_title, seo_description, canonical_url, primary_keyword, secondary_keywords, geo_summary, key_takeaways, cover_image_url, cover_image_source_url, cover_image_page_url, cover_image_alt, cover_image_status, cover_image_fetched_at, cover_image_hash, source_title, source_author, source_publisher, source_url, canonical_source_url, source_language, source_published_at, source_fetched_at, source_timezone, source_fingerprint, relevance_score, credibility_score, generation_model, generation_prompt_version) values ($1, $2, $3, $4, 'published', $24, 'en', 'Industry Insights', $5, now(), now(), 'Cowin Materials Editorial Team', $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, 'verified', now(), $17, $1, null, $18, $19, $20, 'en', $21, now(), 'UTC', $22, $23, 0.75, 'deterministic-editorial-template', 'news-direct-publish-v3') on conflict (slug) do nothing returning id`,
-    [candidate.title, slug, excerpt, contentHtml, ["aerogel", "insulation", "battery", "fire protection"].filter((tag) => `${candidate.title} ${candidate.summary}`.toLowerCase().includes(tag)), buildNewsSeoTitle(candidate.title), excerpt.slice(0, 155), absoluteUrl(`/news/${slug}`), primary?.category || "silica aerogel materials", relatedProducts.map((product) => product.name), `Technical context for international evaluation of ${primary?.category || "advanced insulation materials"}.`, ["Automatically selected from a recent, product-relevant public source.", "Published directly after source, freshness, relevance and duplicate checks.", "This is not a product certification or project-specific conclusion."], imageUrl, absoluteUrl(imageUrl), primary ? absoluteUrl(getProductPath(primary)) : absoluteUrl("/products"), candidate.title, hashText(imageUrl), candidate.publisher, candidate.url, canonicalSourceUrl, new Date(candidate.publishedAt), fingerprint, primary?.relevanceScore || 0, indexable],
+    [candidate.title, slug, excerpt, contentHtml, ["aerogel", "insulation", "battery", "fire protection"].filter((tag) => `${candidate.title} ${candidate.summary}`.toLowerCase().includes(tag)), buildNewsSeoTitle(candidate.title), excerpt.slice(0, 155), absoluteUrl(`/news/${slug}`), primary?.category || "silica aerogel materials", relatedProducts.map((product) => product.name), `Technical context for international evaluation of ${primary?.category || "advanced insulation materials"}.`, ["Automatically selected from a recent, product-relevant public source.", "Published directly after source, freshness, relevance and duplicate checks.", "This is not a product certification or project-specific conclusion."], editorialImage.url, absoluteUrl(editorialImage.url), absoluteUrl("/news"), editorialImage.alt, hashText(editorialImage.url), candidate.publisher, candidate.url, canonicalSourceUrl, new Date(candidate.publishedAt), fingerprint, primary?.relevanceScore || 0, indexable],
   );
   const articleId = result.rows[0]?.id; if (!articleId) return null;
   await Promise.all(relatedProducts.map((product, index) => pool.query(`insert into news_products (news_id, product_slug, product_name, product_category, product_summary, product_image, relevance_score, relationship_reason, display_order) values ($1,$2,$3,$4,$5,$6,$7,$8,$9) on conflict (news_id, product_slug) do nothing`, [articleId, product.slug, product.name, product.category, product.summary, product.image, product.relevanceScore, product.relationshipReason, index + 1])));
