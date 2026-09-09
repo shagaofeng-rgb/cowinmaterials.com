@@ -17,7 +17,7 @@ const retryableDatabaseError = /(connection|connect|timeout|terminat|socket|econ
 const wait = (milliseconds: number) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 
 async function queryWithRetry<T extends QueryResultRow>(query: string, values: unknown[] = []) {
-  const pool = getPool();
+  const pool = getPool(true);
   if (!pool) throw new Error("DATABASE_URL is not configured.");
   let lastError: unknown;
   for (let attempt = 1; attempt <= databaseAttempts; attempt += 1) {
@@ -33,27 +33,27 @@ async function queryWithRetry<T extends QueryResultRow>(query: string, values: u
 }
 
 async function createJob() {
-  if (!getPool()) return null;
+  if (!getPool(true)) return null;
   const result = await queryWithRetry<{ id: string }>(`insert into news_jobs (job_type, status, started_at, message) values ('cron_collect_generate_publish', 'running', now(), 'Automated direct publishing started.') returning id`);
   return result.rows[0]?.id || null;
 }
 async function finishJob(id: string | null, status: string, message: string, metadata: { collected: number; rejected: number; published: number; [key: string]: unknown }) {
-  if (!getPool() || !id) return;
+  if (!getPool(true) || !id) return;
   await queryWithRetry(`update news_jobs set status = $2, finished_at = now(), message = $3, records_collected = $4, records_rejected = $5, records_published = $6, metadata = $7::jsonb where id = $1`, [id, status, message, metadata.collected, metadata.rejected, metadata.published, JSON.stringify(metadata)]);
 }
 async function insertAudit(jobId: string | null, eventType: string, severity: string, message: string, metadata: Record<string, unknown>) {
-  if (!getPool()) return;
+  if (!getPool(true)) return;
   await queryWithRetry(`insert into news_publication_audits (job_id, event_type, severity, message, metadata) values ($1, $2, $3, $4, $5::jsonb)`, [jobId, eventType, severity, message, JSON.stringify(metadata)]);
 }
 
 async function sourceAlreadyUsed(canonicalUrl: string, fingerprint: string) {
-  if (!getPool()) return true;
+  if (!getPool(true)) return true;
   const result = await queryWithRetry<{ id: string }>(`select id from news_articles where canonical_source_url = $1 or source_fingerprint = $2 limit 1`, [canonicalUrl, fingerprint]);
   return Boolean(result.rows[0]);
 }
 
 async function saveArticle(candidate: NewsCandidate, relatedProducts: NewsRelatedProduct[], indexable: boolean) {
-  if (!getPool()) return null;
+  if (!getPool(true)) return null;
   const canonicalSourceUrl = canonicalizeSourceUrl(candidate.url); const fingerprint = createSourceFingerprint(candidate);
   const slug = `${slugifyNewsTitle(candidate.title)}-${candidate.publishedAt.slice(0, 10)}`;
   const primary = relatedProducts[0];
@@ -72,7 +72,7 @@ async function saveArticle(candidate: NewsCandidate, relatedProducts: NewsRelate
 
 export async function runNewsAutomation(): Promise<NewsAutomationResult> {
   const checkedAt = new Date().toISOString();
-  if (!getPool()) return { ok: false, status: "configuration_required", checkedAt, collected: 0, rejected: 0, published: 0, message: "DATABASE_URL is not configured; automated News cannot publish durable content.", warnings: ["Configure the production PostgreSQL connection and apply the News schema."] };
+  if (!getPool(true)) return { ok: false, status: "configuration_required", checkedAt, collected: 0, rejected: 0, published: 0, message: "DATABASE_URL is not configured; automated News cannot publish durable content.", warnings: ["Configure the production PostgreSQL connection and apply the News schema."] };
   let jobId: string | null = null; let collected = 0; let rejected = 0; let published = 0;
   try {
     jobId = await createJob();

@@ -26,6 +26,7 @@ const editorialImages: Record<EditorialImageFamily, readonly Omit<EditorialNewsI
 };
 
 function selectFamily(text: string): EditorialImageFamily {
+  if (/\baerogels?\b/i.test(text)) return "aerogel";
   if (/\b(waterproof|water repellent|water repellency|hydrophobic|concrete|masonry|silane|siloxane|penetrating)\b/i.test(text)) return "water";
   if (/\b(battery|batteries|cell|pack|electric vehicle|\bev\b|lithium|bess|thermal runaway)\b/i.test(text)) return "battery";
   if (/\b(intumescent|fireproof|fire protection|passive fire|steel fire|fire safety)\b/i.test(text)) return "fire";

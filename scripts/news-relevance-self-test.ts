@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { getNewsProductRelevanceThreshold, hasAerogelMaterialResearchContext, hasDirectMaterialRelevance, isIndexableNewsCandidate } from "../src/lib/news/relevance.ts";
 import { buildNewsSeoTitle } from "../src/lib/news/seo-title.ts";
+import { getEditorialNewsImage } from "../src/lib/news/editorial-images.ts";
 
 test("accepts direct material and battery-safety news", () => {
   assert.equal(hasDirectMaterialRelevance({ title: "Aerogel insulation selected for LNG pipe trials", summary: "" }), true);
@@ -33,4 +34,9 @@ test("builds concise News SEO titles without cutting a word", () => {
   assert.match(title, / \| Cowin Materials News$/);
   assert.equal(title.includes("enginee |"), false);
   assert.equal(buildNewsSeoTitle("Battery safety, misinformation, and a very long market update").includes(", |"), false);
+});
+
+test("uses an aerogel editorial cover when an aerogel material story includes silane", () => {
+  assert.equal(getEditorialNewsImage({ title: "Silane-engineered aerogels capture CO2 efficiently", seed: "test" }).family, "aerogel");
+  assert.equal(getEditorialNewsImage({ title: "Silane water-repellent treatment for concrete", seed: "test" }).family, "water");
 });

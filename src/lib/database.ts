@@ -10,6 +10,7 @@ export type DatabaseHealth = {
 };
 
 let pool: Pool | null = null;
+let directPool: Pool | null = null;
 
 function normalizedConnectionString(value: string) {
   const url = new URL(value);
@@ -32,21 +33,27 @@ export function hasDatabaseUrl() {
   return Boolean(process.env.DATABASE_URL);
 }
 
-export function getPool() {
-  if (!process.env.DATABASE_URL) {
+export function getPool(preferDirectConnection = false) {
+  const connectionString = preferDirectConnection
+    ? process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL
+    : process.env.DATABASE_URL;
+  if (!connectionString) {
     return null;
   }
 
-  if (!pool) {
-    pool = new Pool({
-      connectionString: normalizedConnectionString(process.env.DATABASE_URL),
-      connectionTimeoutMillis: 8000,
-      max: 5,
-      ssl: process.env.DATABASE_SSL === "false" ? false : { rejectUnauthorized: false },
-    });
-  }
+  const existingPool = preferDirectConnection ? directPool : pool;
+  if (existingPool) return existingPool;
 
-  return pool;
+  const createdPool = new Pool({
+    connectionString: normalizedConnectionString(connectionString),
+    connectionTimeoutMillis: 8000,
+    max: 5,
+    ssl: process.env.DATABASE_SSL === "false" ? false : { rejectUnauthorized: false },
+  });
+
+  if (preferDirectConnection) directPool = createdPool;
+  else pool = createdPool;
+  return createdPool;
 }
 
 export async function getDatabaseHealth(): Promise<DatabaseHealth> {
