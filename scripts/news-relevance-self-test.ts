@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { getNewsProductRelevanceThreshold, hasDirectMaterialRelevance, isIndexableNewsCandidate } from "../src/lib/news/relevance.ts";
+import { getNewsProductRelevanceThreshold, hasAerogelMaterialResearchContext, hasDirectMaterialRelevance, isIndexableNewsCandidate } from "../src/lib/news/relevance.ts";
 import { buildNewsSeoTitle } from "../src/lib/news/seo-title.ts";
 
 test("accepts direct material and battery-safety news", () => {
@@ -8,6 +8,8 @@ test("accepts direct material and battery-safety news", () => {
   assert.equal(hasDirectMaterialRelevance({ title: "Battery thermal runaway mitigation study released", summary: "" }), true);
   assert.equal(hasDirectMaterialRelevance({ title: "BESS safety review released", summary: "", keywords: ["fire safety"] }), true);
   assert.equal(hasDirectMaterialRelevance({ title: "Concrete waterproofing update", summary: "" }), true);
+  assert.equal(hasAerogelMaterialResearchContext({ title: "Silane-engineered aerogels capture CO2 efficiently in harsh conditions", summary: "" }), true);
+  assert.equal(hasDirectMaterialRelevance({ title: "Silane-engineered aerogels capture CO2 efficiently in harsh conditions", summary: "" }), true);
 });
 
 test("rejects broad energy-market news", () => {

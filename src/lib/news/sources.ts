@@ -4,15 +4,20 @@ import { canonicalizeSourceUrl, normalizeNewsTitle, normalizeSyndicatedSummary, 
 const googleNewsFeed = (query: string) => `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`;
 
 const defaultFeeds = [
-  { label: "Aerogel materials", url: googleNewsFeed('"silica aerogel" OR "aerogel insulation" when:30d') },
-  { label: "Battery thermal safety", url: googleNewsFeed('"battery thermal runaway" OR "battery thermal barrier" when:30d') },
-  { label: "Fire protection coatings", url: googleNewsFeed('"intumescent coating" OR "fireproof coating" steel when:30d') },
+  { label: "Aerogel materials research", url: googleNewsFeed('"silica aerogel" research when:30d') },
+  { label: "Aerogel insulation systems", url: googleNewsFeed('"aerogel insulation" OR "aerogel blanket" when:30d') },
+  { label: "Battery thermal barrier materials", url: googleNewsFeed('"battery thermal barrier" OR "thermal runaway barrier" when:30d') },
+  { label: "Fire protection coatings", url: googleNewsFeed('"intumescent coating" steel OR "passive fire protection coating" when:30d') },
+  { label: "Concrete water-repellent materials", url: googleNewsFeed('"concrete water repellent" OR "masonry water repellent" when:30d') },
   { label: "Energy storage safety", url: "https://www.energy-storage.news/feed/" },
   { label: "Solar and storage engineering", url: "https://www.pv-magazine.com/feed/" },
 ];
 
 const trustedSyndicatedPublishers = new Set([
   "AZoM",
+  "AZoQuantum",
+  "Bioengineer.org",
+  "C&EN",
   "Chemistry World",
   "European Coatings",
   "EurekAlert!",

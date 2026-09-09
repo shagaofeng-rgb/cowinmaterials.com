@@ -45,7 +45,8 @@ async function saveArticle(candidate: NewsCandidate, relatedProducts: NewsRelate
   );
   const articleId = result.rows[0]?.id; if (!articleId) return null;
   await Promise.all(relatedProducts.map((product, index) => pool.query(`insert into news_products (news_id, product_slug, product_name, product_category, product_summary, product_image, relevance_score, relationship_reason, display_order) values ($1,$2,$3,$4,$5,$6,$7,$8,$9) on conflict (news_id, product_slug) do nothing`, [articleId, product.slug, product.name, product.category, product.summary, product.image, product.relevanceScore, product.relationshipReason, index + 1])));
-  return articleId;
+  const verification = await pool.query<{ id: string }>(`select id from news_articles where id = $1 and status = 'published' and slug = $2`, [articleId, slug]);
+  return verification.rows[0] ? { articleId, slug } : null;
 }
 
 export async function runNewsAutomation(): Promise<NewsAutomationResult> {
@@ -75,9 +76,11 @@ export async function runNewsAutomation(): Promise<NewsAutomationResult> {
       const relatedProducts = scoreCandidateAgainstProducts(candidate);
       if (!relatedProducts.length) { rejected += 1; rejectionReasons.belowProductThreshold += 1; await insertAudit(jobId, "candidate_rejected", "info", "Candidate did not meet product-relevance threshold.", { sourceUrl: canonicalUrl }); continue; }
       const indexable = isIndexableNewsCandidate(candidate, relatedProducts);
-      const articleId = await saveArticle(candidate, relatedProducts, indexable);
-      if (!articleId) { rejected += 1; rejectionReasons.insertConflict += 1; await insertAudit(jobId, "candidate_duplicate", "info", "Candidate was not inserted because an equivalent article already exists.", { sourceUrl: canonicalUrl }); continue; }
-      published += 1; await insertAudit(jobId, "article_published", "info", "Article passed automatic checks and was published directly.", { articleId, sourceUrl: canonicalUrl, relatedProducts: relatedProducts.map((product) => product.slug), indexable });
+      const savedArticle = await saveArticle(candidate, relatedProducts, indexable);
+      if (!savedArticle) { rejected += 1; rejectionReasons.insertConflict += 1; await insertAudit(jobId, "candidate_duplicate", "info", "Candidate was not inserted because an equivalent article already exists.", { sourceUrl: canonicalUrl }); continue; }
+      published += 1;
+      revalidatePath(`/news/${savedArticle.slug}`);
+      await insertAudit(jobId, "article_published", "info", "Article passed automatic checks, was persisted as published, and was queued for front-end cache revalidation.", { articleId: savedArticle.articleId, sourceUrl: canonicalUrl, publicPath: `/news/${savedArticle.slug}`, relatedProducts: relatedProducts.map((product) => product.slug), indexable, publicationVerified: true });
     }
     const status = published ? "completed" : "no_publishable_items";
     const message = published ? `${published} News article${published === 1 ? "" : "s"} published directly.` : "No new source met freshness, relevance and duplicate checks.";

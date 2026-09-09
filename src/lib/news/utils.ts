@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import { getProductPath, products, site } from "@/lib/data";
 import type { NewsCandidate, NewsRelatedProduct } from "./types";
-import { getNewsProductRelevanceThreshold } from "./relevance";
+import { getNewsProductRelevanceThreshold, hasAerogelMaterialResearchContext } from "./relevance";
 export { buildNewsSeoTitle } from "./seo-title";
 
 const trackingParams = new Set(["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "utm_id", "fbclid", "gclid", "mc_cid", "mc_eid", "ref"]);
@@ -76,7 +76,8 @@ export function scoreCandidateAgainstProducts(candidate: NewsCandidate): NewsRel
   const candidateTokens = tokenSet(candidateText);
   const batterySafety = /\b(battery|batteries|cell|pack|ev|lithium|bess)\b/i.test(candidateText) && /\b(thermal|fire|heat|safety)\b/i.test(candidateText);
   const fireProtection = /\b(intumescent|fireproof|fire protection|steel fire)\b/i.test(candidateText);
-  const rawAerogel = /\b(silica aerogel|aerogel powder|aerogel particles?|aerogel slurry)\b/i.test(candidateText);
+  const rawAerogel = /\b(silica aerogel|aerogel powder|aerogel particles?|aerogel slurry)\b/i.test(candidateText)
+    || hasAerogelMaterialResearchContext(candidate);
   return products.map((product) => {
     const productTokens = tokenSet([product.name, product.code, product.category, product.summary, product.applications.join(" "), product.metrics.join(" "), product.detail.join(" ")].join(" "));
     let hits = 0;
@@ -86,7 +87,7 @@ export function scoreCandidateAgainstProducts(candidate: NewsCandidate): NewsRel
     if (batterySafety && product.slug === "aerogel-blanket-and-thermal-pads") domainBoost += 0.25;
     if (batterySafety && product.slug === "aerogel-fireproof-coating") domainBoost += 0.15;
     if (fireProtection && ["aerogel-fireproof-coating", "non-intumescent-fire-protection-coating"].includes(product.slug)) domainBoost += 0.5;
-    if (rawAerogel && product.slug === "aerogel-powder-and-slurry") domainBoost += 0.45;
+    if (rawAerogel && product.slug === "aerogel-powder-and-slurry") domainBoost += 0.55;
     return {
       slug: product.slug, name: product.name, category: product.category, summary: product.summary,
       image: product.image || "/images/fire-test-lab.jpg",
