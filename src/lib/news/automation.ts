@@ -1,6 +1,7 @@
 import "server-only";
 
 import { revalidatePath } from "next/cache";
+import type { QueryResultRow } from "pg";
 import { getPool } from "@/lib/database";
 import { absoluteUrl } from "@/lib/seo";
 import type { NewsAutomationResult, NewsCandidate, NewsRelatedProduct } from "./types";
@@ -11,49 +12,70 @@ import { getEditorialNewsImage } from "./editorial-images";
 function getLookbackHours() { return Math.min(24 * 30, Math.max(24, Number(process.env.NEWS_LOOKBACK_HOURS || 336))); }
 function getPublishLimit() { return Math.min(3, Math.max(1, Number(process.env.NEWS_MAX_PUBLISH_PER_RUN || 1))); }
 
+const databaseAttempts = 3;
+const retryableDatabaseError = /(connection|connect|timeout|terminat|socket|econnreset|eai_again|too many clients)/i;
+const wait = (milliseconds: number) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+
+async function queryWithRetry<T extends QueryResultRow>(query: string, values: unknown[] = []) {
+  const pool = getPool();
+  if (!pool) throw new Error("DATABASE_URL is not configured.");
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= databaseAttempts; attempt += 1) {
+    try {
+      return await pool.query<T>(query, values);
+    } catch (error) {
+      lastError = error;
+      if (attempt === databaseAttempts || !retryableDatabaseError.test(error instanceof Error ? error.message : String(error))) throw error;
+      await wait(attempt * 350);
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error("Database query failed.");
+}
+
 async function createJob() {
-  const pool = getPool(); if (!pool) return null;
-  const result = await pool.query<{ id: string }>(`insert into news_jobs (job_type, status, started_at, message) values ('cron_collect_generate_publish', 'running', now(), 'Automated direct publishing started.') returning id`);
+  if (!getPool()) return null;
+  const result = await queryWithRetry<{ id: string }>(`insert into news_jobs (job_type, status, started_at, message) values ('cron_collect_generate_publish', 'running', now(), 'Automated direct publishing started.') returning id`);
   return result.rows[0]?.id || null;
 }
 async function finishJob(id: string | null, status: string, message: string, metadata: { collected: number; rejected: number; published: number; [key: string]: unknown }) {
-  const pool = getPool(); if (!pool || !id) return;
-  await pool.query(`update news_jobs set status = $2, finished_at = now(), message = $3, records_collected = $4, records_rejected = $5, records_published = $6, metadata = $7::jsonb where id = $1`, [id, status, message, metadata.collected, metadata.rejected, metadata.published, JSON.stringify(metadata)]);
+  if (!getPool() || !id) return;
+  await queryWithRetry(`update news_jobs set status = $2, finished_at = now(), message = $3, records_collected = $4, records_rejected = $5, records_published = $6, metadata = $7::jsonb where id = $1`, [id, status, message, metadata.collected, metadata.rejected, metadata.published, JSON.stringify(metadata)]);
 }
 async function insertAudit(jobId: string | null, eventType: string, severity: string, message: string, metadata: Record<string, unknown>) {
-  const pool = getPool(); if (!pool) return;
-  await pool.query(`insert into news_publication_audits (job_id, event_type, severity, message, metadata) values ($1, $2, $3, $4, $5::jsonb)`, [jobId, eventType, severity, message, JSON.stringify(metadata)]);
+  if (!getPool()) return;
+  await queryWithRetry(`insert into news_publication_audits (job_id, event_type, severity, message, metadata) values ($1, $2, $3, $4, $5::jsonb)`, [jobId, eventType, severity, message, JSON.stringify(metadata)]);
 }
 
 async function sourceAlreadyUsed(canonicalUrl: string, fingerprint: string) {
-  const pool = getPool(); if (!pool) return true;
-  const result = await pool.query<{ id: string }>(`select id from news_articles where canonical_source_url = $1 or source_fingerprint = $2 limit 1`, [canonicalUrl, fingerprint]);
+  if (!getPool()) return true;
+  const result = await queryWithRetry<{ id: string }>(`select id from news_articles where canonical_source_url = $1 or source_fingerprint = $2 limit 1`, [canonicalUrl, fingerprint]);
   return Boolean(result.rows[0]);
 }
 
 async function saveArticle(candidate: NewsCandidate, relatedProducts: NewsRelatedProduct[], indexable: boolean) {
-  const pool = getPool(); if (!pool) return null;
+  if (!getPool()) return null;
   const canonicalSourceUrl = canonicalizeSourceUrl(candidate.url); const fingerprint = createSourceFingerprint(candidate);
   const slug = `${slugifyNewsTitle(candidate.title)}-${candidate.publishedAt.slice(0, 10)}`;
   const primary = relatedProducts[0];
   const editorialImage = getEditorialNewsImage({ title: candidate.title, summary: candidate.summary, seed: canonicalSourceUrl });
   const excerpt = `Cowin Materials buyer brief: a recent ${candidate.publisher} update considered in the context of ${primary?.category.toLowerCase() || "advanced insulation material"} evaluation.`;
   const contentHtml = buildNewsArticleHtml(candidate, relatedProducts);
-  const result = await pool.query<{ id: string }>(
+  const result = await queryWithRetry<{ id: string }>(
     `insert into news_articles (title, slug, excerpt, content_html, status, seo_indexable, language, category, tags, published_at, updated_at, author_name, seo_title, seo_description, canonical_url, primary_keyword, secondary_keywords, geo_summary, key_takeaways, cover_image_url, cover_image_source_url, cover_image_page_url, cover_image_alt, cover_image_status, cover_image_fetched_at, cover_image_hash, source_title, source_author, source_publisher, source_url, canonical_source_url, source_language, source_published_at, source_fetched_at, source_timezone, source_fingerprint, relevance_score, credibility_score, generation_model, generation_prompt_version) values ($1, $2, $3, $4, 'published', $24, 'en', 'Industry Insights', $5, now(), now(), 'Cowin Materials Editorial Team', $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, 'verified', now(), $17, $1, null, $18, $19, $20, 'en', $21, now(), 'UTC', $22, $23, 0.75, 'deterministic-editorial-template', 'news-direct-publish-v4-editorial-cover') on conflict (slug) do nothing returning id`,
     [candidate.title, slug, excerpt, contentHtml, ["aerogel", "insulation", "battery", "fire protection"].filter((tag) => `${candidate.title} ${candidate.summary}`.toLowerCase().includes(tag)), buildNewsSeoTitle(candidate.title), excerpt.slice(0, 155), absoluteUrl(`/news/${slug}`), primary?.category || "silica aerogel materials", relatedProducts.map((product) => product.name), `Technical context for international evaluation of ${primary?.category || "advanced insulation materials"}.`, ["Automatically selected from a recent, product-relevant public source.", "Published directly after source, freshness, relevance and duplicate checks.", "This is not a product certification or project-specific conclusion."], editorialImage.url, absoluteUrl(editorialImage.url), absoluteUrl("/news"), editorialImage.alt, hashText(editorialImage.url), candidate.publisher, candidate.url, canonicalSourceUrl, new Date(candidate.publishedAt), fingerprint, primary?.relevanceScore || 0, indexable],
   );
   const articleId = result.rows[0]?.id; if (!articleId) return null;
-  await Promise.all(relatedProducts.map((product, index) => pool.query(`insert into news_products (news_id, product_slug, product_name, product_category, product_summary, product_image, relevance_score, relationship_reason, display_order) values ($1,$2,$3,$4,$5,$6,$7,$8,$9) on conflict (news_id, product_slug) do nothing`, [articleId, product.slug, product.name, product.category, product.summary, product.image, product.relevanceScore, product.relationshipReason, index + 1])));
-  const verification = await pool.query<{ id: string }>(`select id from news_articles where id = $1 and status = 'published' and slug = $2`, [articleId, slug]);
+  await Promise.all(relatedProducts.map((product, index) => queryWithRetry(`insert into news_products (news_id, product_slug, product_name, product_category, product_summary, product_image, relevance_score, relationship_reason, display_order) values ($1,$2,$3,$4,$5,$6,$7,$8,$9) on conflict (news_id, product_slug) do nothing`, [articleId, product.slug, product.name, product.category, product.summary, product.image, product.relevanceScore, product.relationshipReason, index + 1])));
+  const verification = await queryWithRetry<{ id: string }>(`select id from news_articles where id = $1 and status = 'published' and slug = $2`, [articleId, slug]);
   return verification.rows[0] ? { articleId, slug } : null;
 }
 
 export async function runNewsAutomation(): Promise<NewsAutomationResult> {
   const checkedAt = new Date().toISOString();
   if (!getPool()) return { ok: false, status: "configuration_required", checkedAt, collected: 0, rejected: 0, published: 0, message: "DATABASE_URL is not configured; automated News cannot publish durable content.", warnings: ["Configure the production PostgreSQL connection and apply the News schema."] };
-  const jobId = await createJob(); let collected = 0; let rejected = 0; let published = 0;
+  let jobId: string | null = null; let collected = 0; let rejected = 0; let published = 0;
   try {
+    jobId = await createJob();
     const collection = await collectNewsCandidates(); const candidates = collection.candidates; collected = candidates.length; const seen = new Set<string>();
     const warnings = collection.feeds.filter((feed) => feed.status !== "ok").map((feed) => `${feed.label}: ${feed.message || feed.status}`);
     const rejectionReasons: Record<string, number> = { repeatedInRun: 0, outsideLookback: 0, alreadyPublished: 0, unrelated: 0, belowProductThreshold: 0, insertConflict: 0 };
