@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, FileText, Layers3, Mail, MoveVertical, Thermometer } from "lucide-react";
 import { useMemo, useState } from "react";
 
 type RouteConditions = {
@@ -17,6 +17,37 @@ const initialConditions: RouteConditions = {
   thickness: "",
   standard: "",
 };
+
+const routeFields = [
+  {
+    key: "temperature",
+    label: "Operating temperature",
+    placeholder: "Select temperature range",
+    Icon: Thermometer,
+    options: ["Below -40 C", "-40 C to 125 C", "125 C to 180 C", "Above 180 C"],
+  },
+  {
+    key: "substrate",
+    label: "Substrate",
+    placeholder: "Select substrate",
+    Icon: Layers3,
+    options: ["Steel structure or equipment", "Pipe, valve or complex geometry", "Concrete, masonry or mineral substrate", "Battery module or energy storage assembly", "Building envelope"],
+  },
+  {
+    key: "thickness",
+    label: "Target thickness",
+    placeholder: "Select thickness range",
+    Icon: MoveVertical,
+    options: ["Thin build or constrained space", "Up to 20 mm", "More than 20 mm", "To be evaluated"],
+  },
+  {
+    key: "standard",
+    label: "Validation standard",
+    placeholder: "Select standard (e.g. ASTM, EN, ISO)",
+    Icon: FileText,
+    options: ["Project specification", "ASTM", "EN", "GB", "Other or to be confirmed"],
+  },
+] as const;
 
 function conditionHref(conditions: RouteConditions) {
   const params = new URLSearchParams({ request: "Ask for Product Selection" });
@@ -44,62 +75,32 @@ export function HomeRouteFinder() {
   return (
     <section className="home-route-finder" aria-labelledby="material-route-title">
       <div className="home-route-finder-heading">
-        <span className="eyebrow">Project selector</span>
         <h2 id="material-route-title">Find your material route</h2>
-        <p>Share the conditions that shape a responsible first review.</p>
+        <p>Tell us your project conditions and we&apos;ll guide you to the right material family and next steps.</p>
       </div>
 
       <div className="home-route-fields">
-        <label>
-          <span>Operating temperature</span>
-          <select value={conditions.temperature} onChange={(event) => updateCondition("temperature", event.target.value)}>
-            <option value="">Select a service range</option>
-            <option value="Below -40 C">Below -40 C</option>
-            <option value="-40 C to 125 C">-40 C to 125 C</option>
-            <option value="125 C to 180 C">125 C to 180 C</option>
-            <option value="Above 180 C">Above 180 C</option>
-          </select>
-        </label>
-        <label>
-          <span>Substrate or assembly</span>
-          <select value={conditions.substrate} onChange={(event) => updateCondition("substrate", event.target.value)}>
-            <option value="">Select the project context</option>
-            <option value="Steel structure or equipment">Steel structure or equipment</option>
-            <option value="Pipe, valve or complex geometry">Pipe, valve or complex geometry</option>
-            <option value="Concrete, masonry or mineral substrate">Concrete, masonry or mineral substrate</option>
-            <option value="Battery module or energy storage assembly">Battery module or energy storage assembly</option>
-            <option value="Building envelope">Building envelope</option>
-          </select>
-        </label>
-        <label>
-          <span>Available thickness</span>
-          <select value={conditions.thickness} onChange={(event) => updateCondition("thickness", event.target.value)}>
-            <option value="">Select an available space</option>
-            <option value="Thin build or constrained space">Thin build or constrained space</option>
-            <option value="Up to 20 mm">Up to 20 mm</option>
-            <option value="More than 20 mm">More than 20 mm</option>
-            <option value="To be evaluated">To be evaluated</option>
-          </select>
-        </label>
-        <label>
-          <span>Validation standard</span>
-          <select value={conditions.standard} onChange={(event) => updateCondition("standard", event.target.value)}>
-            <option value="">Select or state a requirement</option>
-            <option value="Project specification">Project specification</option>
-            <option value="ASTM">ASTM</option>
-            <option value="EN">EN</option>
-            <option value="GB">GB</option>
-            <option value="Other or to be confirmed">Other or to be confirmed</option>
-          </select>
-        </label>
+        {routeFields.map(({ key, label, placeholder, Icon, options }) => (
+          <label className="home-route-field" key={key}>
+            <Icon size={20} aria-hidden="true" />
+            <span>
+              <strong>{label}</strong>
+              <select value={conditions[key]} onChange={(event) => updateCondition(key, event.target.value)} aria-label={label}>
+                <option value="">{placeholder}</option>
+                {options.map((option) => <option value={option} key={option}>{option}</option>)}
+              </select>
+            </span>
+          </label>
+        ))}
       </div>
 
       <div className="home-route-actions">
         <Link className="home-route-primary" href={href}>
-          Request selection support <ArrowRight size={17} aria-hidden="true" />
+          Find a material route <ArrowRight size={17} aria-hidden="true" />
         </Link>
-        <Link className="home-route-secondary" href="/products">Explore product families</Link>
+        <Link className="home-route-secondary" href={href}><Mail size={17} aria-hidden="true" /> Send project conditions</Link>
       </div>
+      <p className="home-route-note">Provide the available project conditions for a first review.</p>
     </section>
   );
 }

@@ -119,7 +119,8 @@ export function Header() {
           </nav>
 
           <div className="header-actions">
-            <Link className="header-cta" href="/request-quote">Request a Quote</Link>
+            <Link className="header-search" href="/search" aria-label="Search Cowin Materials"><Search size={21} aria-hidden="true" /></Link>
+            <Link className="header-cta" href="/request-quote">Request a Quote <ArrowRight size={17} aria-hidden="true" /></Link>
             <button ref={triggerRef} className="menu-button" type="button" aria-label="Open site menu" aria-controls={drawerId} aria-expanded={drawerOpen} onClick={() => setDrawerOpen(true)}>
               <Menu size={20} aria-hidden="true" />
               <span>Menu</span>
