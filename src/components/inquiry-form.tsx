@@ -42,6 +42,7 @@ function getRequestType(value: string | null) {
 
 function subscribeToLocation(onStoreChange: () => void) {
   window.addEventListener("popstate", onStoreChange);
+  onStoreChange();
   return () => window.removeEventListener("popstate", onStoreChange);
 }
 
@@ -73,6 +74,10 @@ export function InquiryForm() {
     request: getRequestType(params.get("request")),
     product: params.get("product") || "",
     application: params.get("application") || applications[0],
+    substrate: params.get("substrate") || "",
+    operatingTemperature: params.get("operatingTemperature") || "",
+    requiredStandard: params.get("requiredStandard") || "",
+    message: params.get("message") || "",
   };
 
   return (
@@ -173,14 +178,14 @@ export function InquiryForm() {
         </label>
         <label>
           Substrate
-          <input name="substrate" placeholder="Steel, concrete, masonry, battery module..." />
+          <input name="substrate" defaultValue={defaults.substrate} placeholder="Steel, concrete, masonry, battery module..." />
         </label>
       </div>
 
       <div className="form-grid">
         <label>
           Operating Temperature
-          <input name="operatingTemperature" placeholder="e.g. 180 °C, -160 °C" />
+          <input name="operatingTemperature" defaultValue={defaults.operatingTemperature} placeholder="e.g. 180 °C, -160 °C" />
         </label>
         <label>
           Target Performance
@@ -195,7 +200,7 @@ export function InquiryForm() {
         </label>
         <label>
           Required Standard
-          <input name="requiredStandard" placeholder="ASTM, EN, GB, project specification..." />
+          <input name="requiredStandard" defaultValue={defaults.requiredStandard} placeholder="ASTM, EN, GB, project specification..." />
         </label>
       </div>
 
@@ -209,6 +214,7 @@ export function InquiryForm() {
         <textarea
           name="message"
           rows={6}
+          defaultValue={defaults.message}
           placeholder="Tell us the operating conditions, substrate, target thickness, required standard and evaluation plan."
         />
       </label>
