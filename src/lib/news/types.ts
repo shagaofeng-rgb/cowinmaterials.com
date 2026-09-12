@@ -54,6 +54,13 @@ export type NewsArticle = {
   secondaryKeywords: string[];
   geoSummary: string;
   keyTakeaways: string[];
+  originType: "external_industry" | "first_party_technical_note";
+  technicalSource?: {
+    label: string;
+    locator?: string | null;
+    reportNumber?: string | null;
+    evidenceIds: string[];
+  } | null;
   source: NewsSourceRecord;
   image: NewsImageRecord;
   relatedProducts: NewsRelatedProduct[];

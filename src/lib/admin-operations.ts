@@ -56,8 +56,8 @@ export async function getNewsOperations(params: OperationListParams = {}) {
       `select id, status, records_collected, records_rejected, records_published, message, metadata, started_at, finished_at from news_jobs ${jobWhere} order by started_at desc limit $${jobQueryValues.length - 1} offset $${jobQueryValues.length}`,
       jobQueryValues,
     ),
-    rows<{ id: string; title: string; slug: string; status: string; source_publisher: string; published_at: Date | null; updated_at: Date }>(
-      `select id, title, slug, status, source_publisher, published_at, updated_at from news_articles where ${articleWhere} order by updated_at desc limit $${articleQueryValues.length - 1} offset $${articleQueryValues.length}`,
+    rows<{ id: string; title: string; slug: string; status: string; source_publisher: string; origin_type: string | null; published_at: Date | null; updated_at: Date }>(
+      `select id, title, slug, status, source_publisher, origin_type, published_at, updated_at from news_articles where ${articleWhere} order by updated_at desc limit $${articleQueryValues.length - 1} offset $${articleQueryValues.length}`,
       articleQueryValues,
     ),
   ]);

@@ -9,6 +9,7 @@ import { collectNewsCandidates } from "./sources";
 import { buildNewsArticleHtml, buildNewsSeoTitle, canonicalizeSourceUrl, createSourceFingerprint, hasDirectMaterialRelevance, hashText, isWithinLookback, scoreCandidateAgainstProducts, slugifyNewsTitle } from "./utils";
 import { isIndexableNewsCandidate } from "./relevance";
 import { getEditorialNewsImage } from "./editorial-images";
+import { publishNextTechnicalNote } from "./technical-publishing";
 function getLookbackHours() { return Math.min(24 * 30, Math.max(24, Number(process.env.NEWS_LOOKBACK_HOURS || 336))); }
 function getPublishLimit() { return Math.min(3, Math.max(1, Number(process.env.NEWS_MAX_PUBLISH_PER_RUN || 1))); }
 
@@ -76,6 +77,14 @@ export async function runNewsAutomation(): Promise<NewsAutomationResult> {
   let jobId: string | null = null; let collected = 0; let rejected = 0; let published = 0;
   try {
     jobId = await createJob();
+    const technicalPublication = await publishNextTechnicalNote();
+    if (technicalPublication.kind === "published") {
+      published += 1;
+      await insertAudit(jobId, "technical_note_published", "info", "Evidence-backed technical note was published directly.", { articleId: technicalPublication.articleId, topicId: technicalPublication.topicId, publicPath: `/news/${technicalPublication.slug}`, publicationVerified: true });
+      revalidatePath(`/news/${technicalPublication.slug}`);
+    } else if (technicalPublication.kind === "unavailable") {
+      await insertAudit(jobId, "technical_note_unavailable", "warning", technicalPublication.message, {});
+    }
     const collection = await collectNewsCandidates(); const candidates = collection.candidates; collected = candidates.length; const seen = new Set<string>();
     const warnings = collection.feeds.filter((feed) => feed.status !== "ok").map((feed) => `${feed.label}: ${feed.message || feed.status}`);
     const rejectionReasons: Record<string, number> = { repeatedInRun: 0, outsideLookback: 0, alreadyPublished: 0, unrelated: 0, belowProductThreshold: 0, insertConflict: 0 };
