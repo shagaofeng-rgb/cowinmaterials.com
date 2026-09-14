@@ -2,6 +2,7 @@ import { Mail, MapPin, Phone } from "lucide-react";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { InquiryForm } from "@/components/inquiry-form";
+import { OfficeMap } from "@/components/office-map";
 import { SectionHeading } from "@/components/section-heading";
 import { site } from "@/lib/data";
 import { createPageMetadata } from "@/lib/seo";
@@ -54,6 +55,7 @@ export default function ContactPage() {
             </div>
           </div>
           <InquiryForm />
+          <OfficeMap />
         </section>
       </main>
       <Footer />
