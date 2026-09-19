@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ChevronDown, Menu, Search, X } from "lucide-react";
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useId, useRef, useState, type FocusEvent, type KeyboardEvent, type PointerEvent } from "react";
 import { applicationPages, companyMenuItems, getProductFamilyPath, megaMenus, navItems, productFamilies, site } from "@/lib/data";
 
 type PanelName = "Products" | "Applications" | "Company" | null;
@@ -19,6 +19,8 @@ export function Header() {
   const drawerId = useId();
   const drawerRef = useRef<HTMLDialogElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const navRef = useRef<HTMLElement>(null);
+  const panelCloseTimerRef = useRef<number | null>(null);
   const wasDrawerOpenRef = useRef(false);
 
   useEffect(() => {
@@ -39,7 +41,10 @@ export function Header() {
     wasDrawerOpenRef.current = false;
   }, [drawerOpen]);
 
-  useEffect(() => () => document.body.classList.remove("drawer-open"), []);
+  useEffect(() => () => {
+    document.body.classList.remove("drawer-open");
+    if (panelCloseTimerRef.current !== null) window.clearTimeout(panelCloseTimerRef.current);
+  }, []);
 
   useEffect(() => {
     if (!drawerOpen) return;
@@ -50,9 +55,38 @@ export function Header() {
     return () => document.removeEventListener("keydown", closeOnEscape);
   }, [drawerOpen]);
 
+  const clearPanelCloseTimer = () => {
+    if (panelCloseTimerRef.current !== null) window.clearTimeout(panelCloseTimerRef.current);
+    panelCloseTimerRef.current = null;
+  };
+
+  const closePanel = () => {
+    clearPanelCloseTimer();
+    setActivePanel(null);
+  };
+
+  const schedulePanelClose = () => {
+    clearPanelCloseTimer();
+    panelCloseTimerRef.current = window.setTimeout(() => setActivePanel(null), 140);
+  };
+
+  const openPanel = (panel: Exclude<PanelName, null>) => {
+    clearPanelCloseTimer();
+    setActivePanel(panel);
+  };
+
   const closeDrawer = () => setDrawerOpen(false);
   const togglePanel = (panel: Exclude<PanelName, null>) => {
+    clearPanelCloseTimer();
     setActivePanel((current) => current === panel ? null : panel);
+  };
+
+  const handlePanelPointerEnter = (event: PointerEvent<HTMLDivElement>, panel: Exclude<PanelName, null>) => {
+    if (event.pointerType === "mouse") openPanel(panel);
+  };
+
+  const handlePanelBlur = (event: FocusEvent<HTMLDivElement>) => {
+    if (!event.currentTarget.contains(event.relatedTarget)) schedulePanelClose();
   };
 
   const handleDrawerKeyDown = (event: KeyboardEvent<HTMLDialogElement>) => {
@@ -72,6 +106,33 @@ export function Header() {
     }
   };
 
+  useEffect(() => {
+    if (!activePanel) return;
+    const handleDocumentPointerDown = (event: globalThis.PointerEvent) => {
+      if (navRef.current?.contains(event.target as Node)) return;
+      if (panelCloseTimerRef.current !== null) {
+        window.clearTimeout(panelCloseTimerRef.current);
+        panelCloseTimerRef.current = null;
+      }
+      setActivePanel(null);
+    };
+    const handleEscape = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") {
+        if (panelCloseTimerRef.current !== null) {
+          window.clearTimeout(panelCloseTimerRef.current);
+          panelCloseTimerRef.current = null;
+        }
+        setActivePanel(null);
+      }
+    };
+    document.addEventListener("pointerdown", handleDocumentPointerDown);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("pointerdown", handleDocumentPointerDown);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [activePanel]);
+
   return (
     <>
       <header className="site-header">
@@ -81,15 +142,22 @@ export function Header() {
             <span><strong>{site.name}</strong><em>{site.tagline}</em></span>
           </Link>
 
-          <nav className="desktop-nav" aria-label="Primary navigation">
+          <nav ref={navRef} className="desktop-nav" aria-label="Primary navigation">
             {navItems.map((item) => {
               const panel = item.label === "Products" || item.label === "Applications" || item.label === "Company" ? item.label : null;
               const isOpen = activePanel === panel;
               return (
-                <div className="nav-cluster" key={item.href}>
-                  <Link className="nav-link" href={item.href} onClick={() => setActivePanel(null)}>{item.label}</Link>
+                <div
+                  className="nav-cluster"
+                  key={item.href}
+                  onPointerEnter={panel ? (event) => handlePanelPointerEnter(event, panel) : undefined}
+                  onPointerLeave={panel ? schedulePanelClose : undefined}
+                  onFocusCapture={panel ? () => openPanel(panel) : undefined}
+                  onBlurCapture={panel ? handlePanelBlur : undefined}
+                >
+                  <Link className="nav-link" href={item.href} onClick={closePanel}>{item.label}</Link>
                   {panel ? (
-                    <button className="nav-panel-toggle" type="button" aria-label={`Open ${panel} menu`} aria-expanded={isOpen} aria-controls={`${panel.toLowerCase()}-mega-panel`} onClick={() => togglePanel(panel)}>
+                    <button className="nav-panel-toggle" type="button" aria-label={`Toggle ${panel} menu`} aria-expanded={isOpen} aria-controls={`${panel.toLowerCase()}-mega-panel`} onClick={() => togglePanel(panel)}>
                       <ChevronDown size={15} aria-hidden="true" />
                     </button>
                   ) : null}
@@ -98,15 +166,15 @@ export function Header() {
                       <span className="mega-kicker">Explore {panel}</span>
                       <div className="mega-panel-grid">
                         {panel === "Products" ? productFamilies.map((family) => (
-                          <Link href={getProductFamilyPath(family)} key={family.slug} onClick={() => setActivePanel(null)}>
+                          <Link href={getProductFamilyPath(family)} key={family.slug} onClick={closePanel}>
                             <strong>{family.title}</strong><span>{family.intent}</span>
                           </Link>
                         )) : panel === "Applications" ? applicationPages.map((application) => (
-                          <Link href={`/applications/${application.slug}`} key={application.slug} onClick={() => setActivePanel(null)}>
+                          <Link href={`/applications/${application.slug}`} key={application.slug} onClick={closePanel}>
                             <strong>{application.shortTitle}</strong><span>{application.challenges.slice(0, 2).join(" · ")}</span>
                           </Link>
                         )) : companyMenuItems.map((entry) => (
-                          <Link href={entry.href} key={entry.href} onClick={() => setActivePanel(null)}>
+                          <Link href={entry.href} key={entry.href} onClick={closePanel}>
                             <strong>{entry.label}</strong><span>{entry.note}</span>
                           </Link>
                         ))}

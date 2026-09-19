@@ -4,7 +4,7 @@ import { recordAnalyticsEvent, type AnalyticsEventName } from "@/lib/database";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const whatsappPlacement = "floating_whatsapp";
+const whatsappPlacements = new Set(["floating_whatsapp", "footer_phone", "contact_phone", "location_phone", "about_phone"]);
 const allowedEventNames = new Set<AnalyticsEventName>([
   "page_view",
   "whatsapp_click",
@@ -68,7 +68,7 @@ export async function POST(request: Request) {
     const device = readString(body?.device, 24);
 
     const isAllowedEvent = allowedEventNames.has(receivedEventName as AnalyticsEventName);
-    const isValidWhatsapp = receivedEventName !== "whatsapp_click" || receivedPlacement === whatsappPlacement;
+    const isValidWhatsapp = receivedEventName !== "whatsapp_click" || whatsappPlacements.has(receivedPlacement);
     if (!isAllowedEvent || !isValidWhatsapp || !isValidEventId(receivedEventId) || !isValidPagePath(pagePath) || !isValidUuid(visitorKey) || !isValidUuid(sessionKey) || (referrerPath && !isValidPagePath(referrerPath))) {
       return NextResponse.json({ error: "Invalid analytics event." }, { status: 400 });
     }
@@ -78,7 +78,7 @@ export async function POST(request: Request) {
       eventName: receivedEventName as AnalyticsEventName,
       pagePath,
       source: "website",
-      placement: receivedEventName === "whatsapp_click" ? whatsappPlacement : undefined,
+      placement: receivedEventName === "whatsapp_click" ? receivedPlacement as "floating_whatsapp" | "footer_phone" | "contact_phone" | "location_phone" | "about_phone" : undefined,
       requestType: receivedEventName === "form_submit" ? requestType : undefined,
       visitorKey: visitorKey || undefined,
       sessionKey: sessionKey || undefined,

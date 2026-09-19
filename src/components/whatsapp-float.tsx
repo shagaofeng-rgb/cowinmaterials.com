@@ -3,8 +3,7 @@
 import { MessageCircle } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { trackAnalyticsEvent } from "@/components/analytics-events";
-
-const whatsappUrl = "https://wa.me/8613732512581";
+import { site } from "@/lib/data";
 
 function recordWhatsappClick() {
   trackAnalyticsEvent("whatsapp_click", {
@@ -20,7 +19,7 @@ export function WhatsAppFloat() {
   return (
     <a
       className="whatsapp-float"
-      href={whatsappUrl}
+      href={site.whatsappUrl}
       target="_blank"
       rel="noreferrer"
       aria-label="Chat with Cowin Materials on WhatsApp"

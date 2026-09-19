@@ -212,7 +212,7 @@ type AnalyticsEventInput = {
   eventName: AnalyticsEventName;
   pagePath: string;
   source: "website";
-  placement?: "floating_whatsapp";
+  placement?: "floating_whatsapp" | "footer_phone" | "contact_phone" | "location_phone" | "about_phone";
   requestType?: string;
   visitorKey?: string;
   sessionKey?: string;

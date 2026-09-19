@@ -68,7 +68,7 @@ export default function AboutPage() {
           <div className="qualification-panel">
             <h2>Contact information</h2>
             <p>Email: {site.email}</p>
-            <p>Phone: {site.phone}</p>
+            <p>Phone: <a href={site.whatsappUrl} target="_blank" rel="noopener noreferrer" data-analytics-whatsapp-placement="about_phone">{site.phone}</a></p>
             <p>Country / Region: China</p>
           </div>
         </section>

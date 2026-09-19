@@ -3840,6 +3840,7 @@ body.drawer-open { overflow: hidden; }
 .site-footer h2 { letter-spacing: 0; }
 .footer-bottom { flex-wrap: wrap; }
 .contact-list li > :not(svg) { min-width: 0; overflow-wrap: anywhere; }
+.contact-list a:hover { color: var(--green); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
 .location-grid,
 .quality-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .location-card,

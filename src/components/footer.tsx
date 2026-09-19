@@ -59,7 +59,7 @@ export function Footer() {
           <ul className="contact-list">
             <li>
               <Phone size={16} />
-              <a href={`tel:${site.phoneHref}`}>{site.phone}</a>
+            <a href={site.whatsappUrl} target="_blank" rel="noopener noreferrer" data-analytics-whatsapp-placement="footer_phone" aria-label="Chat with Cowin Materials on WhatsApp">{site.phone}</a>
             </li>
             <li>
               <Mail size={16} />
@@ -67,7 +67,7 @@ export function Footer() {
             </li>
             <li>
               <MapPin size={16} />
-              <span><strong>Office:</strong> {site.officeAddress}</span>
+              <a href={site.officeMapUrl} target="_blank" rel="noopener noreferrer" aria-label="Open Cowin Materials office location in Google Maps"><strong>Office:</strong> {site.officeAddress}</a>
             </li>
           </ul>
         </div>

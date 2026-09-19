@@ -35,7 +35,7 @@ export default function ContactPage() {
             <ul className="contact-list large">
               <li>
                 <Phone size={18} />
-                <a href={`tel:${site.phoneHref}`}>{site.phone}</a>
+                <a href={site.whatsappUrl} target="_blank" rel="noopener noreferrer" data-analytics-whatsapp-placement="contact_phone">{site.phone}</a>
               </li>
               <li>
                 <Mail size={18} />
@@ -43,7 +43,7 @@ export default function ContactPage() {
               </li>
               <li>
                 <MapPin size={18} />
-                <span><strong>Office:</strong> {site.officeAddress}</span>
+                <a href={site.officeMapUrl} target="_blank" rel="noopener noreferrer"><strong>Office:</strong> {site.officeAddress}</a>
               </li>
             </ul>
             <div className="contact-note">

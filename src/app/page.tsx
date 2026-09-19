@@ -118,7 +118,7 @@ export default function Home() {
               const copy = applicationCardCopy[application.slug];
               return (
                 <Link className="home-application-card" href={`/applications/${application.slug}`} key={application.slug}>
-                  <Image src={visual.src} alt={visual.alt} fill loading="eager" sizes="(max-width: 720px) 100vw, (max-width: 1120px) 50vw, 33vw" />
+                  <Image src={visual.src} alt={visual.alt} fill sizes="(max-width: 720px) 100vw, (max-width: 1120px) 50vw, 33vw" />
                   <span className="home-application-shade" aria-hidden="true" />
                   <span className="home-application-content">
                     <strong>{copy.title}</strong>
@@ -147,7 +147,7 @@ export default function Home() {
               const copy = materialCardCopy[family.slug];
               return (
                 <article className="home-material-item" key={family.slug}>
-                  <div className="home-material-image"><Image src={familyVisuals[index]} alt="" fill loading="eager" sizes="(max-width: 900px) 100vw, 18vw" /></div>
+                  <div className="home-material-image"><Image src={familyVisuals[index]} alt="" fill sizes="(max-width: 900px) 100vw, 18vw" /></div>
                   <div className="home-material-copy">
                     <h3>{copy.title}</h3>
                     <p>{copy.description}</p>
@@ -187,7 +187,7 @@ export default function Home() {
         </section>
 
         <section className="home-material-banner" aria-label="Cowin Materials project support">
-          <Image src="/images/home/material-ridgeline-footer.jpg" alt="Blue mountain ridgeline used as a Cowin Materials project-support banner" fill loading="eager" sizes="100vw" />
+          <Image src="/images/home/material-ridgeline-footer.jpg" alt="Blue mountain ridgeline used as a Cowin Materials project-support banner" fill sizes="100vw" />
           <div className="home-material-banner-content">
             <div className="home-material-banner-brand"><strong>Cowin</strong><span>Materials</span></div>
             <p>Material systems<br />for technical projects</p>

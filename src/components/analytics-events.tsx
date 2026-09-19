@@ -5,10 +5,12 @@ import { usePathname } from "next/navigation";
 
 type AnalyticsParams = Record<string, string | number | boolean | undefined>;
 type StoredAnalyticsEventName = "page_view" | "whatsapp_click" | "form_submit" | "email_click" | "phone_click" | "request_tds" | "request_sample" | "request_quote";
+type WhatsAppPlacement = "floating_whatsapp" | "footer_phone" | "contact_phone" | "location_phone" | "about_phone";
+
 type StoredAnalyticsEvent = {
   eventName: StoredAnalyticsEventName;
   pagePath: string;
-  placement?: "floating_whatsapp";
+  placement?: WhatsAppPlacement;
   requestType?: string;
 };
 
@@ -34,7 +36,7 @@ export function trackAnalyticsEvent(eventName: string, params: AnalyticsParams =
     recordStoredAnalyticsEvent({
       eventName: eventName as StoredAnalyticsEventName,
       pagePath: window.location.pathname,
-      placement: eventName === "whatsapp_click" && params.placement === "floating_whatsapp" ? "floating_whatsapp" : undefined,
+      placement: eventName === "whatsapp_click" && typeof params.placement === "string" && ["floating_whatsapp", "footer_phone", "contact_phone", "location_phone", "about_phone"].includes(params.placement) ? params.placement as WhatsAppPlacement : undefined,
       requestType: eventName === "form_submit" && typeof params.request_type === "string" ? params.request_type : undefined,
     });
   }
@@ -144,13 +146,15 @@ export function recordStoredAnalyticsEvent(event: StoredAnalyticsEvent) {
 
 function eventForLink(link: HTMLAnchorElement) {
   const href = link.getAttribute("href") || "";
-  if (href.startsWith("mailto:")) return "email_click";
-  if (href.startsWith("tel:")) return "phone_click";
+  const whatsappPlacement = link.dataset.analyticsWhatsappPlacement;
+  if (href.startsWith("https://wa.me/") && whatsappPlacement) return { eventName: "whatsapp_click", params: { placement: whatsappPlacement } };
+  if (href.startsWith("mailto:")) return { eventName: "email_click", params: {} };
+  if (href.startsWith("tel:")) return { eventName: "phone_click", params: {} };
   const url = new URL(link.href, window.location.origin);
   const requestType = (url.searchParams.get("request") || "").toLowerCase();
-  if (/tds|sds|technical data/.test(requestType)) return "request_tds";
-  if (requestType.includes("sample")) return "request_sample";
-  if (requestType.includes("quote") || url.pathname === "/request-quote") return "request_quote";
+  if (/tds|sds|technical data/.test(requestType)) return { eventName: "request_tds", params: {} };
+  if (requestType.includes("sample")) return { eventName: "request_sample", params: {} };
+  if (requestType.includes("quote") || url.pathname === "/request-quote") return { eventName: "request_quote", params: {} };
   return null;
 }
 
@@ -168,8 +172,8 @@ export function AnalyticsEvents() {
       if (!(target instanceof Element)) return;
       const link = target.closest("a");
       if (!(link instanceof HTMLAnchorElement)) return;
-      const eventName = eventForLink(link);
-      if (eventName) trackAnalyticsEvent(eventName);
+      const eventData = eventForLink(link);
+      if (eventData) trackAnalyticsEvent(eventData.eventName, eventData.params);
     };
     document.addEventListener("click", handleClick, true);
     return () => document.removeEventListener("click", handleClick, true);
