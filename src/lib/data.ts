@@ -22,7 +22,7 @@ export const site = {
   phone: "+86 176 0125 2505",
   phoneHref: "+8617601252505",
   whatsappUrl: "https://wa.me/8613732512581",
-  email: "davidsha@cowinmaterials.com",
+  email: "info@cowinmaterials.com",
   officeAddress: "Room 110, 1st Floor, Building 2, Qushidai Future Building, Kecheng District, Quzhou City, Zhejiang Province, China",
   officeMapUrl: "https://maps.app.goo.gl/P1YyVHoCdGBd9ef37",
   manufacturingFacilityAddress: "Building 2, 777 Xinwei Road, Xinhe Town, Chongming District, Shanghai, China",

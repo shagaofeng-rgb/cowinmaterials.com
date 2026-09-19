@@ -49,5 +49,5 @@ psql "$DATABASE_URL" -f database/schema.sql
 - Company: Quzhou Qiying Import & Export Co., Ltd.
 - Brand: Cowin Materials
 - Website: https://www.cowinmaterials.com
-- Email: davidsha@cowinmaterials.com
+- Email: info@cowinmaterials.com
 - Phone: +86 176 0125 2505

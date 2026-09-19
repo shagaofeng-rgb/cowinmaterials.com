@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Send } from "lucide-react";
 import { useState, useSyncExternalStore } from "react";
 import { getAnalyticsIdentity, trackAnalyticsEvent } from "@/components/analytics-events";
+import { site } from "@/lib/data";
 
 const customerTypes = [
   "End User",
@@ -249,7 +250,7 @@ export function InquiryForm() {
       </button>
       {status === "error" ? (
         <p className="form-error">
-          The message could not be sent right now. Please email davidsha@cowinmaterials.com directly.
+          The message could not be sent right now. Please email {site.email} directly.
         </p>
       ) : null}
     </form>
