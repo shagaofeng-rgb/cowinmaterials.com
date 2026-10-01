@@ -1,4 +1,5 @@
 import "server-only";
+import { isNewsAutomationEnabled } from "./policy";
 
 import { getPool } from "@/lib/database";
 import { products } from "@/lib/data";
@@ -90,6 +91,7 @@ async function restoreTopic(topicId: string, message: string) {
 }
 
 export async function publishNextTechnicalNote(): Promise<TechnicalPublishResult> {
+  if (!isNewsAutomationEnabled()) return { kind: "not_due", message: "News automatic technical publishing has been stopped by the site owner." };
   const pool = getPool(true);
   if (!pool) return { kind: "unavailable", message: "DATABASE_URL is not configured." };
   await seedTechnicalData();

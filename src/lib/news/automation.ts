@@ -1,4 +1,5 @@
 import "server-only";
+import { isNewsAutomationEnabled } from "./policy";
 
 import { revalidatePath } from "next/cache";
 import type { QueryResultRow } from "pg";
@@ -73,6 +74,7 @@ async function saveArticle(candidate: NewsCandidate, relatedProducts: NewsRelate
 
 export async function runNewsAutomation(): Promise<NewsAutomationResult> {
   const checkedAt = new Date().toISOString();
+  if (!isNewsAutomationEnabled()) return { ok: true, status: "disabled", checkedAt, collected: 0, rejected: 0, published: 0, message: "News automatic collection, writing and publishing have been stopped by the site owner.", warnings: [] };
   if (!getPool(true)) return { ok: false, status: "configuration_required", checkedAt, collected: 0, rejected: 0, published: 0, message: "DATABASE_URL is not configured; automated News cannot publish durable content.", warnings: ["Configure the production PostgreSQL connection and apply the News schema."] };
   let jobId: string | null = null; let collected = 0; let rejected = 0; let published = 0;
   try {

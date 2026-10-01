@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { AdminDateRangeFields, AdminPagination } from "@/components/admin-list-controls";
 import { AdminEmpty, AdminNotice, AdminShell } from "@/components/admin-shell";
-import { AdminSyncStatus } from "@/components/admin-sync-status";
 import { requireAdminSession } from "@/lib/admin-auth";
 import { getNewsOperations } from "@/lib/admin-operations";
 
@@ -15,10 +14,8 @@ export default async function AdminNewsPage({ searchParams }: { searchParams: Pr
   const { totals, jobs, articles, range, pageSize, jobTotal, articleTotal, jobPaging, articlePaging } = await getNewsOperations(params);
   const latestJob = jobs[0];
   const latestFeeds = Array.isArray(latestJob?.metadata?.feeds) ? latestJob.metadata.feeds as Array<{ label?: string; status?: string; itemCount?: number }> : [];
-  const failedLatestJob = latestJob && ["failed", "source_unavailable"].includes(latestJob.status);
   return <AdminShell title="News运营中心">
-    <AdminNotice><strong>数据来源：PostgreSQL news_articles / news_jobs。</strong> News 自动任务仅在来源、新鲜度、产品关联和重复校验通过后直接发布；此页展示真实发布和拒绝记录，不提供伪审核动作。</AdminNotice>
-    <AdminSyncStatus status={failedLatestJob ? "Failed" : latestJob?.status === "no_publishable_items" ? "Pending" : "Up to date"} lastSyncedAt={latestJob?.finished_at?.toISOString() || totals.latest?.toISOString() || null} label="News 自动发布" websiteHref="/news" />
+    <AdminNotice><strong>News 自动发布已停止。</strong> 自动抓取、撰写、总结和技术文章发布均已关闭。以下为 PostgreSQL news_articles / news_jobs 的历史内容与执行记录，历史来源状态不代表当前运行状态。Blog 第三方插件发布不受影响。</AdminNotice>
     <section className="admin-panel"><form className="admin-filter-grid admin-filter-grid-wide"><AdminDateRangeFields range={range} /><label className="admin-filter-field"><span>每页显示</span><select name="pageSize" defaultValue={String(pageSize)}><option value="10">10条</option><option value="20">20条</option><option value="50">50条</option><option value="100">100条</option></select></label><button className="admin-primary-button" type="submit">查询记录</button><Link href="/admin/news">重置</Link></form></section>
     {latestFeeds.length ? <section className="admin-panel"><div className="admin-panel-heading"><div><h2>来源健康状态</h2><p>最近一次任务对每个 RSS 来源的真实检查结果。</p></div></div><div className="admin-metric-grid">{latestFeeds.map((feed, index) => <article className="admin-metric" key={`${feed.label || "source"}-${index}`}><span>{feed.label || `来源 ${index + 1}`}</span><strong>{feed.status === "ok" ? "正常" : feed.status === "empty" ? "无内容" : "异常"}</strong><small>{Number(feed.itemCount || 0)} 条 RSS 项目</small></article>)}</div></section> : null}
     <section className="admin-metric-grid"><article className="admin-metric"><span>已发布</span><strong>{Number(totals.published)}</strong><small>公开 News</small></article><article className="admin-metric"><span>待处理</span><strong>{Number(totals.review)}</strong><small>草稿 / 审核状态</small></article><article className="admin-metric"><span>未采用</span><strong>{Number(totals.failed)}</strong><small>已拒绝 / 已归档</small></article><article className="admin-metric"><span>最近更新</span><strong>{totals.latest ? new Date(totals.latest).toLocaleDateString("zh-CN") : "—"}</strong><small>真实数据库记录</small></article></section>

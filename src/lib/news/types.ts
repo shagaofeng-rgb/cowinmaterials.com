@@ -94,7 +94,7 @@ export type NewsFeedHealth = {
 
 export type NewsAutomationResult = {
   ok: boolean;
-  status: "completed" | "configuration_required" | "no_publishable_items" | "source_unavailable" | "failed";
+  status: "disabled" | "completed" | "configuration_required" | "no_publishable_items" | "source_unavailable" | "failed";
   checkedAt: string;
   collected: number;
   rejected: number;

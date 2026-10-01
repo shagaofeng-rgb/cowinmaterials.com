@@ -3,6 +3,7 @@ import { siteUrl } from "@/lib/seo";
 import { getSitemapChunk, getSitemapSummary, sitemapKinds } from "./catalog";
 import { SitemapLockError, withSitemapLock } from "./lock";
 import { submitSitemapToSearchConsole } from "./search-console";
+import { weeklySubmissionAllowed } from "./schedule";
 import { compareSnapshots, type SnapshotChanges } from "./snapshot";
 import type { SitemapEntry, SitemapKind } from "./types";
 import { MAX_SITEMAP_URLS, isWellFormedSitemapXml, renderUrlSet } from "./xml";
@@ -153,11 +154,15 @@ export async function runSitemapMaintenance(options: MaintenanceOptions = {}) {
         verifyRobotsDeclaration(),
       ]);
       const changes = await updateSnapshot(allEntries, Boolean(options.dryRun));
-      const changed = Boolean(changes.added.length || changes.modified.length || changes.removed.length);
-      const shouldSubmit = Boolean(options.submit || process.env.GOOGLE_SEARCH_CONSOLE_ENABLED === "true") && (changed || options.force);
+      // The database lock and durable run history prevent duplicate weekly submissions.
+      let shouldSubmit = false;
+      if (!options.dryRun && trigger === "cron" && pool && process.env.GOOGLE_SEARCH_CONSOLE_ENABLED === "true" && weeklySubmissionAllowed(startedAt)) {
+        const previous = await pool.query<{ submitted_at: Date | null }>("select max(started_at) as submitted_at from sitemap_runs where search_console_submitted = true");
+        shouldSubmit = weeklySubmissionAllowed(startedAt, previous.rows[0]?.submitted_at ? new Date(previous.rows[0].submitted_at) : null);
+      }
       const searchConsole = shouldSubmit
         ? await submitSitemapToSearchConsole()
-        : { enabled: process.env.GOOGLE_SEARCH_CONSOLE_ENABLED === "true", submitted: false, status: "disabled" as const, message: "No changed sitemap submission was required." };
+        : { enabled: process.env.GOOGLE_SEARCH_CONSOLE_ENABLED === "true", submitted: false, status: "disabled" as const, message: "Submission skipped: only the Monday weekly cron may submit, once per week; dry runs and manual checks never submit." };
       const finishedAt = new Date();
       const errorCount = failures.length + malformed.length + (robotsValid ? 0 : 1);
       const result = {

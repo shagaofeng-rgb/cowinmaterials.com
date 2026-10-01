@@ -15,10 +15,11 @@ assert.ok(source.includes("/products/aerogel-powder-and-slurry"), "Missing legac
 assert.ok(source.includes("/resources"), "Missing technical resources redirect.");
 
 const cron = JSON.parse(readFileSync(join(root, "vercel.json"), "utf8"));
-assert.equal(cron.crons.find((entry) => entry.path === "/api/cron/news-automation")?.schedule, "15 3 * * *", "News cron must run daily");
+assert.equal(cron.crons.some((entry) => entry.path === "/api/cron/news-automation"), false, "News cron must remain stopped");
 assert.equal(cron.crons.some((entry) => /blog/i.test(entry.path)), false, "Blog automation cron must not exist");
 assert.ok(cron.crons.some((entry) => entry.path === "/api/cron/email-health-check"), "Missing email health cron");
-assert.equal(cron.crons.find((entry) => entry.path === "/api/cron/sitemap-maintenance")?.schedule, "30 2 */3 * *", "Sitemap maintenance must run every three days");
+assert.equal(cron.crons.find((entry) => entry.path === "/api/cron/sitemap-maintenance")?.schedule, "30 2 * * 1", "Sitemap maintenance must run Mondays at 02:30 UTC");
+assert.match(readFileSync(join(root, "src/lib/news/policy.ts"), "utf8"), /return false/, "News automation must be disabled");
 
 const newsAutomation = readFileSync(join(root, "src/lib/news/automation.ts"), "utf8");
 assert.match(newsAutomation, /'published'/, "News automation must publish directly after automatic checks");
