@@ -1,4 +1,4 @@
-export type AdminRangeKey = "today" | "week" | "month" | "custom" | "all";
+export type AdminRangeKey = "today" | "week" | "month" | "90days" | "custom";
 
 export type AdminListParams = {
   page?: string;
@@ -16,6 +16,7 @@ export type AdminDateRange = {
   start?: Date;
   end?: Date;
   label: string;
+  error?: string;
 };
 
 const pageSizes = [10, 20, 50, 100];
@@ -51,13 +52,16 @@ export function parsePageSize(value?: string) {
   return pageSizes.includes(pageSize) ? pageSize : 20;
 }
 
-export function getAdminDateRange(params: Pick<AdminListParams, "range" | "from" | "to">): AdminDateRange {
-  const key = (["today", "week", "month", "custom", "all"] as const).includes(params.range as AdminRangeKey)
+export function getAdminDateRange(params: Pick<AdminListParams, "range" | "from" | "to">, now = new Date()): AdminDateRange {
+  const key = (["today", "week", "month", "90days", "custom"] as const).includes(params.range as AdminRangeKey)
     ? params.range as AdminRangeKey
     : "month";
-  const today = shanghaiDate(new Date());
+  const today = shanghaiDate(now);
 
-  if (key === "all") return { key, label: "全部时间" };
+  if (key === "90days") {
+    const from = addDays(today, -89);
+    return { key, from, to: today, start: shanghaiStart(from), end: shanghaiStart(addDays(today, 1)), label: "90天" };
+  }
   if (key === "today") return { key, from: today, to: today, start: shanghaiStart(today), end: shanghaiStart(addDays(today, 1)), label: "今天" };
   if (key === "week") {
     const weekday = new Date(`${today}T12:00:00+08:00`).getUTCDay() || 7;
@@ -69,9 +73,10 @@ export function getAdminDateRange(params: Pick<AdminListParams, "range" | "from"
     return { key, from, to: today, start: shanghaiStart(from), end: shanghaiStart(addDays(today, 1)), label: "本月" };
   }
 
-  const from = datePattern.test(params.from || "") ? params.from : undefined;
-  const to = datePattern.test(params.to || "") ? params.to : undefined;
-  if (!from && !to) return { key, label: "自定义时间" };
+  const validDate = (value?: string) => Boolean(value && datePattern.test(value) && Number.isFinite(Date.parse(`${value}T00:00:00Z`)) && new Date(`${value}T00:00:00Z`).toISOString().slice(0, 10) === value);
+  const from = validDate(params.from) ? params.from : undefined;
+  const to = validDate(params.to) ? params.to : undefined;
+  if (!from || !to) return { ...getAdminDateRange({ range: "today" }, now), error: "请选择有效的开始和结束日期，当前显示今天的数据。" };
   const safeFrom = from && to && from > to ? to : from;
   const safeTo = from && to && from > to ? from : to;
   return {

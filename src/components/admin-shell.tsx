@@ -1,18 +1,11 @@
 import Link from "next/link";
 import Image from "next/image";
-import type { ComponentType } from "react";
-import { BarChart3, BookOpenText, Boxes, ChartNoAxesCombined, ClipboardList, FileStack, FolderOpen, ImageIcon, Newspaper, RefreshCw, ScrollText, SearchCheck, Settings, ShieldCheck, UsersRound } from "lucide-react";
+import { ExternalLink, LogOut, Inbox } from "lucide-react";
 import { logoutAction } from "@/app/admin/actions";
 import { adminNavGroups } from "@/lib/admin-data";
 import { site } from "@/lib/data";
-
-const navIcons: Record<string, ComponentType<{ size?: number; strokeWidth?: number }>> = {
-  "/admin": BarChart3, "/admin/inquiries": ClipboardList, "/admin/analytics": ChartNoAxesCombined,
-  "/admin/products": Boxes, "/admin/categories": FolderOpen, "/admin/blog": BookOpenText,
-  "/admin/news": Newspaper, "/admin/documents": FileStack, "/admin/media": ImageIcon,
-  "/admin/seo": SearchCheck, "/admin/sync": RefreshCw, "/admin/logs": ScrollText,
-  "/admin/users": UsersRound, "/admin/settings": Settings,
-};
+import { AdminNavigation } from "./admin-navigation";
+import "./admin-workspace.css";
 
 export function AdminShell({ children, title }: { children: React.ReactNode; title: string }) {
   return (
@@ -33,36 +26,28 @@ export function AdminShell({ children, title }: { children: React.ReactNode; tit
               <small>{site.tagline}</small>
             </span>
           </span>
-          <em>中文管理后台</em>
         </Link>
-        <nav aria-label="后台主导航" className="admin-nav-groups">
-          {adminNavGroups.map((group) => (
-            <section key={group.label}>
-              <p>{group.label}</p>
-              {group.items.map((item) => {
-                const Icon = navIcons[item.href] || ShieldCheck;
-                return <Link href={item.href} key={item.href}><Icon size={16} strokeWidth={1.9} /><span>{item.label}</span></Link>;
-              })}
-            </section>
-          ))}
-        </nav>
+        <AdminNavigation groups={adminNavGroups} />
+        <div className="admin-sidebar-footer">Cowin Materials<small>业务管理工作台</small></div>
       </aside>
       <section className="admin-main">
+        <div className="admin-workspace-bar"><strong>品牌工作台</strong><span>Asia/Shanghai</span></div>
         <header className="admin-topbar">
           <div>
-            <p>{site.domain}</p>
+            <p><Link href="/admin">后台</Link> / {title}</p>
             <h1>{title}</h1>
           </div>
           <div className="admin-top-actions">
             <Link href="/" target="_blank">
-              查看前台
+              <ExternalLink size={16} />查看前台
             </Link>
             <form action={logoutAction}>
-              <button type="submit">退出登录</button>
+              <button type="submit"><LogOut size={16} />退出登录</button>
             </form>
           </div>
         </header>
         {children}
+        <footer className="admin-workspace-footer"><span>Cowin Materials · 运营管理</span><span>时间统一为北京时间</span></footer>
       </section>
     </main>
   );
@@ -73,5 +58,5 @@ export function AdminNotice({ children }: { children: React.ReactNode }) {
 }
 
 export function AdminEmpty({ text }: { text: string }) {
-  return <div className="admin-empty">{text}</div>;
+  return <div className="admin-empty"><Inbox size={30} aria-hidden="true" /><p>{text}</p></div>;
 }

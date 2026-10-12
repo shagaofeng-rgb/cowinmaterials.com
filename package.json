@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "eslint",
     "test:self": "node scripts/site-self-check.mjs",
+    "test:admin": "node --experimental-strip-types --test scripts/admin-range-self-test.ts",
     "test:news": "node --experimental-strip-types --test scripts/news-relevance-self-test.ts",
     "test:technical-news": "node --experimental-strip-types --test scripts/technical-news-self-test.ts",
     "test:blog-links": "node --experimental-strip-types --test scripts/blog-related-self-test.ts",

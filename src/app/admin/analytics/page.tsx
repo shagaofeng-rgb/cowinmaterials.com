@@ -24,7 +24,7 @@ export default async function AdminAnalyticsPage({ searchParams }: { searchParam
 
   return <AdminShell title="访问与转化">
     <AdminNotice><strong>数据范围：</strong>记录第一方匿名访客和会话 ID、访问路径、来源域名及站内转化事件；只有客户主动提交表单后，才在受保护后台将该访客与线索关联。不会把姓名、邮箱、聊天内容或完整外部来源 URL 写入公开页面。</AdminNotice>
-    <AdminSyncStatus status="Up to date" lastSyncedAt={data.metrics.latest} label={`访问数据 · ${data.range.label}`} />
+    <AdminSyncStatus status="Read" lastSyncedAt={data.metrics.latest} label={`访问数据 · ${data.range.label}`} />
     <section className="admin-metric-grid" aria-label="访问数据摘要">
       <article className="admin-metric"><span>页面访问</span><strong>{data.metrics.pageViews}</strong><small>{data.range.label}内已记录事件</small></article>
       <article className="admin-metric"><span>已识别访客</span><strong>{data.metrics.visitors}</strong><small>第一方匿名访客 ID</small></article>
@@ -42,7 +42,7 @@ export default async function AdminAnalyticsPage({ searchParams }: { searchParam
         <button className="admin-primary-button" type="submit">查询数据</button>
         <Link href="/admin/analytics">重置</Link>
       </form>
-      {data.visitors.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>访客归属</th><th>首次入口 / 最近页面</th><th>来源</th><th>会话 / 事件</th><th>联系行为</th><th>最近访问</th><th>操作</th></tr></thead><tbody>{data.visitors.map((visitor) => <tr key={visitor.id}><td><strong>{visitor.label}</strong><small>{visitor.company || "匿名访客"}{visitor.email ? ` · ${visitor.email}` : ""}</small></td><td>{visitor.landingPath || "未记录"}<small>{visitor.lastPath || "未记录"}</small></td><td>{visitor.referrerHost || "直接访问或站内跳转"}</td><td>{visitor.sessions} / {visitor.events}</td><td>{visitor.contactActions}</td><td>{displayTime(visitor.lastSeenAt)}</td><td><Link href={`/admin/visitors/${visitor.id}?range=${data.range.key}`}>查看路径</Link></td></tr>)}</tbody></table></div> : <AdminEmpty text="当前时间范围内还没有可归属的访客。历史匿名事件仍保留在数据库中，但不会被虚构关联。" />}
+      {data.visitors.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>访客归属</th><th>首次入口 / 最近页面</th><th>来源</th><th>会话 / 事件</th><th>联系行为</th><th>最近访问</th><th>操作</th></tr></thead><tbody>{data.visitors.map((visitor) => <tr key={visitor.id}><td><strong>{visitor.label}</strong><small>{visitor.company || "匿名访客"}{visitor.email ? ` · ${visitor.email}` : ""}</small></td><td>{visitor.landingPath || "未记录"}<small>{visitor.lastPath || "未记录"}</small></td><td>{visitor.referrerHost || "直接访问或站内跳转"}</td><td>{visitor.sessions} / {visitor.events}</td><td>{visitor.contactActions}</td><td>{displayTime(visitor.lastSeenAt)}</td><td><Link href={`/admin/visitors/${visitor.id}?${new URLSearchParams({ range: data.range.key, from: data.range.from || "", to: data.range.to || "" }).toString()}`}>查看路径</Link></td></tr>)}</tbody></table></div> : <AdminEmpty text="当前时间范围内还没有可归属的访客。历史匿名事件仍保留在数据库中，但不会被虚构关联。" />}
       <AdminPagination pathname="/admin/analytics" page={data.page} pages={data.pages} pageSize={data.pageSize} total={data.total} query={query} />
     </section>
   </AdminShell>;

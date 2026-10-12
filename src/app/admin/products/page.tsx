@@ -25,7 +25,7 @@ export default async function AdminProductsPage({
       <AdminNotice>
         <strong>数据来源：Git 版本化技术资料。</strong> 产品官网与后台读取同一份受版本控制的正式目录；为避免“保存成功但官网不变”，当前不提供脱离发布流程的在线编辑。
       </AdminNotice>
-      <AdminSyncStatus status="Up to date" label="产品官网内容" />
+      <AdminSyncStatus status="Configured" label="产品官网内容" />
 
       <section className="admin-panel">
         <form className="admin-toolbar">

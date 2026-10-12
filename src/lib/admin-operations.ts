@@ -5,11 +5,11 @@ import { getAdminDateRange, parsePage, parsePageSize, type AdminListParams } fro
 
 async function rows<T extends Record<string, unknown>>(sql: string, values: unknown[] = []) {
   const pool = getPool();
-  if (!pool) return [] as T[];
+  if (!pool) throw new Error("数据源未连接，请检查数据库配置。");
   try {
     return (await pool.query<T>(sql, values)).rows;
   } catch {
-    return [] as T[];
+    throw new Error("运行记录读取失败，请稍后重试。");
   }
 }
 

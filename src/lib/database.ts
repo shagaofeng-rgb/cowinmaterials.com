@@ -343,10 +343,7 @@ export async function getAdminAnalyticsOverview(filters: AdminAnalyticsFilters =
   const range = getAdminDateRange(filters);
   const pageSize = parsePageSize(filters.pageSize);
   const requestedPage = parsePage(filters.page);
-  if (!activePool) return {
-    range, metrics: { pageViews: 0, visitors: 0, sessions: 0, formSubmits: 0, whatsappClicks: 0, contactActions: 0, latest: null as string | null },
-    visitors: [] as AdminAnalyticsVisitor[], total: 0, page: 1, pages: 1, pageSize,
-  };
+  if (!activePool) throw new Error("访问数据源未连接。");
 
   const metricsParts = analyticsQueryParts(range);
   const metrics = await activePool.query<{
@@ -588,7 +585,7 @@ export async function getAdminInquiryList(filters: AdminInquiryFilters = {}) {
   const range = getAdminDateRange(filters);
   const pageSize = parsePageSize(filters.pageSize);
   const requestedPage = parsePage(filters.page);
-  if (!activePool) return { items: [] as AdminInquiryListItem[], total: 0, page: 1, pageSize, pages: 1, range };
+  if (!activePool) throw new Error("客户线索数据源未连接。");
   const clauses = ["deleted_at is null"];
   const values: unknown[] = [];
   const bind = (value: unknown) => {
@@ -605,7 +602,10 @@ export async function getAdminInquiryList(filters: AdminInquiryFilters = {}) {
   if (["low", "normal", "high", "urgent"].includes(filters.priority || "")) clauses.push(`priority = ${bind(filters.priority)}`);
   if (["new", "qualified", "technical_review", "quotation", "sample", "follow_up", "won", "lost"].includes(filters.stage || "")) clauses.push(`lead_stage = ${bind(filters.stage)}`);
   if (filters.followUp === "overdue") clauses.push("next_follow_up_at < now() and status not in ('closed', 'spam')");
-  if (filters.followUp === "today") clauses.push("next_follow_up_at >= date_trunc('day', now()) and next_follow_up_at < date_trunc('day', now()) + interval '1 day'");
+  if (filters.followUp === "today") {
+    const today = getAdminDateRange({ range: "today" });
+    clauses.push(`next_follow_up_at >= ${bind(today.start)} and next_follow_up_at < ${bind(today.end)}`);
+  }
   if (range.start) clauses.push(`created_at >= ${bind(range.start)}`);
   if (range.end) clauses.push(`created_at < ${bind(range.end)}`);
 

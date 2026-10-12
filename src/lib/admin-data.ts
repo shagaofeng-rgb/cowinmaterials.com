@@ -28,7 +28,7 @@ export type AdminModuleKey = (typeof adminNav)[number]["href"] extends `/admin/$
 
 export type AdminListParams = SharedAdminListParams;
 
-export type AdminStatus = "Up to date" | "Pending" | "Syncing" | "Failed" | "Not connected";
+export type AdminStatus = "Up to date" | "Pending" | "Syncing" | "Failed" | "Not connected" | "Read" | "Not checked" | "Configured";
 
 export type AdminModuleRow = {
   id: string;
@@ -100,17 +100,16 @@ function getMediaRows(): AdminModuleRow[] {
 
 async function queryRows<T extends Record<string, unknown>>(sql: string, values: unknown[] = []) {
   const pool = getPool();
-  if (!pool) return [] as T[];
+  if (!pool) throw new Error("后台数据源未连接。");
   const result = await pool.query<T>(sql, values);
   return result.rows;
 }
 
-async function scalarCount(sql: string) {
-  const rows = await queryRows<{ count: string }>(sql);
-  return Number(rows[0]?.count || 0);
-}
-
-export async function getAdminDashboard() {
+export async function getAdminDashboard(params: AdminListParams = {}) {
+  const range = getAdminDateRange(params);
+  const rangeQuery = new URLSearchParams({ range: range.key, from: range.from || "", to: range.to || "" }).toString();
+  const within = (column: string) => ` and ${column} >= $1 and ${column} < $2`;
+  const dates = [range.start, range.end];
   const database = await getDatabaseHealth();
   const staticCards = [
     { label: "已发布产品", value: products.length, note: "Git 版本化官网目录", href: "/admin/products" },
@@ -119,32 +118,61 @@ export async function getAdminDashboard() {
     { label: "技术资料入口", value: resourceSections.length, note: "官网资源中心", href: "/resources" },
   ];
 
-  if (!database.connected) {
+  const unavailable = (message: string) => {
+    const unavailableDatabase = { ...database, connected: false, message };
     return {
-      database,
+      database: unavailableDatabase,
+      range,
+      primary: null,
       cards: staticCards,
-      workItems: [{ label: "数据库连接", value: database.message, href: "/admin/sync" }],
+      workItems: [{ label: "数据库读取", value: message, href: "/admin/sync" }],
       activity: [] as AdminModuleRow[],
       systemStatus: [
         ["内容来源", "产品为 Git 版本化资料；Blog、询盘、News 使用 PostgreSQL。"],
-        ["数据库", "未连接，数据库模块将显示未连接状态。"],
+        ["数据库", message],
         ["最后检查", formatDate(database.checkedAt)],
       ],
       company: [["品牌", site.name], ["公司", site.legalName], ["邮箱", site.email], ["电话", site.phone], ["办公室地址", site.officeAddress]],
     };
-  }
+  };
 
-  const [blogPublished, blogDraft, inquiriesNew, inquiriesHighPriority, inquiriesOverdue, syncFailed, syncPending, analyticsCount, latestAudit] = await Promise.all([
-    scalarCount("select count(*) from articles where class_id in ('blog', '31') and status = 'published' and deleted_at is null"),
-    scalarCount("select count(*) from articles where class_id in ('blog', '31') and status = 'draft' and deleted_at is null"),
-    scalarCount("select count(*) from inquiries where deleted_at is null and status = 'new' and is_spam = false"),
-    scalarCount("select count(*) from inquiries where deleted_at is null and priority in ('high', 'urgent') and status not in ('closed', 'spam')"),
-    scalarCount("select count(*) from inquiries where deleted_at is null and next_follow_up_at < now() and status not in ('closed', 'spam')"),
-    scalarCount("select count(*) from sync_jobs where status = 'failed'"),
-    scalarCount("select count(*) from sync_jobs where status in ('pending', 'running')"),
-    scalarCount("select count(*) from analytics_events"),
-    queryRows<{ id: string; module: string; action: string; target_id: string | null; created_at: Date }>("select id, module, action, target_id, created_at from audit_logs order by created_at desc limit 10"),
-  ]);
+  if (!database.connected) return unavailable(database.message);
+
+  let blogPublished: number;
+  let blogDraft: number;
+  let inquiriesNew: number;
+  let inquiriesHighPriority: number;
+  let inquiriesOverdue: number;
+  let syncFailed: number;
+  let syncPending: number;
+  let analyticsCount: number;
+  let latestAudit: { id: string; module: string; action: string; target_id: string | null; created_at: Date }[];
+  try {
+    const blog = await queryRows<{ published: string; draft: string }>(
+      "select count(*) filter (where status = 'published') as published, count(*) filter (where status = 'draft') as draft from articles where class_id in ('blog', '31') and deleted_at is null" + within("created_at"), dates,
+    );
+    const inquiries = await queryRows<{ new_count: string; high_priority: string; overdue: string }>(
+      "select count(*) filter (where status = 'new' and is_spam = false) as new_count, count(*) filter (where priority in ('high', 'urgent') and status not in ('closed', 'spam')) as high_priority, count(*) filter (where next_follow_up_at < now() and status not in ('closed', 'spam')) as overdue from inquiries where deleted_at is null" + within("created_at"), dates,
+    );
+    const sync = await queryRows<{ failed: string; pending: string }>(
+      "select count(*) filter (where status = 'failed') as failed, count(*) filter (where status in ('pending', 'running')) as pending from sync_jobs where true" + within("created_at"), dates,
+    );
+    const events = await queryRows<{ count: string }>("select count(*) as count from analytics_events where true" + within("occurred_at"), dates);
+    latestAudit = await queryRows<{ id: string; module: string; action: string; target_id: string | null; created_at: Date }>(
+      "select id, module, action, target_id, created_at from audit_logs where true" + within("created_at") + " order by created_at desc limit 10", dates,
+    );
+    blogPublished = Number(blog[0].published);
+    blogDraft = Number(blog[0].draft);
+    inquiriesNew = Number(inquiries[0].new_count);
+    inquiriesHighPriority = Number(inquiries[0].high_priority);
+    inquiriesOverdue = Number(inquiries[0].overdue);
+    syncFailed = Number(sync[0].failed);
+    syncPending = Number(sync[0].pending);
+    analyticsCount = Number(events[0].count);
+  } catch (error) {
+    console.error("Admin dashboard query failed", error instanceof Error ? error.name : "UnknownError");
+    return unavailable("业务统计读取失败，请稍后重试。");
+  }
 
   const activity = latestAudit.map((row) => ({
     id: row.id,
@@ -158,17 +186,19 @@ export async function getAdminDashboard() {
 
   return {
     database,
+    range,
+    primary: { inquiriesNew, inquiriesOverdue, blogDraft, syncFailed },
     cards: [
       ...staticCards,
       { label: "Blog", value: blogPublished, note: `${blogDraft} 篇草稿`, href: "/admin/blog" },
       { label: "客户表单", value: inquiriesNew, note: `${inquiriesHighPriority} 条高优先级 · ${inquiriesOverdue} 条逾期`, href: "/admin/inquiries" },
-      { label: "同步健康度", value: syncFailed ? "异常" : syncPending ? "待处理" : "正常", note: `${syncPending} 待处理 · ${syncFailed} 失败`, href: "/admin/sync" },
-      { label: "访问事件", value: analyticsCount || "未连接", note: analyticsCount ? "内部事件记录" : "暂无真实分析事件", href: "/admin/analytics" },
+      { label: "同步任务", value: syncFailed ? "有失败" : syncPending ? "待处理" : "无待办", note: `${syncPending} 待处理 · ${syncFailed} 失败；不代表全链路验证`, href: "/admin/sync" },
+      { label: "访问事件", value: analyticsCount, note: `${range.label}内事件`, href: `/admin/analytics?${rangeQuery}` },
     ],
     workItems: [
-      { label: "新询盘", value: `${inquiriesNew} 条新线索 · ${inquiriesHighPriority} 条高优先级`, href: "/admin/inquiries" },
-      { label: "同步任务", value: syncFailed ? `${syncFailed} 个失败任务` : syncPending ? `${syncPending} 个待处理任务` : "当前没有待处理任务", href: "/admin/sync" },
-      { label: "Blog 草稿", value: `${blogDraft} 篇草稿`, href: "/admin/blog" },
+      { label: "新询盘", value: `${inquiriesNew} 条新线索 · ${inquiriesHighPriority} 条高优先级`, href: `/admin/inquiries?${rangeQuery}&status=new` },
+      { label: "同步任务", value: syncFailed ? `${syncFailed} 个失败任务` : syncPending ? `${syncPending} 个待处理任务` : "当前范围内没有待处理任务", href: `/admin/sync?${rangeQuery}` },
+      { label: "Blog 草稿", value: `${blogDraft} 篇草稿`, href: `/admin/blog?${rangeQuery}&status=draft` },
     ],
     activity,
     systemStatus: [
@@ -185,11 +215,16 @@ export async function getAdminDashboard() {
 export async function getAdminModuleData(module: string, params: AdminListParams = {}): Promise<AdminModuleData | null> {
   const database = await getDatabaseHealth();
   const databaseSource = database.connected ? "PostgreSQL 实时查询" : "数据库未连接";
+  const directory = (title: string, description: string, source: string, rows: AdminModuleRow[]): AdminModuleData => {
+    const q = (params.q || "").trim().toLowerCase();
+    const result = paginate(rows.filter((row) => !q || `${row.name} ${row.value}`.toLowerCase().includes(q)), params);
+    return { title, description, source, rows: result.items, pagination: result, status: "Configured" };
+  };
 
-  if (module === "categories") return { title: "产品分类", description: "分类是官网产品信息架构的来源。当前目录由版本化技术资料维护，避免后台显示无法发布的伪编辑。", source: "Git 版本化产品目录", rows: getProductCategoryRows(), status: "Up to date" };
-  if (module === "media") return { title: "媒体库", description: "列出官网已引用的受控静态图片。未连接独立媒体存储，因此不提供伪上传或删除操作。", source: "网站受控静态资源", rows: getMediaRows(), status: "Up to date" };
-  if (module === "users") return { title: "用户与权限", description: "当前为单管理员会话模式。账号与密钥仅保存在服务器环境变量，不会在后台展示。", source: "服务器会话配置", rows: [{ id: "admin", name: process.env.ADMIN_USERNAME || "admin", status: "超级管理员", value: "拥有当前后台全部管理权限", source: "环境变量（不展示密钥）" }], status: "Up to date" };
-  if (module === "settings") return { title: "系统设置", description: "公司与通知配置的权威来源是部署环境与版本化站点资料。高风险设置不能在此页面假装直接修改。", source: "环境变量与 Git 版本化站点资料", rows: [{ id: "brand", name: "网站品牌", status: "已配置", value: site.name }, { id: "timezone", name: "后台时区", status: "已配置", value: "Asia/Shanghai" }, { id: "mail", name: "表单邮件通知", status: "已配置", value: site.email }, { id: "deployment", name: "部署配置", status: "Vercel 管理", value: "环境变量需要在 Vercel 项目设置中修改" }], status: "Up to date" };
+  if (module === "categories") return directory("产品分类", "官网产品目录的分类与关联数量；当前内容通过版本发布维护。", "Git 版本化产品目录", getProductCategoryRows());
+  if (module === "media") return directory("媒体库", "官网产品与应用已引用的图片资产。替换或新增资产需通过内容版本发布。", "网站受控静态资源", getMediaRows());
+  if (module === "users") return { title: "用户与权限", description: "当前为单管理员会话模式。账号与密钥仅保存在服务器环境变量，不会在后台展示。", source: "服务器会话配置", rows: [{ id: "admin", name: process.env.ADMIN_USERNAME || "admin", status: "超级管理员", value: "拥有当前后台全部管理权限", source: "环境变量（不展示密钥）" }], status: "Configured" };
+  if (module === "settings") return { title: "系统设置", description: "公司与通知配置的权威来源是部署环境与版本化站点资料。高风险设置不能在此页面假装直接修改。", source: "环境变量与 Git 版本化站点资料", rows: [{ id: "brand", name: "网站品牌", status: "已配置", value: site.name }, { id: "timezone", name: "后台时区", status: "已配置", value: "Asia/Shanghai" }, { id: "mail", name: "表单邮件通知", status: "已配置", value: site.email }, { id: "deployment", name: "部署配置", status: "Vercel 管理", value: "环境变量需要在 Vercel 项目设置中修改" }], status: "Configured" };
 
   if (!database.connected) {
     const titles: Record<string, [string, string]> = {
@@ -205,7 +240,7 @@ export async function getAdminModuleData(module: string, params: AdminListParams
 
   if (module === "inquiries") {
     const rows = await queryRows<{ id: string; name: string; company: string | null; email: string; country: string | null; request_type: string | null; product: string | null; status: string; created_at: Date }>("select id, name, company, email, country, request_type, product, status, created_at from inquiries where deleted_at is null order by created_at desc limit 100");
-    return { title: "客户表单", description: "官网询盘的真实数据库记录。客户原文仅在受保护详情页中显示。", source: databaseSource, rows: rows.map((row) => ({ id: row.id, name: row.name, status: row.status, value: [row.company, row.country, row.request_type, row.product].filter(Boolean).join(" · ") || row.email, updatedAt: row.created_at.toISOString(), href: `/admin/inquiries/${row.id}`, source: databaseSource })), status: "Up to date" };
+    return { title: "客户表单", description: "官网询盘的真实数据库记录。客户原文仅在受保护详情页中显示。", source: databaseSource, rows: rows.map((row) => ({ id: row.id, name: row.name, status: row.status, value: [row.company, row.country, row.request_type, row.product].filter(Boolean).join(" · ") || row.email, updatedAt: row.created_at.toISOString(), href: `/admin/inquiries/${row.id}`, source: databaseSource })), status: "Configured" };
   }
   if (module === "analytics") {
     const [rows, summary] = await Promise.all([
@@ -243,7 +278,7 @@ export async function getAdminModuleData(module: string, params: AdminListParams
         const [name, status] = eventLabels[row.event_name] || [row.event_name, "事件"];
         return { id: row.id, name, status, value: [row.page_path || "未记录页面路径", row.placement === "floating_whatsapp" ? "右侧悬浮入口" : null, row.request_type || null].filter(Boolean).join(" · "), updatedAt: row.occurred_at.toISOString(), source: "PostgreSQL 匿名事件" };
       }),
-      status: "Up to date",
+      status: "Configured",
       lastSyncedAt: totals.latest?.toISOString() || null,
     };
   }
@@ -263,7 +298,7 @@ export async function getAdminModuleData(module: string, params: AdminListParams
     const page = Math.min(parsePage(params.page), pages);
     values.push(pageSize, (page - 1) * pageSize);
     const rows = await queryRows<{ id: string; action: string; module: string; target_id: string | null; created_at: Date }>(`select id, action, module, target_id, created_at from audit_logs ${where} order by created_at desc limit $${values.length - 1} offset $${values.length}`, values);
-    return { title: "操作日志", description: "仅追加的后台操作记录。敏感凭据、完整客户内容和密钥不会写入日志。", source: databaseSource, rows: rows.map((row) => ({ id: row.id, name: `${row.module} · ${row.action}`, status: "成功", value: row.target_id ? `记录 ${row.target_id}` : "系统记录", updatedAt: row.created_at.toISOString(), source: databaseSource })), status: "Up to date", pagination: { page, pageSize, total, pages }, range };
+    return { title: "操作日志", description: "仅追加的后台操作记录。敏感凭据、完整客户内容和密钥不会写入日志。", source: databaseSource, rows: rows.map((row) => ({ id: row.id, name: `${row.module} · ${row.action}`, status: "已记录", value: row.target_id ? `记录 ${row.target_id}` : "系统记录", updatedAt: row.created_at.toISOString(), source: databaseSource })), status: "Read", pagination: { page, pageSize, total, pages }, range };
   }
   if (module === "sync") {
     const rows = await queryRows<{ id: string; source: string; status: string; records_synced: number; error_message: string | null; started_at: Date | null; finished_at: Date | null }>("select id, source, status, records_synced, error_message, started_at, finished_at from sync_jobs order by created_at desc limit 100");
@@ -271,8 +306,8 @@ export async function getAdminModuleData(module: string, params: AdminListParams
   }
   if (module === "seo") {
     const rows = await queryRows<{ source: string; page_path: string | null; issue_code: string | null; issue_message: string | null; captured_at: Date }>("select source, page_path, issue_code, issue_message, captured_at from seo_snapshots order by captured_at desc limit 100");
-    const baseRows: AdminModuleRow[] = [{ id: "sitemap", name: "Sitemap", status: "已上线", value: "/sitemap.xml · 每 3 天维护", source: "Next.js route + Vercel Cron" }, { id: "robots", name: "Robots", status: "已上线", value: "/robots.txt", source: "Next.js route" }, { id: "llms", name: "AI 发现文件", status: "已上线", value: "/llms.txt", source: "Next.js route" }];
-    return { title: "SEO数据", description: "站内 SEO 基础配置与已保存的真实检查快照。Search Console 未授权时不展示虚构的点击或收录数据。", source: rows.length ? databaseSource : "Next.js SEO 路由", rows: [...baseRows, ...rows.map((row, index) => ({ id: `snapshot-${index}`, name: row.issue_code || row.source, status: row.issue_code ? "需处理" : "已检查", value: row.issue_message || row.page_path || "站内快照", updatedAt: row.captured_at.toISOString(), source: databaseSource }))], status: "Up to date" };
+    const baseRows: AdminModuleRow[] = [{ id: "sitemap", name: "Sitemap", status: "已上线", value: "/sitemap.xml · 每周一维护", source: "Next.js route + Vercel Cron" }, { id: "robots", name: "Robots", status: "已上线", value: "/robots.txt", source: "Next.js route" }, { id: "llms", name: "AI 发现文件", status: "已上线", value: "/llms.txt", source: "Next.js route" }];
+    return { title: "SEO数据", description: "站内 SEO 基础配置与已保存的真实检查快照。Search Console 未授权时不展示虚构的点击或收录数据。", source: rows.length ? databaseSource : "Next.js SEO 路由", rows: [...baseRows, ...rows.map((row, index) => ({ id: `snapshot-${index}`, name: row.issue_code || row.source, status: row.issue_code ? "需处理" : "已检查", value: row.issue_message || row.page_path || "站内快照", updatedAt: row.captured_at.toISOString(), source: databaseSource }))], status: "Configured" };
   }
 
   return null;

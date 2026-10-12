@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "SEO中心 | Cowin Materials 后台", robots: { index: false, follow: false } };
 
 function displayTime(value?: Date | null) {
-  return value ? new Date(value).toLocaleString("zh-CN") : "暂无记录";
+  return value ? new Date(value).toLocaleString("zh-CN", { timeZone: "Asia/Shanghai" }) : "暂无记录";
 }
 
 export default async function AdminSeoPage({ searchParams }: { searchParams: Promise<{ page?: string; pageSize?: string; sitemapPage?: string; range?: string; from?: string; to?: string }> }) {
@@ -25,12 +25,12 @@ export default async function AdminSeoPage({ searchParams }: { searchParams: Pro
   return (
     <AdminShell title="SEO中心">
       <AdminNotice><strong>数据边界：</strong>这里仅展示站点实际产生的 Sitemap 维护记录和服务器配置状态。Google Search Console 未完成正式授权或未启用时，不显示虚构的排名、点击或收录数据。</AdminNotice>
-      <AdminSyncStatus status={failed ? "Failed" : latest ? "Up to date" : "Not connected"} lastSyncedAt={latest?.finished_at?.toISOString() || null} label="Sitemap 与抓取准备" websiteHref="/sitemap.xml" />
+      <AdminSyncStatus status={failed ? "Failed" : latest ? "Read" : "Not checked"} lastSyncedAt={latest?.finished_at?.toISOString() || null} label="Sitemap 与抓取准备" websiteHref="/sitemap.xml" />
       <section className="admin-panel"><form className="admin-filter-grid admin-filter-grid-wide"><AdminDateRangeFields range={range} /><label className="admin-filter-field"><span>每页显示</span><select name="pageSize" defaultValue={String(pageSize)}><option value="10">10条</option><option value="20">20条</option><option value="50">50条</option><option value="100">100条</option></select></label><button className="admin-primary-button" type="submit">查询记录</button><Link href="/admin/seo">重置</Link></form></section>
       <section className="admin-metric-grid" aria-label="SEO 运行摘要">
-        <article className="admin-metric"><span>Sitemap 维护记录</span><strong>{sitemapRuns.length}</strong><small>已落库的最近运行</small></article>
-        <article className="admin-metric"><span>最近有效 URL</span><strong>{lastSuccessful?.urls_successful ?? "—"}</strong><small>最近一次成功维护</small></article>
-        <article className="admin-metric"><span>需处理错误</span><strong>{failed}</strong><small>运行失败或 URL 验证失败</small></article>
+        <article className="admin-metric"><span>Sitemap 维护记录</span><strong>{sitemapTotal}</strong><small>所选范围全部运行记录</small></article>
+        <article className="admin-metric"><span>当前页有效 URL</span><strong>{lastSuccessful?.urls_successful ?? "—"}</strong><small>当前页最近一次成功维护</small></article>
+        <article className="admin-metric"><span>当前页异常运行</span><strong>{failed}</strong><small>当前页运行失败或 URL 验证失败</small></article>
         <article className="admin-metric"><span>Search Console</span><strong>{searchConsoleEnabled ? "已启用" : "未启用"}</strong><small>只显示服务器实际配置</small></article>
       </section>
       <section className="admin-panel">

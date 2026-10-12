@@ -44,7 +44,7 @@ export default async function AdminModulePage({ params, searchParams }: { params
         </section>
       ) : null}
       <section className="admin-panel">
-        {page.pagination && page.range ? <form className="admin-filter-grid admin-filter-grid-wide"><label className="admin-filter-field"><span>搜索</span><input name="q" defaultValue={query.q || ""} placeholder="模块、动作或记录 ID" /></label><AdminDateRangeFields range={page.range} /><label className="admin-filter-field"><span>每页显示</span><select name="pageSize" defaultValue={String(page.pagination.pageSize)}><option value="10">10条</option><option value="20">20条</option><option value="50">50条</option><option value="100">100条</option></select></label><button className="admin-primary-button" type="submit">查询记录</button><Link href={`/admin/${module}`}>重置</Link></form> : null}
+        {page.pagination ? <form className="admin-filter-grid admin-filter-grid-wide"><label className="admin-filter-field"><span>搜索</span><input name="q" defaultValue={query.q || ""} placeholder={module === "logs" ? "模块、动作或记录 ID" : "名称或关键词"} /></label>{page.range ? <AdminDateRangeFields range={page.range} /> : null}<label className="admin-filter-field"><span>每页显示</span><select name="pageSize" defaultValue={String(page.pagination.pageSize)}><option value="10">10条</option><option value="20">20条</option><option value="50">50条</option><option value="100">100条</option></select></label><button className="admin-primary-button" type="submit">查询记录</button><Link href={`/admin/${module}`}>重置</Link></form> : null}
         {page.rows.length ? (
           <div className="admin-table-wrap">
             <table className="admin-table">

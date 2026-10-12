@@ -30,7 +30,7 @@ export default async function AdminInquiriesPage({
   return (
     <AdminShell title="客户线索工作台">
       <AdminNotice><strong>权威来源：PostgreSQL inquiries。</strong> 官网表单、项目条件和 UTM 数据会写入同一条线索记录；内部跟进只在后台保存，不会改写客户原文或暴露到前台。</AdminNotice>
-      <AdminSyncStatus status="Up to date" label="官网表单与销售线索" />
+      <AdminSyncStatus status="Read" label="官网表单与销售线索" />
       <section className="admin-metric-grid" aria-label="客户线索摘要">
         <article className="admin-metric"><span>当前结果</span><strong>{result.total}</strong><small>{result.range.label}内的匹配线索</small></article>
         <article className="admin-metric"><span>进行中</span><strong>{active}</strong><small>未关闭或标记垃圾</small></article>

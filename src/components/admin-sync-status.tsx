@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 type SyncStatusProps = {
-  status?: "Up to date" | "Pending" | "Syncing" | "Failed" | "Not connected";
+  status?: "Up to date" | "Pending" | "Syncing" | "Failed" | "Not connected" | "Read" | "Not checked" | "Configured";
   lastSyncedAt?: string | null;
   websiteHref?: string;
   label?: string;
@@ -13,12 +13,15 @@ const labels = {
   Syncing: "同步中",
   Failed: "同步失败",
   "Not connected": "未连接",
+  Read: "已读取",
+  "Not checked": "暂无检查记录",
+  Configured: "版本化配置",
 } as const;
 
 export function AdminSyncStatus({ status = "Not connected", lastSyncedAt, websiteHref, label = "官网同步" }: SyncStatusProps) {
   const time = lastSyncedAt
     ? new Intl.DateTimeFormat("zh-CN", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Shanghai" }).format(new Date(lastSyncedAt))
-    : "暂无同步时间";
+    : "暂无记录时间";
 
   return (
     <div className="admin-sync-status" data-status={status.toLowerCase().replaceAll(" ", "-")}>
