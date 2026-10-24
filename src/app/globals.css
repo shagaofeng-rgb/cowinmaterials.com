@@ -4164,10 +4164,10 @@ body.drawer-open { overflow: hidden; }
 @media (max-width: 767px) {
   .whatsapp-float {
     top: auto;
-    right: 18px;
+    right: 0;
     bottom: max(18px, calc(18px + env(safe-area-inset-bottom)));
-    width: 54px;
-    height: 54px;
+    width: 44px;
+    height: 44px;
     transform: none;
   }
 

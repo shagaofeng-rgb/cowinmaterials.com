@@ -209,7 +209,7 @@ export async function getPublishedBlogPage({ page = 1, pageSize = 9 }: { page?: 
   const pool = getPool();
   const safePage = Math.max(1, Math.floor(page));
   const safePageSize = Math.min(50, Math.max(1, Math.floor(pageSize)));
-  if (!pool) return { articles: [] as BlogArticle[], total: 0, page: safePage, pageSize: safePageSize };
+  if (!pool) throw new Error("Blog data source is unavailable.");
 
   const clause = "a.class_id in ('blog', '31') and a.status = 'published' and a.deleted_at is null and a.published_at <= now()";
   try {
@@ -218,8 +218,9 @@ export async function getPublishedBlogPage({ page = 1, pageSize = 9 }: { page?: 
       pool.query<BlogRow>(`${articleSelect} where ${clause} order by a.published_at desc, a.id desc limit $1 offset $2`, [safePageSize, (safePage - 1) * safePageSize]),
     ]);
     return { articles: rows.rows.map(rowToArticle), total: Number(count.rows[0]?.count || 0), page: safePage, pageSize: safePageSize };
-  } catch {
-    return { articles: [] as BlogArticle[], total: 0, page: safePage, pageSize: safePageSize };
+  } catch (error) {
+    console.error("Published Blog query failed", error instanceof Error ? error.name : "UnknownError");
+    throw error;
   }
 }
 

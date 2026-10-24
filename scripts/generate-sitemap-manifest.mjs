@@ -8,6 +8,7 @@ const pageFiles = {
   "/": "src/app/page.tsx",
   "/about": "src/app/about/page.tsx",
   "/applications": "src/app/applications/page.tsx",
+  "/blog": "src/app/blog/page.tsx",
   "/case-studies": "src/app/case-studies/page.tsx",
   "/contact": "src/app/contact/page.tsx",
   "/cookie-notice": "src/app/cookie-notice/page.tsx",

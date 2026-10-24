@@ -66,6 +66,8 @@ export async function POST(request: Request) {
     const referrerPath = readString(body?.referrer_path, 260);
     const referrerHost = readString(body?.referrer_host, 255);
     const device = readString(body?.device, 24);
+    const countryHeader = process.env.VERCEL === "1" ? request.headers.get("x-vercel-ip-country") || "" : "";
+    const country = /^[A-Z]{2}$/.test(countryHeader) && countryHeader !== "XX" ? countryHeader : undefined;
 
     const isAllowedEvent = allowedEventNames.has(receivedEventName as AnalyticsEventName);
     const isValidWhatsapp = receivedEventName !== "whatsapp_click" || whatsappPlacements.has(receivedPlacement);
@@ -86,6 +88,7 @@ export async function POST(request: Request) {
       referrerHost: referrerHost || undefined,
       utm: readUtm(body?.utm),
       device: ["mobile", "tablet", "desktop"].includes(device) ? device : undefined,
+      country,
     });
 
     if (!result.recorded && !result.duplicate) {

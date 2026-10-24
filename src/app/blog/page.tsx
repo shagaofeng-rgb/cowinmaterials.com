@@ -2,30 +2,32 @@ import Link from "next/link";
 import { ArrowRight, CalendarDays } from "lucide-react";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
-import { getBlogArticles } from "@/lib/blog/store";
 import { getPublishedBlogPage } from "@/lib/blog/store";
 import { Pagination } from "@/components/pagination";
 import { createPageMetadata } from "@/lib/seo";
+import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
 type BlogPageProps = { searchParams: Promise<{ page?: string }> };
 
 export async function generateMetadata({ searchParams }: BlogPageProps) {
-  const articles = await getBlogArticles();
-  const page = Math.max(1, Number((await searchParams).page) || 1);
+  const page = validPage((await searchParams).page);
+  const { total } = await getPublishedBlogPage({ page: 1, pageSize: 1 });
+  if (page > Math.max(1, Math.ceil(total / 9))) notFound();
   return createPageMetadata({
     title: page > 1 ? `Aerogel Technical Blog - Page ${page} | Cowin Materials` : "Aerogel Technical Blog | Cowin Materials",
     description: "Technical articles about silica aerogel insulation, fire protection, waterproofing and thermal-management applications.",
     path: page > 1 ? `/blog?page=${page}` : "/blog",
     keywords: ["aerogel blog", "silica aerogel technical articles", "industrial insulation guidance"],
-    index: articles.length > 0,
+    index: total > 0,
   });
 }
 
 export default async function BlogPage({ searchParams }: BlogPageProps) {
-  const requestedPage = Math.max(1, Number((await searchParams).page) || 1);
+  const requestedPage = validPage((await searchParams).page);
   const result = await getPublishedBlogPage({ page: requestedPage, pageSize: 9 });
+  if (requestedPage > Math.max(1, Math.ceil(result.total / result.pageSize))) notFound();
   const articles = result.articles;
   return (
     <>
@@ -75,4 +77,12 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
       <Footer />
     </>
   );
+}
+
+function validPage(value?: string, totalPages?: number) {
+  if (value === undefined) return 1;
+  if (!/^[1-9]\d*$/.test(value)) notFound();
+  const page = Number(value);
+  if (!Number.isSafeInteger(page) || (totalPages !== undefined && page > Math.max(1, totalPages))) notFound();
+  return page;
 }

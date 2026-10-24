@@ -43,10 +43,11 @@ for (let index = 0; index < uniquePublicPaths.length; index += 4) {
 }
 const urlFailures = urlChecks.filter((item) => item.status !== 200);
 assert.deepEqual(urlFailures, [], `Sitemap contains unavailable URLs: ${JSON.stringify(urlFailures)}`);
+assert.ok(publicPaths.includes("/blog"), "Blog index must be present in the sitemap.");
 assert.ok(publicPaths.includes("/news"), "News index must be present in the sitemap.");
 
-const [robots, llms, home, products, resources, locationsPage, quote, search, news, newsRss, adminHealth, sitemapCron, newsCron, blogWebhook, invalidInquiry, botAnalytics] = await Promise.all([
-  request("/robots.txt"), request("/llms.txt"), request("/"), request("/products"), request("/resources"), request("/locations"), request("/request-quote"), request("/search?q=aerogel"), request("/news"), request("/news/rss.xml"), request("/api/admin/health"), request("/api/cron/sitemap-maintenance"), request("/api/cron/news-automation"), request("/api/webhook/send_article"), request("/api/inquiry", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }), request("/api/analytics/event", { method: "POST", headers: { "content-type": "application/json", "user-agent": "HeadlessChrome Cowin smoke audit" }, body: JSON.stringify({ event_id: "smoke-headless-analytics-event", event_name: "page_view", page_path: "/" }) }),
+const [robots, llms, home, products, resources, locationsPage, quote, search, blog, news, newsRss, invalidProductsPage, invalidBlogPage, invalidNewsPage, adminHealth, sitemapCron, newsCron, blogWebhook, invalidInquiry, botAnalytics] = await Promise.all([
+  request("/robots.txt"), request("/llms.txt"), request("/"), request("/products"), request("/resources"), request("/locations"), request("/request-quote"), request("/search?q=aerogel"), request("/blog"), request("/news"), request("/news/rss.xml"), request("/products?page=999"), request("/blog?page=999"), request("/news?page=999"), request("/api/admin/health"), request("/api/cron/sitemap-maintenance"), request("/api/cron/news-automation"), request("/api/webhook/send_article"), request("/api/inquiry", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }), request("/api/analytics/event", { method: "POST", headers: { "content-type": "application/json", "user-agent": "HeadlessChrome Cowin smoke audit" }, body: JSON.stringify({ event_id: "smoke-headless-analytics-event", event_name: "page_view", page_path: "/" }) }),
 ]);
 
 assert.match(robots.body, /Sitemap: https:\/\/www\.cowinmaterials\.com\/sitemap\.xml/);
@@ -58,7 +59,12 @@ for (const page of [home, products, resources, locationsPage, quote]) {
   assert.match(page.body, /rel="canonical"/);
 }
 assert.match(search.body, /<meta name="robots" content="noindex, nofollow"/);
+assert.match(home.body, /href="\/products"[^>]*><strong>All products<\/strong>/);
+assert.match(home.body, /href="\/applications"[^>]*><strong>All applications<\/strong>/);
+assert.match(resources.body, /id="test-data"/);
+assert.equal(blog.status, 200);
 assert.equal(news.status, 200);
+for (const page of [invalidProductsPage, invalidBlogPage, invalidNewsPage]) assert.equal(page.status, 404, `${page.path} must not be an indexable empty page.`);
 assert.equal(newsRss.status, 200);
 assert.match(newsRss.type, /application\/rss\+xml/);
 assert.equal(adminHealth.status, 401);

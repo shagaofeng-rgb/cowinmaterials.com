@@ -63,7 +63,7 @@ export const megaMenus = {
   Resources: [
     { href: "/resources#tds", label: "Technical Data Sheets", note: "Request product-specific TDS" },
     { href: "/resources#sds", label: "Safety Data Sheets", note: "Request applicable SDS" },
-    { href: "/resources#data-highlights", label: "Test Data", note: "Review data in context" },
+    { href: "/resources#test-data", label: "Test Data", note: "Review data in context" },
     { href: "/resources#installation-guides", label: "Installation Guides", note: "Coating system guidance" },
     { href: "/resources#selection-guide", label: "Product Selection Guide", note: "Choose by conditions" },
     { href: "/resources#faq", label: "FAQ", note: "Common buyer questions" },

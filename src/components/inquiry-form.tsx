@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Send } from "lucide-react";
 import { useState, useSyncExternalStore } from "react";
-import { getAnalyticsIdentity, trackAnalyticsEvent } from "@/components/analytics-events";
+import { getAnalyticsIdentity, getAttributionUtm, trackAnalyticsEvent } from "@/components/analytics-events";
 import { site } from "@/lib/data";
 
 const customerTypes = [
@@ -95,21 +95,22 @@ export function InquiryForm() {
         const identity = getAnalyticsIdentity();
         formData.set("visitor_id", identity.visitorKey);
         formData.set("session_id", identity.sessionKey);
-        for (const key of ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"]) {
-          const value = new URLSearchParams(window.location.search).get(key);
+        for (const [key, value] of Object.entries(getAttributionUtm())) {
           if (value) formData.set(key, value);
         }
 
-        const response = await fetch("/api/inquiry", {
-          method: "POST",
-          body: formData,
-        });
-
-        if (response.ok) {
-          trackAnalyticsEvent("form_submit", { request_type: String(formData.get("requestType") || "") });
-          router.push("/thank-you");
-          return;
-        } else {
+        try {
+          const response = await fetch("/api/inquiry", {
+            method: "POST",
+            body: formData,
+          });
+          if (response.ok) {
+            trackAnalyticsEvent("form_submit", { request_type: String(formData.get("requestType") || "") });
+            router.push("/thank-you");
+            return;
+          }
+          setStatus("error");
+        } catch {
           setStatus("error");
         }
       }}

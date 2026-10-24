@@ -148,27 +148,33 @@ export async function getAdminDashboard(params: AdminListParams = {}) {
   let analyticsCount: number;
   let latestAudit: { id: string; module: string; action: string; target_id: string | null; created_at: Date }[];
   try {
-    const blog = await queryRows<{ published: string; draft: string }>(
-      "select count(*) filter (where status = 'published') as published, count(*) filter (where status = 'draft') as draft from articles where class_id in ('blog', '31') and deleted_at is null" + within("created_at"), dates,
-    );
-    const inquiries = await queryRows<{ new_count: string; high_priority: string; overdue: string }>(
-      "select count(*) filter (where status = 'new' and is_spam = false) as new_count, count(*) filter (where priority in ('high', 'urgent') and status not in ('closed', 'spam')) as high_priority, count(*) filter (where next_follow_up_at < now() and status not in ('closed', 'spam')) as overdue from inquiries where deleted_at is null" + within("created_at"), dates,
-    );
-    const sync = await queryRows<{ failed: string; pending: string }>(
-      "select count(*) filter (where status = 'failed') as failed, count(*) filter (where status in ('pending', 'running')) as pending from sync_jobs where true" + within("created_at"), dates,
-    );
-    const events = await queryRows<{ count: string }>("select count(*) as count from analytics_events where true" + within("occurred_at"), dates);
-    latestAudit = await queryRows<{ id: string; module: string; action: string; target_id: string | null; created_at: Date }>(
-      "select id, module, action, target_id, created_at from audit_logs where true" + within("created_at") + " order by created_at desc limit 10", dates,
-    );
-    blogPublished = Number(blog[0].published);
-    blogDraft = Number(blog[0].draft);
-    inquiriesNew = Number(inquiries[0].new_count);
-    inquiriesHighPriority = Number(inquiries[0].high_priority);
-    inquiriesOverdue = Number(inquiries[0].overdue);
-    syncFailed = Number(sync[0].failed);
-    syncPending = Number(sync[0].pending);
-    analyticsCount = Number(events[0].count);
+    const [summary, audits] = await Promise.all([
+      queryRows<{
+        blog_published: string; blog_draft: string; inquiries_new: string; inquiries_high: string;
+        inquiries_overdue: string; sync_failed: string; sync_pending: string; analytics_count: string;
+      }>(`select
+        (select count(*) from articles where class_id in ('blog', '31') and status = 'published' and deleted_at is null ${within("created_at")})::text as blog_published,
+        (select count(*) from articles where class_id in ('blog', '31') and status = 'draft' and deleted_at is null ${within("created_at")})::text as blog_draft,
+        (select count(*) from inquiries where deleted_at is null and status = 'new' and is_spam = false ${within("created_at")})::text as inquiries_new,
+        (select count(*) from inquiries where deleted_at is null and priority in ('high', 'urgent') and status not in ('closed', 'spam') ${within("created_at")})::text as inquiries_high,
+        (select count(*) from inquiries where deleted_at is null and next_follow_up_at < now() and status not in ('closed', 'spam') ${within("created_at")})::text as inquiries_overdue,
+        (select count(*) from sync_jobs where status = 'failed' ${within("created_at")})::text as sync_failed,
+        (select count(*) from sync_jobs where status in ('pending', 'running') ${within("created_at")})::text as sync_pending,
+        (select count(*) from analytics_events where true ${within("occurred_at")})::text as analytics_count`, dates),
+      queryRows<{ id: string; module: string; action: string; target_id: string | null; created_at: Date }>(
+        "select id, module, action, target_id, created_at from audit_logs where true" + within("created_at") + " order by created_at desc limit 10", dates,
+      ),
+    ]);
+    latestAudit = audits;
+    const counts = summary[0];
+    blogPublished = Number(counts.blog_published);
+    blogDraft = Number(counts.blog_draft);
+    inquiriesNew = Number(counts.inquiries_new);
+    inquiriesHighPriority = Number(counts.inquiries_high);
+    inquiriesOverdue = Number(counts.inquiries_overdue);
+    syncFailed = Number(counts.sync_failed);
+    syncPending = Number(counts.sync_pending);
+    analyticsCount = Number(counts.analytics_count);
   } catch (error) {
     console.error("Admin dashboard query failed", error instanceof Error ? error.name : "UnknownError");
     return unavailable("业务统计读取失败，请稍后重试。");

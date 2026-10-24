@@ -2,12 +2,23 @@ import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { ProductFilter } from "@/components/product-filter";
 import { SectionHeading } from "@/components/section-heading";
+import { notFound } from "next/navigation";
+import { products } from "@/lib/data";
 import { productListJsonLd, createPageMetadata } from "@/lib/seo";
 
 type ProductsPageProps = { searchParams: Promise<{ page?: string }> };
+const pageCount = Math.ceil(products.length / 6);
+
+function validPage(value?: string) {
+  if (value === undefined) return 1;
+  if (!/^[1-9]\d*$/.test(value)) notFound();
+  const page = Number(value);
+  if (!Number.isSafeInteger(page) || page > pageCount) notFound();
+  return page;
+}
 
 export async function generateMetadata({ searchParams }: ProductsPageProps) {
-  const page = Math.max(1, Number((await searchParams).page) || 1);
+  const page = validPage((await searchParams).page);
   return createPageMetadata({
     title: page > 1 ? `Aerogel Products - Page ${page} | Cowin Materials` : "Aerogel Products and Functional Coating Systems | Cowin Materials",
     description: "Explore aerogel powder, blankets, insulation coatings, battery thermal barriers, fire protection coatings and waterproofing materials from Cowin Materials.",
@@ -17,7 +28,7 @@ export async function generateMetadata({ searchParams }: ProductsPageProps) {
 }
 
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
-  const page = Number((await searchParams).page) || 1;
+  const page = validPage((await searchParams).page);
   return (
     <>
       <Header />

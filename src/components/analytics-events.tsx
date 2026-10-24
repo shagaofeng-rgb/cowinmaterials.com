@@ -49,6 +49,7 @@ function eventId(prefix: string) {
 
 const visitorStorageKey = "cowin.analytics.visitor";
 const sessionStorageKey = "cowin.analytics.session";
+const attributionStorageKey = "cowin.analytics.utm";
 const sessionIdleMs = 30 * 60 * 1000;
 let fallbackVisitorKey = "";
 let fallbackSessionKey = "";
@@ -106,11 +107,21 @@ function getReferrer() {
   }
 }
 
-function getUtm() {
+export function getAttributionUtm(): Record<string, string> {
   const params = new URLSearchParams(window.location.search);
-  return Object.fromEntries(["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"]
+  const current = Object.fromEntries(["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"]
     .map((key) => [key, (params.get(key) || "").slice(0, 120)])
     .filter(([, value]) => value));
+  try {
+    if (Object.keys(current).length) {
+      window.sessionStorage.setItem(attributionStorageKey, JSON.stringify(current));
+      return current;
+    }
+    const stored = JSON.parse(window.sessionStorage.getItem(attributionStorageKey) || "{}");
+    return stored && typeof stored === "object" && !Array.isArray(stored) ? stored as Record<string, string> : {};
+  } catch {
+    return current;
+  }
 }
 
 function getDevice() {
@@ -129,7 +140,7 @@ export function recordStoredAnalyticsEvent(event: StoredAnalyticsEvent) {
     visitor_id: identity.visitorKey,
     session_id: identity.sessionKey,
     ...getReferrer(),
-    utm: getUtm(),
+    utm: getAttributionUtm(),
     device: getDevice(),
   });
 

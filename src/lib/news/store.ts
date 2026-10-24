@@ -28,7 +28,7 @@ const publishedClause = "a.status = 'published' and a.deleted_at is null and a.p
 const indexablePublishedClause = `${publishedClause} and a.seo_indexable = true`;
 export async function getPublishedNews({ page = 1, pageSize = 12, productSlug }: { page?: number; pageSize?: number; productSlug?: string } = {}): Promise<NewsListResult> {
   const pool = getPool(); const safePage = Math.max(1, Math.floor(page)); const safePageSize = Math.min(50, Math.max(1, Math.floor(pageSize)));
-  if (!pool) return { articles: [], total: 0, page: safePage, pageSize: safePageSize };
+  if (!pool) throw new Error("News data source is unavailable.");
   try {
     const params: unknown[] = []; let filter = "";
     if (productSlug) { params.push(productSlug); filter = ` and exists (select 1 from news_products px where px.news_id = a.id and px.product_slug = $${params.length})`; }
@@ -36,20 +36,20 @@ export async function getPublishedNews({ page = 1, pageSize = 12, productSlug }:
     params.push(safePageSize, (safePage - 1) * safePageSize);
     const rows = await pool.query<NewsRow>(`${articleSelect} where ${publishedClause}${filter} group by a.id order by a.published_at desc limit $${params.length - 1} offset $${params.length}`, params);
     return { articles: rows.rows.map(rowToArticle), total: Number(count.rows[0]?.count || 0), page: safePage, pageSize: safePageSize };
-  } catch { return { articles: [], total: 0, page: safePage, pageSize: safePageSize }; }
+  } catch (error) { console.error("Published News query failed", error instanceof Error ? error.name : "UnknownError"); throw error; }
 }
 
 export const getPublishedNewsBySlug = cache(async function getPublishedNewsBySlug(slug: string) {
-  const pool = getPool(); if (!pool) return null;
-  try { const result = await pool.query<NewsRow>(`${articleSelect} where ${publishedClause} and a.slug = $1 group by a.id limit 1`, [slug]); return result.rows[0] ? rowToArticle(result.rows[0]) : null; } catch { return null; }
+  const pool = getPool(); if (!pool) throw new Error("News data source is unavailable.");
+  try { const result = await pool.query<NewsRow>(`${articleSelect} where ${publishedClause} and a.slug = $1 group by a.id limit 1`, [slug]); return result.rows[0] ? rowToArticle(result.rows[0]) : null; } catch (error) { console.error("News detail query failed", error instanceof Error ? error.name : "UnknownError"); throw error; }
 });
 
 export async function getPublishedNewsSitemapSummary() {
-  const pool = getPool(); if (!pool) return { count: 0, lastModified: new Date().toISOString() };
-  try { const result = await pool.query<{ count: string; last_modified: Date | string | null }>(`select count(*)::text as count, max(updated_at) as last_modified from news_articles a where ${indexablePublishedClause}`); return { count: Number(result.rows[0]?.count || 0), lastModified: iso(result.rows[0]?.last_modified) }; } catch { return { count: 0, lastModified: new Date().toISOString() }; }
+  const pool = getPool(); if (!pool) throw new Error("News data source is unavailable.");
+  try { const result = await pool.query<{ count: string; last_modified: Date | string | null }>(`select count(*)::text as count, max(updated_at) as last_modified from news_articles a where ${indexablePublishedClause}`); return { count: Number(result.rows[0]?.count || 0), lastModified: iso(result.rows[0]?.last_modified) }; } catch (error) { console.error("News sitemap summary query failed", error instanceof Error ? error.name : "UnknownError"); throw error; }
 }
 
 export async function getPublishedNewsSitemapPage({ offset, limit }: { offset: number; limit: number }) {
-  const pool = getPool(); if (!pool) return { entries: [] as NewsSitemapEntry[], total: 0 };
-  try { const [count, rows] = await Promise.all([pool.query<{ count: string }>(`select count(*)::text as count from news_articles a where ${indexablePublishedClause}`), pool.query<{ slug: string; updated_at: Date | string }>(`select slug, updated_at from news_articles a where ${indexablePublishedClause} order by published_at desc, id desc limit $1 offset $2`, [Math.min(45_000, Math.max(1, limit)), Math.max(0, offset)])]); return { entries: rows.rows.map((row) => ({ slug: row.slug, updatedAt: iso(row.updated_at) })), total: Number(count.rows[0]?.count || 0) }; } catch { return { entries: [] as NewsSitemapEntry[], total: 0 }; }
+  const pool = getPool(); if (!pool) throw new Error("News data source is unavailable.");
+  try { const [count, rows] = await Promise.all([pool.query<{ count: string }>(`select count(*)::text as count from news_articles a where ${indexablePublishedClause}`), pool.query<{ slug: string; updated_at: Date | string }>(`select slug, updated_at from news_articles a where ${indexablePublishedClause} order by published_at desc, id desc limit $1 offset $2`, [Math.min(45_000, Math.max(1, limit)), Math.max(0, offset)])]); return { entries: rows.rows.map((row) => ({ slug: row.slug, updatedAt: iso(row.updated_at) })), total: Number(count.rows[0]?.count || 0) }; } catch (error) { console.error("News sitemap page query failed", error instanceof Error ? error.name : "UnknownError"); throw error; }
 }

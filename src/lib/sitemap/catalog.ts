@@ -11,6 +11,7 @@ const pagePaths = [
   "/products",
   "/applications",
   "/resources",
+  "/blog",
   "/news",
   "/about",
   "/locations",
