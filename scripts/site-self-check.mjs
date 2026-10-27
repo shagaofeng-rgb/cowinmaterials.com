@@ -13,6 +13,8 @@ for (const item of ["label: \"Company\"", "href: \"/about\"", "href: \"/contact\
 const source = readFileSync(join(root, "next.config.ts"), "utf8");
 assert.ok(source.includes("/products/aerogel-powder-and-slurry"), "Missing legacy product redirect.");
 assert.ok(source.includes("/resources"), "Missing technical resources redirect.");
+assert.ok(source.includes('source: "/contact-us", destination: "/contact"'), "Missing contact alias redirect.");
+assert.ok(source.includes('source: "/technical-data-sheet", destination: "/resources#tds"'), "Missing technical-data alias redirect.");
 
 const cron = JSON.parse(readFileSync(join(root, "vercel.json"), "utf8"));
 assert.equal(cron.crons.some((entry) => entry.path === "/api/cron/news-automation"), false, "News cron must remain stopped");
@@ -40,7 +42,7 @@ assert.ok(adminData.includes("Git 版本化产品目录"), "Products must not pr
 assert.ok(adminData.includes("sync_jobs"), "Sync dashboard must read real job records");
 const adminBlog = readFileSync(join(root, "src/lib/blog/store.ts"), "utf8");
 assert.ok(adminBlog.includes("insert into audit_logs"), "Blog changes must append an audit log");
-assert.ok(adminBlog.includes("sanitizeContent(input.content)"), "Blog updates must sanitize content server-side");
+assert.ok(adminBlog.includes("sanitizeBlogContent(input.content)"), "Blog updates must sanitize content server-side");
 const inquiryStore = readFileSync(join(root, "src/lib/database.ts"), "utf8");
 assert.ok(inquiryStore.includes("updateAdminInquiryStatus"), "Inquiry status must be updated server-side");
 assert.ok(inquiryStore.includes("project_details"), "Inquiry project conditions must persist to the authoritative record");

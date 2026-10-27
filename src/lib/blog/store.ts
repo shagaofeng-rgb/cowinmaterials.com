@@ -4,6 +4,7 @@ import sanitizeHtml from "sanitize-html";
 import { getPool } from "@/lib/database";
 import { getAdminDateRange, parsePage, parsePageSize, type AdminListParams } from "@/lib/admin-listing";
 import type { BlogArticle } from "./types";
+import { sanitizeBlogContent } from "./content";
 
 type BlogRow = {
   id: string;
@@ -45,7 +46,7 @@ function rowToArticle(row: BlogRow): BlogArticle {
     slug: row.slug,
     classId: row.class_id,
     title: row.title_en,
-    contentHtml: row.body_html,
+    contentHtml: sanitizeBlogContent(row.body_html),
     excerpt: row.excerpt_en || "",
     authorId: row.author_id,
     imageUrl: row.cover_image_url,
@@ -61,27 +62,6 @@ function slugify(value: string) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 72) || "article";
-}
-
-function sanitizeContent(content: string) {
-  return sanitizeHtml(content, {
-    allowedTags: [
-      "p", "br", "h2", "h3", "h4", "strong", "b", "em", "i", "u", "ul", "ol", "li",
-      "blockquote", "a", "img", "figure", "figcaption", "table", "thead", "tbody", "tr", "th", "td",
-      "pre", "code", "hr", "sup", "sub",
-    ],
-    allowedAttributes: {
-      a: ["href", "title", "target", "rel"],
-      img: ["src", "alt", "title", "width", "height", "loading"],
-      th: ["colspan", "rowspan", "scope"],
-      td: ["colspan", "rowspan"],
-    },
-    allowedSchemes: ["http", "https", "mailto"],
-    transformTags: {
-      a: sanitizeHtml.simpleTransform("a", { rel: "nofollow noopener noreferrer", target: "_blank" }),
-      img: sanitizeHtml.simpleTransform("img", { loading: "lazy" }),
-    },
-  }).trim();
 }
 
 function excerptFromHtml(contentHtml: string) {
@@ -123,11 +103,13 @@ export async function publishBlogArticle(input: {
   imageUrl: string;
 }): Promise<{ article: BlogArticle; idempotentReplay: boolean }> {
   const pool = requirePool();
-  const contentHtml = sanitizeContent(input.content);
+  const contentHtml = sanitizeBlogContent(input.content);
   if (!contentHtml) throw new Error("Article content is empty after security filtering.");
 
+  // Keep the pre-link-repair fingerprint so a plugin retry updates its original row.
+  const fingerprintContent = sanitizeBlogContent(input.content, false);
   const fingerprint = createHash("sha256")
-    .update(`${input.classId}\n${input.title}\n${contentHtml}`)
+    .update(`${input.classId}\n${input.title}\n${fingerprintContent}`)
     .digest("hex");
   const slug = `${slugify(input.title)}-${fingerprint.slice(0, 10)}`;
   const excerpt = excerptFromHtml(contentHtml);
@@ -321,7 +303,7 @@ export async function updateAdminBlogArticle(input: {
   const pool = requirePool();
   const title = input.title.trim().slice(0, 220);
   const authorId = input.authorId.trim().slice(0, 120) || "Cowin Materials";
-  const contentHtml = sanitizeContent(input.content);
+  const contentHtml = sanitizeBlogContent(input.content);
   if (!title || !contentHtml) throw new Error("Title and article content are required.");
   const coverImageUrl = normalizeImageUrl(input.imageUrl);
   const excerpt = excerptFromHtml(contentHtml);

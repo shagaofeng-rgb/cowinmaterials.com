@@ -35,6 +35,8 @@ const nextConfig: NextConfig = {
       { source: "/technical-resources", destination: "/resources", permanent: true },
       { source: "/construction", destination: "/resources#installation-guides", permanent: true },
       { source: "/comparison", destination: "/about", permanent: true },
+      { source: "/contact-us", destination: "/contact", permanent: true },
+      { source: "/technical-data-sheet", destination: "/resources#tds", permanent: true },
       { source: "/products/aerogel-powder-and-slurry", destination: "/products/aerogel-powders-granules/aerogel-powder-and-slurry", permanent: true },
       { source: "/products/aerogel-blanket-and-thermal-pads", destination: "/products/aerogel-blankets-felts-mats/aerogel-blanket-and-thermal-pads", permanent: true },
       { source: "/products/battery-thermal-pads", destination: "/products/aerogel-blankets-felts-mats/battery-thermal-pads", permanent: true },
