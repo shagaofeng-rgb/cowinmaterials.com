@@ -41,10 +41,13 @@ Useful commands:
 ```bash
 pnpm lint
 pnpm test:sitemap
+pnpm test:reliability
 pnpm build
 node scripts/hash-admin-password.mjs
 psql "$DATABASE_URL" -f database/schema.sql
 ```
+
+For additive database migrations, inquiry notification recovery, and release rollback, see [docs/OPERATIONS.md](docs/OPERATIONS.md).
 
 ## Contact
 

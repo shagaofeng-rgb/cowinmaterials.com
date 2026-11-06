@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { Rss } from "lucide-react";
 import { InteriorHeading, InteriorLink, InteriorPage } from "@/components/interior";
 import { EditorialCard } from "@/components/interior-editorial";
@@ -10,18 +11,22 @@ import { createPageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 type NewsPageProps = { searchParams: Promise<{ page?: string }> };
+const pageSize = 9;
+const getPage = cache(async (page: number) => {
+  const result = await getPublishedNews({ page, pageSize });
+  if (page > Math.max(1, Math.ceil(result.total / pageSize))) notFound();
+  return result;
+});
 
 export async function generateMetadata({ searchParams }: NewsPageProps) {
   const page = validPage((await searchParams).page);
-  const { total } = await getPublishedNews({ page: 1, pageSize: 1 });
-  if (page > Math.max(1, Math.ceil(total / 9))) notFound();
+  await getPage(page);
   return createPageMetadata({ title: page > 1 ? `Aerogel Industry News - Page ${page} | Cowin Materials` : "Aerogel Industry News and Technical Notes | Cowin Materials", description: "Evidence-backed technical notes and source-linked industry briefs on silica aerogel insulation, thermal barriers, coatings and waterproofing materials.", path: page > 1 ? `/news?page=${page}` : "/news", keywords: ["aerogel news", "silica aerogel insulation", "battery thermal barrier news"] });
 }
 
 export default async function NewsPage({ searchParams }: NewsPageProps) {
   const page = validPage((await searchParams).page);
-  const news = await getPublishedNews({ page, pageSize: 9 });
-  if (page > Math.max(1, Math.ceil(news.total / news.pageSize))) notFound();
+  const news = await getPage(page);
   return (
     <InteriorPage>
       <InteriorHeading title="News and technical notes" crumbs={[{ label: "News" }]} description="Cowin Materials technical notes and source-linked industry briefs on aerogel, thermal barriers and functional coatings." action={<a className="cw-button cw-button--secondary" href="/news/rss.xml"><Rss size={17} aria-hidden="true" />RSS feed</a>} />

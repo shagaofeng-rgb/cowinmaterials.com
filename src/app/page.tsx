@@ -89,13 +89,13 @@ export default function Home() {
       <main className="home-navigator">
         <section className="home-hero">
           <div className="home-hero-media" aria-hidden="true">
-            <Image src="/images/fire-test-lab.jpg" alt="" fill priority sizes="100vw" />
+            <Image src="/images/fire-test-lab.jpg" alt="" fill preload quality={65} sizes="100vw" />
           </div>
           <div className="home-hero-shell">
             <div className="home-hero-copy">
-              <span className="eyebrow">Silica aerogel material systems</span>
-              <h1>Specify by condition. Select by material.</h1>
-              <p>Engineered silica aerogel solutions for thermal insulation, fire protection and moisture control across global industries.</p>
+              <span className="eyebrow">Cowin Materials</span>
+              <h1>Silica aerogel materials</h1>
+              <p>Compare insulation, thermal barriers and protective coatings for your operating conditions.</p>
               <div className="home-hero-rule" aria-hidden="true" />
               <p className="home-hero-note">Lower energy<br />Safer assets<br />A clearer material route</p>
             </div>

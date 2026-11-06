@@ -4,12 +4,31 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdminSession } from "@/lib/admin-auth";
 import { addAdminInquiryNote, updateAdminInquiryStatus, updateAdminInquiryWorkflow } from "@/lib/database";
+import { deliverInquiryNotification } from "@/lib/inquiry-notifications";
+
+const inquiryIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export async function retryInquiryNotificationAction(formData: FormData) {
+  const session = await requireAdminSession();
+  const id = String(formData.get("id") || "");
+  if (!inquiryIdPattern.test(id)) redirect("/admin/inquiries");
+  let result = "unavailable";
+  try {
+    result = await deliverInquiryNotification(id, session.sub) || "unchanged";
+    revalidatePath("/admin");
+    revalidatePath(`/admin/inquiries/${id}`);
+  } catch {
+    // The delivery may have started; do not retry automatically without its durable status.
+  }
+  redirect(`/admin/inquiries/${id}?mail=${result}`);
+}
 
 export async function updateInquiryStatusAction(formData: FormData) {
   const session = await requireAdminSession();
   const id = String(formData.get("id") || "");
+  if (!inquiryIdPattern.test(id)) redirect("/admin/inquiries");
   const status = String(formData.get("status") || "");
-  if (!/^[0-9a-f-]{36}$/i.test(id) || !["new", "in_progress", "closed", "spam"].includes(status)) {
+  if (!["new", "in_progress", "closed", "spam"].includes(status)) {
     redirect(`/admin/inquiries/${id}?error=invalid`);
   }
   try {
@@ -26,17 +45,18 @@ export async function updateInquiryStatusAction(formData: FormData) {
 export async function updateInquiryWorkflowAction(formData: FormData) {
   const session = await requireAdminSession();
   const id = String(formData.get("id") || "");
+  if (!inquiryIdPattern.test(id)) redirect("/admin/inquiries");
   const status = String(formData.get("status") || "");
   const priority = String(formData.get("priority") || "");
   const leadStage = String(formData.get("leadStage") || "");
   const nextFollowUpAt = String(formData.get("nextFollowUpAt") || "");
   const internalSummary = String(formData.get("internalSummary") || "").trim();
-  const validId = /^[0-9a-f-]{36}$/i.test(id);
   const validStatus = ["new", "in_progress", "closed", "spam"].includes(status);
   const validPriority = ["low", "normal", "high", "urgent"].includes(priority);
   const validStage = ["new", "qualified", "technical_review", "quotation", "sample", "follow_up", "won", "lost"].includes(leadStage);
-  const validDate = !nextFollowUpAt || /^\d{4}-\d{2}-\d{2}$/.test(nextFollowUpAt);
-  if (!validId || !validStatus || !validPriority || !validStage || !validDate || internalSummary.length > 3000) {
+  const parsedDate = new Date(`${nextFollowUpAt}T00:00:00Z`);
+  const validDate = !nextFollowUpAt || (/^\d{4}-\d{2}-\d{2}$/.test(nextFollowUpAt) && Number.isFinite(+parsedDate) && parsedDate.toISOString().slice(0, 10) === nextFollowUpAt);
+  if (!validStatus || !validPriority || !validStage || !validDate || internalSummary.length > 3000) {
     redirect(`/admin/inquiries/${id}?error=invalid`);
   }
   try {
@@ -61,8 +81,9 @@ export async function updateInquiryWorkflowAction(formData: FormData) {
 export async function addInquiryNoteAction(formData: FormData) {
   const session = await requireAdminSession();
   const id = String(formData.get("id") || "");
+  if (!inquiryIdPattern.test(id)) redirect("/admin/inquiries");
   const note = String(formData.get("note") || "").trim();
-  if (!/^[0-9a-f-]{36}$/i.test(id) || !note || note.length > 3000) {
+  if (!note || note.length > 3000) {
     redirect(`/admin/inquiries/${id}?error=note`);
   }
   try {

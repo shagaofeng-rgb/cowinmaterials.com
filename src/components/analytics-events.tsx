@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { getAnalyticsReferrer, type AnalyticsReferrer } from "@/lib/analytics-referrer";
 
 type AnalyticsParams = Record<string, string | number | boolean | undefined>;
 type StoredAnalyticsEventName = "page_view" | "whatsapp_click" | "form_submit" | "email_click" | "phone_click" | "request_tds" | "request_sample" | "request_quote";
@@ -30,6 +31,7 @@ declare global {
 }
 
 export function trackAnalyticsEvent(eventName: string, params: AnalyticsParams = {}) {
+  if (!allowsMeasurement()) return;
   window.dispatchEvent(new CustomEvent("cowin:analytics", { detail: { eventName, params } }));
   window.gtag?.("event", eventName, params);
   if (storedEventNames.has(eventName as StoredAnalyticsEventName)) {
@@ -47,33 +49,44 @@ function eventId(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
 }
 
+function allowsMeasurement() {
+  const privacy = navigator as Navigator & { globalPrivacyControl?: boolean };
+  return privacy.globalPrivacyControl !== true && privacy.doNotTrack !== "1";
+}
+
+function storage(name: "localStorage" | "sessionStorage") {
+  try { return window[name]; } catch { return undefined; }
+}
+
 const visitorStorageKey = "cowin.analytics.visitor";
 const sessionStorageKey = "cowin.analytics.session";
 const attributionStorageKey = "cowin.analytics.utm";
 const sessionIdleMs = 30 * 60 * 1000;
 let fallbackVisitorKey = "";
 let fallbackSessionKey = "";
+let lastPublicPath = "";
+let pageReferrer: AnalyticsReferrer | undefined;
 
-function readStoredId(storage: Storage, key: string) {
+function readStoredId(storage: Storage | undefined, key: string) {
   try {
-    const value = storage.getItem(key) || "";
+    const value = storage?.getItem(key) || "";
     return /^[0-9a-f-]{36}$/i.test(value) ? value : "";
   } catch {
     return "";
   }
 }
 
-function storeId(storage: Storage, key: string, value: string) {
+function storeId(storage: Storage | undefined, key: string, value: string) {
   try {
-    storage.setItem(key, value);
+    storage?.setItem(key, value);
   } catch {
     // Analytics remains optional when browser storage is unavailable.
   }
 }
 
-function readStoredNumber(storage: Storage, key: string) {
+function readStoredNumber(storage: Storage | undefined, key: string) {
   try {
-    const value = Number(storage.getItem(key) || "0");
+    const value = Number(storage?.getItem(key) || "0");
     return Number.isFinite(value) ? value : 0;
   } catch {
     return 0;
@@ -81,33 +94,29 @@ function readStoredNumber(storage: Storage, key: string) {
 }
 
 export function getAnalyticsIdentity(): AnalyticsIdentity {
-  const visitorStored = readStoredId(window.localStorage, visitorStorageKey);
+  if (!allowsMeasurement()) return { visitorKey: "", sessionKey: "" };
+  const local = storage("localStorage");
+  const session = storage("sessionStorage");
+  const visitorStored = readStoredId(local, visitorStorageKey);
   const visitorKey = visitorStored || fallbackVisitorKey || eventId("visitor");
   fallbackVisitorKey = visitorKey;
-  if (!visitorStored) storeId(window.localStorage, visitorStorageKey, visitorKey);
+  if (!visitorStored) storeId(local, visitorStorageKey, visitorKey);
 
-  const sessionStored = readStoredId(window.sessionStorage, sessionStorageKey);
-  const lastSeen = readStoredNumber(window.sessionStorage, `${sessionStorageKey}.seen`);
+  const sessionStored = readStoredId(session, sessionStorageKey);
+  const lastSeen = readStoredNumber(session, `${sessionStorageKey}.seen`);
   const sessionKey = sessionStored && Date.now() - lastSeen < sessionIdleMs ? sessionStored : eventId("session");
   fallbackSessionKey = sessionKey || fallbackSessionKey || eventId("session");
-  storeId(window.sessionStorage, sessionStorageKey, fallbackSessionKey);
-  storeId(window.sessionStorage, `${sessionStorageKey}.seen`, String(Date.now()));
+  storeId(session, sessionStorageKey, fallbackSessionKey);
+  storeId(session, `${sessionStorageKey}.seen`, String(Date.now()));
+  if (sessionStored && sessionStored !== fallbackSessionKey) {
+    try { session?.removeItem(attributionStorageKey); } catch { /* Measurement is optional. */ }
+  }
 
   return { visitorKey, sessionKey: fallbackSessionKey };
 }
 
-function getReferrer() {
-  if (!document.referrer) return {};
-  try {
-    const referrer = new URL(document.referrer);
-    if (referrer.origin === window.location.origin) return { referrerPath: referrer.pathname };
-    return { referrerHost: referrer.hostname.slice(0, 255) };
-  } catch {
-    return {};
-  }
-}
-
 export function getAttributionUtm(): Record<string, string> {
+  if (!allowsMeasurement()) return {};
   const params = new URLSearchParams(window.location.search);
   const current = Object.fromEntries(["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"]
     .map((key) => [key, (params.get(key) || "").slice(0, 120)])
@@ -130,6 +139,7 @@ function getDevice() {
 }
 
 export function recordStoredAnalyticsEvent(event: StoredAnalyticsEvent) {
+  if (!allowsMeasurement()) return;
   const identity = getAnalyticsIdentity();
   const payload = JSON.stringify({
     event_id: eventId(event.eventName),
@@ -139,20 +149,24 @@ export function recordStoredAnalyticsEvent(event: StoredAnalyticsEvent) {
     ...(event.requestType ? { request_type: event.requestType } : {}),
     visitor_id: identity.visitorKey,
     session_id: identity.sessionKey,
-    ...getReferrer(),
+    ...(pageReferrer ?? getAnalyticsReferrer(document.referrer, window.location.origin)),
     utm: getAttributionUtm(),
     device: getDevice(),
   });
 
   const body = new Blob([payload], { type: "application/json" });
-  if (navigator.sendBeacon?.("/api/analytics/event", body)) return;
+  try {
+    if (navigator.sendBeacon?.("/api/analytics/event", body)) return;
+  } catch {
+    // The keepalive request below is best effort.
+  }
 
   void fetch("/api/analytics/event", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: payload,
     keepalive: true,
-  });
+  }).catch(() => undefined);
 }
 
 function eventForLink(link: HTMLAnchorElement) {
@@ -174,6 +188,9 @@ export function AnalyticsEvents() {
 
   useEffect(() => {
     if (!pathname || pathname.startsWith("/admin") || pathname.startsWith("/api")) return;
+    if (pathname === lastPublicPath) return;
+    pageReferrer = getAnalyticsReferrer(document.referrer, window.location.origin, lastPublicPath);
+    lastPublicPath = pathname;
     recordStoredAnalyticsEvent({ eventName: "page_view", pagePath: pathname });
   }, [pathname]);
 

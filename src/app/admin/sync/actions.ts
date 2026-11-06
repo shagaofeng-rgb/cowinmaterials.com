@@ -8,6 +8,7 @@ import { runSitemapMaintenance } from "@/lib/sitemap/maintenance";
 
 export async function runSitemapMaintenanceAction() {
   const session = await requireAdminSession();
+  let outcome: "success" | "warning" | "failed" = "failed";
 
   try {
     // A manual run validates the public sitemap and refreshes its snapshot. It does not force a Google submission.
@@ -23,8 +24,9 @@ export async function runSitemapMaintenanceAction() {
     revalidatePath("/admin");
     revalidatePath("/admin/seo");
     revalidatePath("/admin/sync");
-    redirect(`/admin/sync?run=${result.ok ? "success" : "warning"}`);
+    outcome = result.ok && result.persisted ? "success" : result.persisted ? "warning" : "failed";
   } catch {
-    redirect("/admin/sync?run=failed");
+    outcome = "failed";
   }
+  redirect(`/admin/sync?run=${outcome}`);
 }

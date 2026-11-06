@@ -4,7 +4,8 @@ import { AdminDateRangeFields, AdminPagination } from "@/components/admin-list-c
 import { AdminEmpty, AdminNotice, AdminShell } from "@/components/admin-shell";
 import { AdminSyncStatus } from "@/components/admin-sync-status";
 import { requireAdminSession } from "@/lib/admin-auth";
-import { getPublishingOperations } from "@/lib/admin-operations";
+import { getSitemapOperations } from "@/lib/admin-operations";
+import { isSitemapSubmissionFailure } from "@/lib/sitemap/schedule";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "SEO中心 | Cowin Materials 后台", robots: { index: false, follow: false } };
@@ -16,10 +17,10 @@ function displayTime(value?: Date | null) {
 export default async function AdminSeoPage({ searchParams }: { searchParams: Promise<{ page?: string; pageSize?: string; sitemapPage?: string; range?: string; from?: string; to?: string }> }) {
   await requireAdminSession();
   const params = await searchParams;
-  const { sitemapRuns, range, pageSize, sitemapTotal, sitemapPaging } = await getPublishingOperations(params);
+  const { records: sitemapRuns, range, pageSize, total: sitemapTotal, pagination: sitemapPaging } = await getSitemapOperations(params);
   const latest = sitemapRuns[0];
   const searchConsoleEnabled = process.env.GOOGLE_SEARCH_CONSOLE_ENABLED === "true";
-  const failed = sitemapRuns.filter((run) => run.status === "failed" || run.urls_failed > 0).length;
+  const failed = sitemapRuns.filter((run) => ["failed", "completed_with_errors"].includes(run.status) || isSitemapSubmissionFailure(run.search_console_status)).length;
   const lastSuccessful = sitemapRuns.find((run) => run.status === "completed");
 
   return (
@@ -31,7 +32,7 @@ export default async function AdminSeoPage({ searchParams }: { searchParams: Pro
         <article className="admin-metric"><span>Sitemap 维护记录</span><strong>{sitemapTotal}</strong><small>所选范围全部运行记录</small></article>
         <article className="admin-metric"><span>当前页有效 URL</span><strong>{lastSuccessful?.urls_successful ?? "—"}</strong><small>当前页最近一次成功维护</small></article>
         <article className="admin-metric"><span>当前页异常运行</span><strong>{failed}</strong><small>当前页运行失败或 URL 验证失败</small></article>
-        <article className="admin-metric"><span>Search Console</span><strong>{searchConsoleEnabled ? "已启用" : "未启用"}</strong><small>只显示服务器实际配置</small></article>
+        <article className="admin-metric"><span>每周一提交</span><strong>{searchConsoleEnabled ? "已启用" : "未启用"}</strong><small>北京时间 10:30 · <a href="https://search.google.com/search-console/sitemaps?resource_id=sc-domain%3Acowinmaterials.com" target="_blank" rel="noreferrer">在 Google 查看下载状态</a></small></article>
       </section>
       <section className="admin-panel">
         <div className="admin-panel-heading"><div><h2>公开 SEO 端点</h2><p>核心页面由 Next.js 路由生成，产品与内容 URL 只在实际公开且可索引时进入 Sitemap。</p></div></div>

@@ -10,7 +10,7 @@ type ServiceAccountCredentials = {
 export type SearchConsoleResult = {
   enabled: boolean;
   submitted: boolean;
-  status: "disabled" | "submitted" | "configuration_error" | "authentication_error" | "permission_error" | "network_error" | "api_error";
+  status: "disabled" | "submitted" | "configuration_error" | "authentication_error" | "permission_error" | "network_error" | "api_error" | "skipped_schedule" | "skipped_duplicate" | "skipped_validation" | "submission_pending";
   message: string;
   httpStatus?: number;
 };
@@ -31,7 +31,8 @@ async function loadCredentials(env: NodeJS.ProcessEnv): Promise<ServiceAccountCr
   const raw = inline || (encoded ? Buffer.from(encoded, "base64").toString("utf8") : path ? await readFile(path, "utf8") : "");
   if (!raw) throw new Error("Service account credentials are not configured.");
 
-  const credentials = JSON.parse(raw) as ServiceAccountCredentials;
+  let credentials: ServiceAccountCredentials;
+  try { credentials = JSON.parse(raw); } catch { throw new Error("Service account credential JSON is invalid."); }
   if (!credentials.client_email || !credentials.private_key) {
     throw new Error("Service account credentials are missing client_email or private_key.");
   }
@@ -51,6 +52,9 @@ async function fetchWithTimeout(fetchImpl: typeof fetch, input: string, init: Re
 async function getAccessToken(credentials: ServiceAccountCredentials, fetchImpl: typeof fetch) {
   const now = Math.floor(Date.now() / 1000);
   const tokenUri = credentials.token_uri || "https://oauth2.googleapis.com/token";
+  if (!["https://oauth2.googleapis.com/token", "https://accounts.google.com/o/oauth2/token"].includes(tokenUri)) {
+    throw new Error("Service account credential has an unsupported token endpoint.");
+  }
   const header = base64Url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
   const claim = base64Url(JSON.stringify({
     iss: credentials.client_email,
@@ -72,7 +76,7 @@ async function getAccessToken(credentials: ServiceAccountCredentials, fetchImpl:
   });
   const data = await response.json().catch(() => ({})) as { access_token?: string; error_description?: string; error?: string };
   if (!response.ok || !data.access_token) {
-    throw new Error(`OAuth token request failed: ${data.error_description || data.error || `HTTP ${response.status}`}.`);
+    throw new Error(`OAuth token request failed (HTTP ${response.status}).`);
   }
   return data.access_token;
 }
@@ -114,14 +118,15 @@ export async function submitSitemapToSearchConsole(options: SearchConsoleOptions
     }
 
     const status = response?.status || 0;
-    const body = await response?.text().catch(() => "");
-    const message = body?.slice(0, 500) || `Search Console API returned HTTP ${status}.`;
+    const message = `Search Console API returned HTTP ${status}.`;
     if (status === 401) return { enabled: true, submitted: false, status: "authentication_error", message, httpStatus: status };
     if (status === 403) return { enabled: true, submitted: false, status: "permission_error", message, httpStatus: status };
     return { enabled: true, submitted: false, status: "api_error", message, httpStatus: status };
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Search Console request failed.";
-    const status = /credential|private_key|client_email|JSON/i.test(message) ? "configuration_error" : /OAuth|token/i.test(message) ? "authentication_error" : "network_error";
+    const reason = error instanceof Error ? error.message : "";
+    const status = /credential|private_key|client_email|JSON|ENOENT|decoder|PEM/i.test(reason) ? "configuration_error" : /OAuth|token/i.test(reason) ? "authentication_error" : "network_error";
+    const message = status === "configuration_error" ? "Check the Search Console service account configuration." :
+      status === "authentication_error" ? "Google rejected the OAuth token request." : "The Google request did not complete.";
     return { enabled: true, submitted: false, status, message };
   }
 }

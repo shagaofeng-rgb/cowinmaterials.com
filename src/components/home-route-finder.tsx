@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, FileText, Layers3, Mail, MoveVertical, Thermometer } from "lucide-react";
+import { ArrowRight, FileText, Layers3, MoveVertical, Thermometer } from "lucide-react";
 import { useMemo, useState } from "react";
 
 type RouteConditions = {
@@ -43,9 +43,9 @@ const routeFields = [
   {
     key: "standard",
     label: "Validation standard",
-    placeholder: "Select standard (e.g. ASTM, EN, ISO)",
+    placeholder: "Select a standard",
     Icon: FileText,
-    options: ["Project specification", "ASTM", "EN", "GB", "Other or to be confirmed"],
+    options: ["Project specification", "ASTM", "EN", "ISO", "GB", "Other or to be confirmed"],
   },
 ] as const;
 
@@ -75,8 +75,8 @@ export function HomeRouteFinder() {
   return (
     <section className="home-route-finder" aria-labelledby="material-route-title">
       <div className="home-route-finder-heading">
-        <h2 id="material-route-title">Find your material route</h2>
-        <p>Tell us your project conditions and we&apos;ll guide you to the right material family and next steps.</p>
+        <h2 id="material-route-title">Project conditions</h2>
+        <p>Share what you know for a material recommendation.</p>
       </div>
 
       <div className="home-route-fields">
@@ -96,11 +96,10 @@ export function HomeRouteFinder() {
 
       <div className="home-route-actions">
         <Link className="home-route-primary" href={href}>
-          Find a material route <ArrowRight size={17} aria-hidden="true" />
+          Request material guidance <ArrowRight size={17} aria-hidden="true" />
         </Link>
-        <Link className="home-route-secondary" href={href}><Mail size={17} aria-hidden="true" /> Send project conditions</Link>
+        <Link className="home-route-secondary" href="/products">Compare products</Link>
       </div>
-      <p className="home-route-note">Provide the available project conditions for a first review.</p>
     </section>
   );
 }

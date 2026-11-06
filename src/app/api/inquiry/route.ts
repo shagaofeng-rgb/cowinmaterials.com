@@ -1,18 +1,11 @@
-import { NextResponse } from "next/server";
-import { sendInquiryEmail } from "@/lib/mail";
-import { recordInquiryNotificationResult, saveInquiryRecord } from "@/lib/database";
+import { after, NextResponse } from "next/server";
+import { saveInquiryRecord } from "@/lib/database";
+import { deliverInquiryNotification } from "@/lib/inquiry-notifications";
+import { inquiryBodyLimit, inquiryFileLimit, inquiryFileLimitLabel, validateInquiryFile } from "@/lib/inquiry-upload";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const maxFileSize = 5 * 1024 * 1024;
-const allowedTypes = new Set([
-  "application/pdf",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  "image/jpeg",
-  "image/png",
-]);
+export const maxDuration = 60;
 
 class InquiryValidationError extends Error {}
 
@@ -29,18 +22,20 @@ async function parseAttachment(file: FormDataEntryValue | null) {
     return undefined;
   }
 
-  if (file.size > maxFileSize) {
-    throw new InquiryValidationError("File is larger than 5 MB.");
+  if (file.size > inquiryFileLimit) {
+    throw new InquiryValidationError(`Choose a file no larger than ${inquiryFileLimitLabel}.`);
   }
 
-  if (!allowedTypes.has(file.type)) {
-    throw new InquiryValidationError("Unsupported file type.");
+  const content = Buffer.from(await file.arrayBuffer());
+  const contentType = validateInquiryFile(file.name, file.type, content);
+  if (!contentType) {
+    throw new InquiryValidationError("Choose a valid PDF, DOCX, XLSX, JPG or PNG file.");
   }
 
   return {
-    filename: file.name.slice(0, 180),
-    content: Buffer.from(await file.arrayBuffer()),
-    contentType: file.type,
+    filename: file.name.replace(/[\\/\p{Cc}]/gu, "_").slice(0, 180),
+    content,
+    contentType,
   };
 }
 
@@ -55,6 +50,9 @@ export async function POST(request: Request) {
     const contentType = request.headers.get("content-type") || "";
     if (!contentType.includes("multipart/form-data") && !contentType.includes("application/x-www-form-urlencoded")) {
       return NextResponse.json({ error: "Use form data to submit an enquiry." }, { status: 415 });
+    }
+    if (Number(request.headers.get("content-length")) > inquiryBodyLimit) {
+      return NextResponse.json({ error: `Choose a file no larger than ${inquiryFileLimitLabel}.` }, { status: 413 });
     }
 
     let body: FormData;
@@ -74,9 +72,13 @@ export async function POST(request: Request) {
     const email = clean(body.get("email"), 180);
     const country = clean(body.get("country"), 120);
     const privacy = clean(body.get("privacy"), 20);
+    const requestKey = clean(body.get("submission_id"), 60);
 
-    if (!name || !company || !country || !email || !isEmail(email) || !privacy) {
+    if (!name || !company || !country || !email || !isEmail(email) || privacy !== "on") {
       return NextResponse.json({ error: "Please provide the required contact fields." }, { status: 400 });
+    }
+    if (requestKey && !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestKey)) {
+      return NextResponse.json({ error: "Invalid inquiry submission ID." }, { status: 400 });
     }
 
     const attachment = await parseAttachment(body.get("file"));
@@ -112,29 +114,25 @@ export async function POST(request: Request) {
       attachment,
     };
 
-    const stored = await saveInquiryRecord(payload);
+    const stored = await saveInquiryRecord(payload, requestKey || undefined);
     if (!stored.saved || !stored.id) {
       return NextResponse.json({ error: "Unable to save enquiry right now." }, { status: 503 });
     }
 
-    try {
-      await sendInquiryEmail(payload);
-      await recordInquiryNotificationResult(stored.id, "sent").catch(() => undefined);
-    } catch (error) {
-      await recordInquiryNotificationResult(stored.id, "failed").catch(() => undefined);
-      console.error("Inquiry notification failed after durable storage", {
-        inquiryId: stored.id,
-        reason: error instanceof Error ? error.message : "Unknown notification error",
-      });
-      return NextResponse.json({ ok: true, notification: "deferred" }, { status: 202 });
-    }
-
-    return NextResponse.json({ ok: true });
+    const inquiryId = stored.id;
+    after(async () => {
+      try {
+        await deliverInquiryNotification(inquiryId);
+      } catch {
+        console.error(JSON.stringify({ event: "inquiry_notification_processing_failed", inquiryId }));
+      }
+    });
+    return NextResponse.json({ ok: true, duplicate: Boolean(stored.duplicate) }, { status: 202 });
   } catch (error) {
     if (error instanceof InquiryValidationError) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
-    console.error("Inquiry submission failed", error);
+    console.error(JSON.stringify({ event: "inquiry_storage_failed", error: error instanceof Error ? error.name : "UnknownError" }));
     return NextResponse.json({ error: "Unable to submit enquiry right now." }, { status: 500 });
   }
 }

@@ -1,6 +1,6 @@
 import manifest from "@/generated/sitemap-content.json";
 import { applicationPages, getProductFamilyPath, getProductPath, productFamilies, products } from "@/lib/data";
-import { getBlogArticles } from "@/lib/blog/store";
+import { getPool } from "@/lib/database";
 import { getPublishedNewsSitemapPage, getPublishedNewsSitemapSummary } from "@/lib/news/store";
 import { absoluteUrl } from "@/lib/seo";
 import { MAX_SITEMAP_URLS } from "./xml";
@@ -25,11 +25,13 @@ const pagePaths = [
 
 const pageDates = manifest.pages as Record<string, string>;
 
-function latest(entries: SitemapEntry[], fallback = manifest.generatedAt) {
+function latest(entries: SitemapEntry[], fallback = entries[0]?.lastModified || manifest.generatedAt) {
   return entries.reduce((value, entry) => (
     new Date(entry.lastModified).getTime() > new Date(value).getTime() ? entry.lastModified : value
   ), fallback);
 }
+
+const publicBlog = "class_id in ('blog', '31') and status = 'published' and deleted_at is null and published_at <= now()";
 
 export function getStaticSitemapEntries(kind: Exclude<SitemapKind, "blog" | "news">): SitemapEntry[] {
   if (kind === "pages") {
@@ -68,11 +70,12 @@ export function getStaticSitemapEntries(kind: Exclude<SitemapKind, "blog" | "new
 
 export async function getSitemapSummary(kind: SitemapKind): Promise<SitemapSummary> {
   if (kind === "blog") {
-    const articles = await getBlogArticles();
-    return { kind, count: articles.length, lastModified: latest(articles.map((article) => ({
-      url: absoluteUrl(`/blog/${encodeURIComponent(article.slug)}`),
-      lastModified: article.updatedAt,
-    }))) };
+    const pool = getPool();
+    if (!pool) return { kind, count: 0, lastModified: manifest.generatedAt };
+    const { rows: [summary] } = await pool.query<{ total: number; last_modified: Date | null }>(
+      `select count(*)::int as total, max(updated_at) as last_modified from articles where ${publicBlog}`,
+    );
+    return { kind, count: summary.total, lastModified: summary.last_modified?.toISOString() || manifest.generatedAt };
   }
 
   if (kind === "news") {
@@ -89,11 +92,16 @@ export async function getSitemapChunk(kind: SitemapKind, part: number) {
   if (part < 1) return [];
 
   if (kind === "blog") {
-    const articles = await getBlogArticles();
-    return articles.slice(offset, offset + MAX_SITEMAP_URLS).map((article) => ({
+    const pool = getPool();
+    if (!pool) return [];
+    const { rows } = await pool.query<{ slug: string; updated_at: Date }>(
+      `select slug, updated_at from articles where ${publicBlog} order by published_at desc, id desc limit $1 offset $2`,
+      [MAX_SITEMAP_URLS, offset],
+    );
+    return rows.map((article) => ({
       url: absoluteUrl(`/blog/${encodeURIComponent(article.slug)}`),
       canonicalUrl: absoluteUrl(`/blog/${encodeURIComponent(article.slug)}`),
-      lastModified: article.updatedAt,
+      lastModified: article.updated_at.toISOString(),
       status: "published" as const,
     }));
   }

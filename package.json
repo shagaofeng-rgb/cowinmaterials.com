@@ -14,6 +14,7 @@
     "test:technical-news": "node --experimental-strip-types --test scripts/technical-news-self-test.ts",
     "test:blog-links": "node --experimental-strip-types --test scripts/blog-related-self-test.ts",
     "test:sitemap": "node --experimental-strip-types --test scripts/sitemap-self-test.ts",
+    "test:reliability": "node --experimental-strip-types --test scripts/reliability-self-test.ts scripts/automation-policy-self-test.ts",
     "test:smoke": "node scripts/full-site-smoke.mjs",
     "sitemap:generate": "node scripts/sitemap-generate.mjs"
   },

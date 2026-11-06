@@ -90,9 +90,13 @@ async function pagedOperationRows<T extends Record<string, unknown>>({
   return { records, total, pagination, range, pageSize };
 }
 
+export async function getSitemapOperations(params: OperationListParams = {}) {
+  return pagedOperationRows<{ id: string; trigger_type: string; status: string; urls_processed: number; urls_successful: number; urls_failed: number; search_console_submitted: boolean; search_console_status: string | null; google_http: string | null; google_message: string | null; started_at: Date; finished_at: Date | null; message: string | null }>({ select: "select id, trigger_type, status, urls_processed, urls_successful, urls_failed, search_console_submitted, search_console_status, metadata->>'searchConsoleHttpStatus' as google_http, metadata->>'searchConsoleMessage' as google_message, started_at, finished_at, message", table: "sitemap_runs", timeColumn: "started_at", pageValue: params.sitemapPage, params });
+}
+
 export async function getPublishingOperations(params: OperationListParams = {}) {
   const [sitemap, webhooks, news, sync] = await Promise.all([
-    pagedOperationRows<{ id: string; trigger_type: string; status: string; urls_processed: number; urls_successful: number; urls_failed: number; search_console_submitted: boolean; search_console_status: string | null; started_at: Date; finished_at: Date | null; message: string | null }>({ select: "select id, trigger_type, status, urls_processed, urls_successful, urls_failed, search_console_submitted, search_console_status, started_at, finished_at, message", table: "sitemap_runs", timeColumn: "started_at", pageValue: params.sitemapPage, params }),
+    getSitemapOperations(params),
     pagedOperationRows<{ id: string; event_type: string; class_id: string | null; outcome: string; http_status: number; message: string; received_at: Date }>({ select: "select id, event_type, class_id, outcome, http_status, message, received_at", table: "blog_webhook_events", timeColumn: "received_at", pageValue: params.webhookPage, params }),
     pagedOperationRows<{ id: string; status: string; records_published: number; message: string | null; started_at: Date; finished_at: Date | null }>({ select: "select id, status, records_published, message, started_at, finished_at", table: "news_jobs", timeColumn: "started_at", pageValue: params.newsPage, params }),
     pagedOperationRows<{ id: string; source: string; status: string; records_synced: number; error_message: string | null; started_at: Date | null; finished_at: Date | null }>({ select: "select id, source, status, records_synced, error_message, started_at, finished_at", table: "sync_jobs", timeColumn: "created_at", pageValue: params.syncPage, params }),

@@ -5,6 +5,10 @@
       "schedule": "0 0 1 * *"
     },
     {
+      "path": "/api/cron/inquiry-notifications",
+      "schedule": "15 0 * * *"
+    },
+    {
       "path": "/api/cron/sitemap-maintenance",
       "schedule": "30 2 * * 1"
     }

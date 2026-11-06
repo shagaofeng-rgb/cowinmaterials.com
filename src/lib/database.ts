@@ -48,7 +48,7 @@ export function getPool(preferDirectConnection = false) {
     connectionString: normalizedConnectionString(connectionString),
     connectionTimeoutMillis: 8000,
     max: 5,
-    ssl: process.env.DATABASE_SSL === "false" ? false : { rejectUnauthorized: false },
+    ssl: process.env.DATABASE_SSL === "false" && process.env.NODE_ENV !== "production" ? false : { rejectUnauthorized: true },
   });
   createdPool.on("error", (error) => {
     console.error("Database idle connection failed", error.name);
@@ -90,7 +90,7 @@ export async function getDatabaseHealth(): Promise<DatabaseHealth> {
   }
 }
 
-export async function saveInquiryRecord(payload: InquiryPayload) {
+export async function saveInquiryRecord(payload: InquiryPayload, requestKey?: string) {
   const activePool = getPool();
   if (!activePool) {
     return { saved: false, reason: "database_not_configured" };
@@ -99,6 +99,14 @@ export async function saveInquiryRecord(payload: InquiryPayload) {
   const client = await activePool.connect();
   try {
     await client.query("begin");
+    if (requestKey) {
+      await client.query("select pg_advisory_xact_lock(hashtextextended($1, 0))", [requestKey]);
+      const existing = await client.query<{ inquiry_id: string }>("select inquiry_id from inquiry_notifications where request_key = $1", [requestKey]);
+      if (existing.rows[0]) {
+        await client.query("commit");
+        return { saved: true, id: existing.rows[0].inquiry_id, duplicate: true };
+      }
+    }
     let visitorId: string | null = null;
     let visitorSessionId: string | null = null;
     let customerIdentityId: string | null = null;
@@ -121,7 +129,8 @@ export async function saveInquiryRecord(payload: InquiryPayload) {
         `insert into analytics_sessions (
           session_key, visitor_id, started_at, last_seen_at, landing_path, exit_path, utm, source, event_count, created_at, updated_at
         ) values ($1, $2, now(), now(), $3, $3, $4::jsonb, 'website', 0, now(), now())
-        on conflict (session_key) do update set last_seen_at = now(), exit_path = excluded.exit_path, updated_at = now()
+          on conflict (session_key) do update set last_seen_at = now(), exit_path = excluded.exit_path, updated_at = now()
+          where analytics_sessions.visitor_id = excluded.visitor_id
         returning id`,
         [payload.sessionKey, visitorId, pathFromPageUrl(payload.page), JSON.stringify(payload.utm || {})],
       );
@@ -189,6 +198,11 @@ export async function saveInquiryRecord(payload: InquiryPayload) {
       `insert into audit_logs (action, module, target_id, metadata)
        values ('create', 'inquiries', $1, $2::jsonb)`,
       [id, JSON.stringify({ source: "website_form" })],
+    );
+    await client.query(
+      `insert into inquiry_notifications (inquiry_id, request_key, attachment_name, attachment_type, attachment_content)
+       values ($1, coalesce($2::uuid, gen_random_uuid()), $3, $4, $5)`,
+      [id, requestKey || null, payload.attachment?.filename || null, payload.attachment?.contentType || null, payload.attachment?.content || null],
     );
     await client.query("commit");
     return { saved: true, id };
@@ -259,6 +273,7 @@ async function upsertAnalyticsIdentity(client: PoolClient, input: AnalyticsEvent
       referrer_path = coalesce(analytics_sessions.referrer_path, excluded.referrer_path),
       referrer_host = coalesce(analytics_sessions.referrer_host, excluded.referrer_host),
       event_count = analytics_sessions.event_count + 1, updated_at = now()
+    where analytics_sessions.visitor_id = excluded.visitor_id
     returning id`,
     [input.sessionKey, visitorId, input.pagePath, input.referrerPath || null, input.referrerHost || null, JSON.stringify(utm), input.device || null, input.source],
   );
@@ -351,7 +366,7 @@ export async function getAdminAnalyticsOverview(filters: AdminAnalyticsFilters =
 
   const metricsParts = analyticsQueryParts(range);
   const metricsQuery = activePool.query<{
-    page_views: string; visitors: string; sessions: string; form_submits: string; whatsapp_clicks: string; contact_actions: string; geolocated_views: string; latest: Date | null;
+    page_views: string; visitors: string; sessions: string; form_submits: string; whatsapp_clicks: string; contact_actions: string; geolocated_views: string; attributed_views: string; latest: Date | null;
   }>(
     `select
       count(*) filter (where e.event_name = 'page_view')::text as page_views,
@@ -360,6 +375,7 @@ export async function getAdminAnalyticsOverview(filters: AdminAnalyticsFilters =
       count(*) filter (where e.event_name = 'form_submit')::text as form_submits,
       count(*) filter (where e.event_name = 'whatsapp_click')::text as whatsapp_clicks,
       count(*) filter (where e.event_name = 'page_view' and e.country is not null)::text as geolocated_views,
+      count(*) filter (where e.event_name = 'page_view' and (e.referrer_host is not null or nullif(e.metadata->'utm'->>'utm_source', '') is not null))::text as attributed_views,
       count(*) filter (where e.event_name in ('whatsapp_click', 'form_submit', 'email_click', 'phone_click', 'request_tds', 'request_sample', 'request_quote'))::text as contact_actions,
       max(e.occurred_at) as latest
     from analytics_events e where true ${eventWindow(metricsParts)}`,
@@ -372,6 +388,19 @@ export async function getAdminAnalyticsOverview(filters: AdminAnalyticsFilters =
      where e.event_name = 'page_view' and e.country is not null ${eventWindow(countryParts)}
      group by e.country order by count(*) desc, e.country asc limit 10`,
     countryParts.values,
+  );
+  const sourcesQuery = activePool.query<{ label: string; kind: string; views: string }>(
+    `select coalesce(nullif(e.metadata->'utm'->>'utm_source', ''), e.referrer_host, 'unknown') as label,
+      case when nullif(e.metadata->'utm'->>'utm_source', '') is not null then 'utm'
+        when e.referrer_host is not null then 'referrer' else 'unknown' end as kind, count(*)::text as views
+     from analytics_events e where e.event_name = 'page_view' ${eventWindow(metricsParts)}
+     group by 1, 2 order by count(*) desc, 1 limit 10`,
+    metricsParts.values,
+  );
+  const inquiriesQuery = activePool.query<{ count: string }>(
+    `select count(*)::text as count from inquiries where deleted_at is null and status <> 'spam'
+      and created_at >= $1 and created_at < $2`,
+    [range.start, range.end],
   );
 
   const visitorParts = analyticsQueryParts(range);
@@ -392,7 +421,7 @@ export async function getAdminAnalyticsOverview(filters: AdminAnalyticsFilters =
   }
   const where = visitorClauses.join(" and ");
   const countQuery = activePool.query<{ count: string }>(`select count(*)::text as count from analytics_visitors v where ${where}`, visitorParts.values);
-  const [metrics, countries, count] = await Promise.all([metricsQuery, countriesQuery, countQuery]);
+  const [metrics, countries, count, sources, inquiries] = await Promise.all([metricsQuery, countriesQuery, countQuery, sourcesQuery, inquiriesQuery]);
   const total = Number(count.rows[0]?.count || 0);
   const pages = Math.max(1, Math.ceil(total / pageSize));
   const page = Math.min(requestedPage, pages);
@@ -414,19 +443,21 @@ export async function getAdminAnalyticsOverview(filters: AdminAnalyticsFilters =
       order by i.created_at desc limit 1
     ) contact on true
     where ${where}
-    order by v.last_seen_at desc
+    order by v.last_seen_at desc, v.id desc
     limit ${limit} offset ${offset}`,
     visitorParts.values,
   );
 
-  const metric = metrics.rows[0] || { page_views: "0", visitors: "0", sessions: "0", form_submits: "0", whatsapp_clicks: "0", geolocated_views: "0", contact_actions: "0", latest: null };
+  const metric = metrics.rows[0];
   return {
     range,
     metrics: {
       pageViews: Number(metric.page_views), visitors: Number(metric.visitors), sessions: Number(metric.sessions), formSubmits: Number(metric.form_submits),
       whatsappClicks: Number(metric.whatsapp_clicks), geolocatedViews: Number(metric.geolocated_views), contactActions: Number(metric.contact_actions), latest: metric.latest?.toISOString() || null,
+      attributedViews: Number(metric.attributed_views), inquiries: Number(inquiries.rows[0].count),
     },
     countries: countries.rows.map((row) => ({ code: row.country, pageViews: Number(row.views) })),
+    sources: sources.rows.map((row) => ({ label: row.label, kind: row.kind, pageViews: Number(row.views) })),
     visitors: rows.rows.map((row) => ({
       id: row.id,
       label: row.contact_name || `匿名访客 ${row.visitor_key.slice(0, 8)}`,
@@ -494,7 +525,9 @@ export async function getAdminVisitorJourney(id: string, filters: AdminAnalytics
   const page = Math.min(requestedPage, pages);
   eventValues.push(pageSize, (page - 1) * pageSize);
   const events = await activePool.query<{ id: string; event_name: string; page_path: string | null; occurred_at: Date; source: string | null }>(
-    `select e.id, e.event_name, e.page_path, e.occurred_at, e.source from analytics_events e
+    `select e.id, e.event_name, e.page_path, e.occurred_at,
+       coalesce(nullif(e.metadata->'utm'->>'utm_source', ''), e.referrer_host, e.referrer_path) as source
+     from analytics_events e
      where ${eventWhere} order by e.occurred_at desc limit $${eventValues.length - 1} offset $${eventValues.length}`,
     eventValues,
   );
@@ -519,23 +552,12 @@ export async function getAdminVisitorJourney(id: string, filters: AdminAnalytics
   return {
     id: row.id, label: row.contact_name || `匿名访客 ${row.visitor_key.slice(0, 8)}`, company: row.contact_company, email: row.contact_email,
     firstSeenAt: row.first_seen_at.toISOString(), lastSeenAt: row.last_seen_at.toISOString(), landingPath: row.first_landing_path, lastPath: row.last_path, referrerHost: row.last_referrer_host,
-    sessions: sessions.rows.map((session) => ({ id: session.id, startedAt: session.started_at.toISOString(), lastSeenAt: session.last_seen_at.toISOString(), landingPath: session.landing_path, exitPath: session.exit_path, referrer: session.referrer_path || session.referrer_host, events: session.event_count })),
+    sessions: sessions.rows.map((session) => ({ id: session.id, startedAt: session.started_at.toISOString(), lastSeenAt: session.last_seen_at.toISOString(), landingPath: session.landing_path, exitPath: session.exit_path, referrer: session.referrer_host || session.referrer_path, events: session.event_count })),
     events: events.rows.map((event) => ({ id: event.id, name: event.event_name, path: event.page_path, occurredAt: event.occurred_at.toISOString(), source: event.source })),
     inquiries: inquiries.rows.map((inquiry) => ({ id: inquiry.id, name: inquiry.name, company: inquiry.company, email: inquiry.email, createdAt: inquiry.created_at.toISOString() })),
     relatedVisitors: related.rows.map((relatedVisitor) => ({ id: relatedVisitor.id, label: `匿名访客 ${relatedVisitor.visitor_key.slice(0, 8)}`, lastSeenAt: relatedVisitor.last_seen_at.toISOString() })),
     totalEvents, page, pages, pageSize, range,
   };
-}
-
-export async function recordInquiryNotificationResult(inquiryId: string, result: "sent" | "failed") {
-  const activePool = getPool();
-  if (!activePool) return;
-
-  await activePool.query(
-    `insert into audit_logs (action, module, target_id, metadata)
-     values ($1, 'inquiries', $2, $3::jsonb)`,
-    [`notification_${result}`, inquiryId, JSON.stringify({ channel: "email", result })],
-  );
 }
 
 export type AdminInquiry = {
@@ -593,6 +615,7 @@ export type AdminInquiryFilters = AdminListParams & {
   priority?: string;
   stage?: string;
   followUp?: "overdue" | "today";
+  mail?: string;
 };
 
 export async function getAdminInquiryList(filters: AdminInquiryFilters = {}) {
@@ -621,11 +644,18 @@ export async function getAdminInquiryList(filters: AdminInquiryFilters = {}) {
     const today = getAdminDateRange({ range: "today" });
     clauses.push(`next_follow_up_at >= ${bind(today.start)} and next_follow_up_at < ${bind(today.end)}`);
   }
+  if (filters.mail === "attention") clauses.push("exists (select 1 from inquiry_notifications n where n.inquiry_id = inquiries.id and n.status in ('retry', 'failed', 'uncertain'))");
   if (range.start) clauses.push(`created_at >= ${bind(range.start)}`);
   if (range.end) clauses.push(`created_at < ${bind(range.end)}`);
 
-  const count = await activePool.query<{ count: string }>(`select count(*)::text as count from inquiries where ${clauses.join(" and ")}`, values);
-  const total = Number(count.rows[0]?.count || 0);
+  const { rows: [counts] } = await activePool.query<{ total: string; active: string; high: string; due: string }>(
+    `select count(*)::text as total,
+      count(*) filter (where status not in ('closed', 'spam'))::text as active,
+      count(*) filter (where priority in ('high', 'urgent'))::text as high,
+      count(*) filter (where next_follow_up_at < now() and status not in ('closed', 'spam'))::text as due
+     from inquiries where ${clauses.join(" and ")}`, values,
+  );
+  const total = Number(counts.total);
   const pages = Math.max(1, Math.ceil(total / pageSize));
   const page = Math.min(requestedPage, pages);
   const limit = bind(pageSize);
@@ -639,7 +669,7 @@ export async function getAdminInquiryList(filters: AdminInquiryFilters = {}) {
        (next_follow_up_at < now() and status not in ('closed', 'spam')) as is_overdue, created_at
      from inquiries where ${clauses.join(" and ")} order by
        case priority when 'urgent' then 1 when 'high' then 2 when 'normal' then 3 else 4 end,
-       next_follow_up_at asc nulls last, created_at desc limit ${limit} offset ${offset}`,
+       next_follow_up_at asc nulls last, created_at desc, id desc limit ${limit} offset ${offset}`,
     values,
   );
   const items = result.rows.map((row) => ({
@@ -647,10 +677,11 @@ export async function getAdminInquiryList(filters: AdminInquiryFilters = {}) {
     requestType: row.request_type, product: row.product, status: row.status, priority: row.priority,
     leadStage: row.lead_stage, nextFollowUpAt: row.next_follow_up_at?.toISOString() || null, isOverdue: row.is_overdue, visitorId: row.visitor_id, createdAt: row.created_at.toISOString(),
   }));
-  return { items, total, page, pageSize, pages, range };
+  return { items, total, page, pageSize, pages, range, active: Number(counts.active), highPriority: Number(counts.high), due: Number(counts.due) };
 }
 
 export async function getAdminInquiry(id: string): Promise<AdminInquiry | null> {
+  if (!isUuid(id)) return null;
   const activePool = getPool();
   if (!activePool) return null;
   const result = await activePool.query<{

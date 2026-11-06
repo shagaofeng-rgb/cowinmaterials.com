@@ -27,9 +27,11 @@ Public content routes:
 - Product catalogue: ${siteUrl}/products
 - Application pages: ${siteUrl}/applications
 - Technical resources: ${siteUrl}/resources
+- Technical blog: ${siteUrl}/blog
 - Source-linked industry news: ${siteUrl}/news
-- Office and manufacturing facility address: ${siteUrl}/locations
+- Quzhou office and business contact: ${siteUrl}/locations
 - Quality and documentation scope: ${siteUrl}/quality
+- Product selection, technical data, samples and quotations: ${siteUrl}/request-quote
 
 Technical notes:
 - Technical values depend on product grade, test method, sample configuration and operating conditions.

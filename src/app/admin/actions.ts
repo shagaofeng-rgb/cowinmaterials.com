@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { createAdminSession, destroyAdminSession, isAdminConfigured, verifyAdminPassword } from "@/lib/admin-auth";
+import { allowAdminLoginAttempt, createAdminSession, destroyAdminSession, isAdminConfigured, verifyAdminPassword } from "@/lib/admin-auth";
 
 export type LoginState = {
   error?: string;
@@ -18,12 +18,18 @@ export async function loginAction(_state: LoginState, formData: FormData): Promi
   const next = String(formData.get("next") || "/admin");
   const expectedUsername = process.env.ADMIN_USERNAME || "admin";
 
+  try {
+    if (!await allowAdminLoginAttempt()) return { error: "登录尝试次数过多，请 10 分钟后重试。" };
+  } catch {
+    return { error: "后台登录服务暂不可用，请稍后重试。" };
+  }
+
   if (username !== expectedUsername || !verifyAdminPassword(password)) {
     return { error: "账号或密码不正确，请检查后重试。" };
   }
 
   await createAdminSession(remember);
-  redirect(next.startsWith("/admin") ? next : "/admin");
+  redirect(/^\/admin(?:\/[^\\\s]*|\?[^\\\s]*)?$/.test(next) ? next : "/admin");
 }
 
 export async function logoutAction() {

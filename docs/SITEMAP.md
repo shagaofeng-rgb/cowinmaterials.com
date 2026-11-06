@@ -6,6 +6,7 @@ Cowin Materials serves a dynamic sitemap index at:
 - `https://www.cowinmaterials.com/sitemaps/pages-1.xml`
 - `https://www.cowinmaterials.com/sitemaps/products-1.xml`
 - `https://www.cowinmaterials.com/sitemaps/applications-1.xml`
+- `https://www.cowinmaterials.com/sitemaps/blog-1.xml`
 - `https://www.cowinmaterials.com/sitemaps/news-1.xml`
 
 The index only lists non-empty child files. A child file is split before 50,000 URLs or 50 MB; the implementation uses a safety limit of 45,000 URLs and 49 MB. XML is UTF-8, escaped, and returned with `application/xml; charset=utf-8`.
@@ -14,23 +15,22 @@ The index only lists non-empty child files. A child file is split before 50,000 
 
 Static public page timestamps are generated from the last Git commit that significantly changed each page. Product and application timestamps come from the last commit to `src/lib/data.ts`. The manifest is regenerated before every production build by `scripts/generate-sitemap-manifest.mjs`.
 
-Published Blog articles and News are read at request time from PostgreSQL when `DATABASE_URL` is configured. Blog URLs are included only while their status is `published`; News automation uses source, freshness, relevance and duplicate checks before a direct publication. News appears on the public News page after publication, but only a material-specific item with a high product-match score is eligible for the XML sitemap. Source-linked market briefs remain available to visitors with `noindex` and do not compete with product or technical URLs for discovery.
+Published Blog articles and News are read from PostgreSQL when `DATABASE_URL` is configured. Blog URLs are included only while their status is `published`. News auto-publication remains disabled. Eligible public technical articles can appear in the XML; existing market briefs can remain public with `noindex`.
 
-Dynamic sitemap routes mean a published or archived database article is reflected without writing to the Vercel filesystem. The every-three-day maintenance job validates the index, child XML, robots declaration, and public HTTP status. It records URL additions, modifications, and removals in PostgreSQL when the schema is installed, and always writes a structured Vercel runtime log.
+Dynamic sitemap routes reflect publication and withdrawal without writing to the Vercel filesystem. The Monday maintenance job checks the live index, child XML, robots declaration, and public HTTP status before Google submission. It records changes and failures in PostgreSQL and writes a structured Vercel log.
 
 ## Commands
 
 ```bash
 pnpm sitemap:generate -- --dry-run --verbose
-pnpm sitemap:generate -- --force --verbose
-pnpm sitemap:generate -- --force --submit --verbose
+pnpm sitemap:generate -- --verbose
 pnpm test:sitemap
 SITE_URL=https://www.cowinmaterials.com pnpm test:smoke
 ```
 
-`--dry-run` only checks public sitemap files. Other modes call the authenticated maintenance route and require `CRON_SECRET`. `--submit` still requires `GOOGLE_SEARCH_CONSOLE_ENABLED=true` and valid Google credentials; the flag cannot bypass the environment safety switch.
+`--dry-run` only checks public sitemap files. A manual maintenance run requires `CRON_SECRET` and never submits to Google. The weekly job requires valid Google credentials and `GOOGLE_SEARCH_CONSOLE_ENABLED=true`. It reserves a durable attempt after validation and before calling Google; a repeated delivery of the same cron cannot submit again that week.
 
-The production Vercel Cron route is `/api/cron/sitemap-maintenance`, scheduled every three days at 02:30 UTC in `vercel.json`. Vercel supplies `Authorization: Bearer $CRON_SECRET` automatically when the project secret is configured.
+The production Vercel Cron route is `/api/cron/sitemap-maintenance`, scheduled each Monday at 02:30 UTC (10:30 Beijing time) in `vercel.json`. Vercel supplies `Authorization: Bearer $CRON_SECRET` when configured.
 
 ## Environment Variables
 

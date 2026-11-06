@@ -13,7 +13,7 @@ export type ContentPanelProps = {
 
 export function ContentPanel({ id, children, active = false, enhanced = false, tabId }: ContentPanelProps) {
   return (
-    <section className="cw-panel" role={enhanced ? "tabpanel" : undefined} id={id} aria-labelledby={enhanced ? tabId : undefined} hidden={enhanced && !active} tabIndex={enhanced ? 0 : undefined}>
+    <section className="cw-panel" role={enhanced ? "tabpanel" : undefined} id={id} data-current={active ? "true" : undefined} aria-labelledby={enhanced ? tabId : undefined} hidden={enhanced && !active} tabIndex={enhanced ? 0 : undefined}>
       {children}
     </section>
   );
@@ -68,7 +68,7 @@ export function ContentPanels({ label, initialId, children }: ContentPanelsProps
   if (!panelElements.length) return null;
 
   return (
-    <div className="cw-panels">
+    <div className="cw-panels" data-ready={enhanced}>
       {enhanced ? <>
         <div className="cw-panel-select">
           <label htmlFor={`${uid}-select`}>{label}</label>

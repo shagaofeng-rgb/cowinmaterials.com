@@ -17,7 +17,8 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const gaMeasurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID?.trim();
+const configuredGaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID?.trim();
+const gaMeasurementId = configuredGaId && /^G-[A-Z0-9]+$/.test(configuredGaId) ? configuredGaId : null;
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -68,10 +69,7 @@ export default function RootLayout({
         <WhatsAppFloat />
         <AnalyticsEvents />
         {gaMeasurementId ? (
-          <>
-            <Script async src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`} strategy="afterInteractive" />
-            <Script id="ga4-bootstrap" strategy="afterInteractive">{`window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', '${gaMeasurementId}', { anonymize_ip: true });`}</Script>
-          </>
+          <Script id="ga4-bootstrap" strategy="afterInteractive">{`if (navigator.globalPrivacyControl !== true && navigator.doNotTrack !== '1' && !location.pathname.startsWith('/admin')) { window.dataLayer = window.dataLayer || []; window.gtag = function(){dataLayer.push(arguments);}; gtag('js', new Date()); gtag('config', '${gaMeasurementId}', { anonymize_ip: true }); const ga = document.createElement('script'); ga.async = true; ga.src = 'https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}'; document.head.appendChild(ga); }`}</Script>
         ) : null}
         <script
           type="application/ld+json"

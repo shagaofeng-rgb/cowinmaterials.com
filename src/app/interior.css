@@ -34,6 +34,11 @@
 
 .cw-interior .cw-shell { width: min(1240px, calc(100% - 48px)); margin-inline: auto; min-width: 0; }
 .cw-interior .cw-reading { max-width: 72ch; }
+
+@media (scripting: enabled) {
+  .cw-interior .cw-panels[data-ready="false"] .cw-panel-stage:not(:has(> .cw-panel:target)) > .cw-panel:not([data-current]) { display: none; }
+  .cw-interior .cw-panels[data-ready="false"] .cw-panel-stage:has(> .cw-panel:target) > .cw-panel:not(:target) { display: none; }
+}
 .cw-interior .cw-section { padding-block: 32px 44px; }
 .cw-interior .cw-section + .cw-section { border-top: 1px solid var(--cw-line); }
 .cw-interior .cw-crumbs { padding-block: 16px; }

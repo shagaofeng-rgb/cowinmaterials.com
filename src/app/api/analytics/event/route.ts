@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { recordAnalyticsEvent, type AnalyticsEventName } from "@/lib/database";
+import { readAnalyticsReferrer } from "@/lib/analytics-referrer";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -63,15 +64,14 @@ export async function POST(request: Request) {
     const pagePath = readString(body?.page_path, 260);
     const visitorKey = readString(body?.visitor_id, 64);
     const sessionKey = readString(body?.session_id, 64);
-    const referrerPath = readString(body?.referrer_path, 260);
-    const referrerHost = readString(body?.referrer_host, 255);
+    const { referrer_path: referrerPath, referrer_host: referrerHost } = readAnalyticsReferrer(body || {});
     const device = readString(body?.device, 24);
     const countryHeader = process.env.VERCEL === "1" ? request.headers.get("x-vercel-ip-country") || "" : "";
     const country = /^[A-Z]{2}$/.test(countryHeader) && countryHeader !== "XX" ? countryHeader : undefined;
 
     const isAllowedEvent = allowedEventNames.has(receivedEventName as AnalyticsEventName);
     const isValidWhatsapp = receivedEventName !== "whatsapp_click" || whatsappPlacements.has(receivedPlacement);
-    if (!isAllowedEvent || !isValidWhatsapp || !isValidEventId(receivedEventId) || !isValidPagePath(pagePath) || !isValidUuid(visitorKey) || !isValidUuid(sessionKey) || (referrerPath && !isValidPagePath(referrerPath))) {
+    if (!isAllowedEvent || !isValidWhatsapp || !isValidEventId(receivedEventId) || !isValidPagePath(pagePath) || !isValidUuid(visitorKey) || !isValidUuid(sessionKey)) {
       return NextResponse.json({ error: "Invalid analytics event." }, { status: 400 });
     }
 

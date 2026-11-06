@@ -67,7 +67,12 @@ export function Header() {
 
   const schedulePanelClose = () => {
     clearPanelCloseTimer();
-    panelCloseTimerRef.current = window.setTimeout(() => setActivePanel(null), 140);
+    panelCloseTimerRef.current = window.setTimeout(() => {
+      panelCloseTimerRef.current = null;
+      if (!navRef.current?.querySelector(".mega-panel")?.contains(document.activeElement)) {
+        setActivePanel(null);
+      }
+    }, 180);
   };
 
   const openPanel = (panel: Exclude<PanelName, null>) => {
@@ -122,6 +127,12 @@ export function Header() {
           window.clearTimeout(panelCloseTimerRef.current);
           panelCloseTimerRef.current = null;
         }
+        const id = `${activePanel.toLowerCase()}-mega-panel`;
+        const toggle = navRef.current?.querySelector<HTMLButtonElement>(`[aria-controls="${id}"]`);
+        if (toggle?.closest(".nav-cluster")?.contains(document.activeElement)) {
+          event.preventDefault();
+          toggle.focus();
+        }
         setActivePanel(null);
       }
     };
@@ -152,7 +163,6 @@ export function Header() {
                   key={item.href}
                   onPointerEnter={panel ? (event) => handlePanelPointerEnter(event, panel) : undefined}
                   onPointerLeave={panel ? schedulePanelClose : undefined}
-                  onFocusCapture={panel ? () => openPanel(panel) : undefined}
                   onBlurCapture={panel ? handlePanelBlur : undefined}
                 >
                   <Link className="nav-link" href={item.href} onClick={closePanel}>{item.label}</Link>

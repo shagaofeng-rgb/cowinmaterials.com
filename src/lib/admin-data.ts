@@ -143,6 +143,7 @@ export async function getAdminDashboard(params: AdminListParams = {}) {
   let inquiriesNew: number;
   let inquiriesHighPriority: number;
   let inquiriesOverdue: number;
+  let notificationAttention: number;
   let syncFailed: number;
   let syncPending: number;
   let analyticsCount: number;
@@ -151,14 +152,18 @@ export async function getAdminDashboard(params: AdminListParams = {}) {
     const [summary, audits] = await Promise.all([
       queryRows<{
         blog_published: string; blog_draft: string; inquiries_new: string; inquiries_high: string;
-        inquiries_overdue: string; sync_failed: string; sync_pending: string; analytics_count: string;
+        inquiries_overdue: string; notification_attention: string; sync_failed: string; sync_pending: string; analytics_count: string;
       }>(`select
         (select count(*) from articles where class_id in ('blog', '31') and status = 'published' and deleted_at is null ${within("created_at")})::text as blog_published,
         (select count(*) from articles where class_id in ('blog', '31') and status = 'draft' and deleted_at is null ${within("created_at")})::text as blog_draft,
         (select count(*) from inquiries where deleted_at is null and status = 'new' and is_spam = false ${within("created_at")})::text as inquiries_new,
         (select count(*) from inquiries where deleted_at is null and priority in ('high', 'urgent') and status not in ('closed', 'spam') ${within("created_at")})::text as inquiries_high,
         (select count(*) from inquiries where deleted_at is null and next_follow_up_at < now() and status not in ('closed', 'spam') ${within("created_at")})::text as inquiries_overdue,
-        (select count(*) from sync_jobs where status = 'failed' ${within("created_at")})::text as sync_failed,
+        (select count(*) from inquiry_notifications n join inquiries i on i.id = n.inquiry_id
+          where i.deleted_at is null and n.status in ('retry', 'failed', 'uncertain') ${within("i.created_at")})::text as notification_attention,
+        ((select count(*) from sync_jobs where status = 'failed' ${within("created_at")})
+         + (select count(*) from sitemap_runs where status in ('failed', 'completed_with_errors') ${within("started_at")})
+         + (select count(*) from blog_webhook_events where outcome = 'retryable_failure' ${within("received_at")}))::text as sync_failed,
         (select count(*) from sync_jobs where status in ('pending', 'running') ${within("created_at")})::text as sync_pending,
         (select count(*) from analytics_events where true ${within("occurred_at")})::text as analytics_count`, dates),
       queryRows<{ id: string; module: string; action: string; target_id: string | null; created_at: Date }>(
@@ -172,6 +177,7 @@ export async function getAdminDashboard(params: AdminListParams = {}) {
     inquiriesNew = Number(counts.inquiries_new);
     inquiriesHighPriority = Number(counts.inquiries_high);
     inquiriesOverdue = Number(counts.inquiries_overdue);
+    notificationAttention = Number(counts.notification_attention);
     syncFailed = Number(counts.sync_failed);
     syncPending = Number(counts.sync_pending);
     analyticsCount = Number(counts.analytics_count);
@@ -203,6 +209,7 @@ export async function getAdminDashboard(params: AdminListParams = {}) {
     ],
     workItems: [
       { label: "新询盘", value: `${inquiriesNew} 条新线索 · ${inquiriesHighPriority} 条高优先级`, href: `/admin/inquiries?${rangeQuery}&status=new` },
+      { label: "邮件通知", value: notificationAttention ? `${notificationAttention} 条待重试或核对` : "当前范围内无待处理异常", href: `/admin/inquiries?${rangeQuery}&mail=attention` },
       { label: "同步任务", value: syncFailed ? `${syncFailed} 个失败任务` : syncPending ? `${syncPending} 个待处理任务` : "当前范围内没有待处理任务", href: `/admin/sync?${rangeQuery}` },
       { label: "Blog 草稿", value: `${blogDraft} 篇草稿`, href: `/admin/blog?${rangeQuery}&status=draft` },
     ],
@@ -230,7 +237,20 @@ export async function getAdminModuleData(module: string, params: AdminListParams
   if (module === "categories") return directory("产品分类", "官网产品目录的分类与关联数量；当前内容通过版本发布维护。", "Git 版本化产品目录", getProductCategoryRows());
   if (module === "media") return directory("媒体库", "官网产品与应用已引用的图片资产。替换或新增资产需通过内容版本发布。", "网站受控静态资源", getMediaRows());
   if (module === "users") return { title: "用户与权限", description: "当前为单管理员会话模式。账号与密钥仅保存在服务器环境变量，不会在后台展示。", source: "服务器会话配置", rows: [{ id: "admin", name: process.env.ADMIN_USERNAME || "admin", status: "超级管理员", value: "拥有当前后台全部管理权限", source: "环境变量（不展示密钥）" }], status: "Configured" };
-  if (module === "settings") return { title: "系统设置", description: "公司与通知配置的权威来源是部署环境与版本化站点资料。高风险设置不能在此页面假装直接修改。", source: "环境变量与 Git 版本化站点资料", rows: [{ id: "brand", name: "网站品牌", status: "已配置", value: site.name }, { id: "timezone", name: "后台时区", status: "已配置", value: "Asia/Shanghai" }, { id: "mail", name: "表单邮件通知", status: "已配置", value: site.email }, { id: "deployment", name: "部署配置", status: "Vercel 管理", value: "环境变量需要在 Vercel 项目设置中修改" }], status: "Configured" };
+  if (module === "settings") {
+    const smtpConfigured = Boolean(process.env.SMTP_USER && process.env.SMTP_PASS);
+    const mailMatches = (process.env.MAIL_TO?.trim() || site.email).toLowerCase() === site.email.toLowerCase();
+    return {
+      title: "系统设置", description: "公司与通知配置由部署环境与版本化站点资料管理。", source: "环境变量与 Git 版本化站点资料",
+      rows: [
+        { id: "brand", name: "网站品牌", status: "已配置", value: site.name },
+        { id: "timezone", name: "后台时区", status: "已配置", value: "Asia/Shanghai" },
+        { id: "mail", name: "表单邮件通知", status: !smtpConfigured ? "未配置" : mailMatches ? "配置已读取" : "需核对",
+          value: !smtpConfigured ? "SMTP 凭据未配置" : mailMatches ? `主收件人：${site.email}。投递结果见询盘详情。` : "部署的主收件人与官网联系邮箱不同，请核对 Vercel 设置。" },
+        { id: "deployment", name: "部署配置", status: "Vercel 管理", value: "环境变量需要在 Vercel 项目设置中修改" },
+      ], status: "Configured",
+    };
+  }
 
   if (!database.connected) {
     const titles: Record<string, [string, string]> = {

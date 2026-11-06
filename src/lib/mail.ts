@@ -46,6 +46,9 @@ function getTransporter() {
       host: process.env.SMTP_HOST || "smtp.exmail.qq.com",
       port: Number(process.env.SMTP_PORT || 465),
       secure: (process.env.SMTP_SECURE || "true") === "true",
+      connectionTimeout: 8_000,
+      greetingTimeout: 5_000,
+      socketTimeout: 20_000,
       auth: {
         user: getEnv("SMTP_USER"),
         pass: getEnv("SMTP_PASS"),
@@ -82,8 +85,8 @@ function getInquiryCcRecipients() {
   return recipients.length ? recipients : undefined;
 }
 
-export async function sendInquiryEmail(payload: InquiryPayload) {
-  const to = process.env.MAIL_TO || site.email;
+export async function sendInquiryEmail(payload: InquiryPayload, inquiryId: string) {
+  const to = process.env.MAIL_TO?.trim() || site.email;
   const from = process.env.MAIL_FROM || `${site.name} Website <${getEnv("SMTP_USER")}>`;
   const submittedAt = payload.submittedAt || new Date().toISOString();
 
@@ -141,16 +144,18 @@ export async function sendInquiryEmail(payload: InquiryPayload) {
     </div>
   `;
 
-  await getTransporter().sendMail({
+  const result = await getTransporter().sendMail({
     from,
     to,
     cc: getInquiryCcRecipients(),
     replyTo: payload.email,
+    messageId: `<inquiry-${inquiryId}@${site.domain}>`,
     subject: `[${site.name}] New inquiry from ${payload.name}`,
     text,
     html,
     attachments: payload.attachment ? [payload.attachment] : undefined,
   });
+  return result.accepted?.length && !result.rejected?.length ? "accepted" : "partial";
 }
 
 export async function sendMonthlyEmailHealthCheck() {

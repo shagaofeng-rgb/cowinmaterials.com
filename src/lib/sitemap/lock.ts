@@ -15,15 +15,14 @@ export async function withSitemapLock<T>(task: () => Promise<T>, pool: Pool | nu
   if (pool) {
     const client = await pool.connect();
     try {
-      const lock = await client.query<{ locked: boolean }>("select pg_try_advisory_lock(20260710) as locked");
+      // A transaction pins the lock to one PostgreSQL connection even through a pooler.
+      await client.query("begin");
+      const lock = await client.query<{ locked: boolean }>("select pg_try_advisory_xact_lock(20260710) as locked");
       if (!lock.rows[0]?.locked) throw new SitemapLockError();
-      try {
-        return await task();
-      } finally {
-        await client.query("select pg_advisory_unlock(20260710)");
-      }
+      return await task();
     } finally {
-      client.release();
+      const rolledBack = await client.query("rollback").then(() => true, () => false);
+      client.release(!rolledBack);
     }
   }
 

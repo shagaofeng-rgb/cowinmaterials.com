@@ -6,6 +6,7 @@ import { ChevronDown, Paperclip, Send } from "lucide-react";
 import { useRef, useState, useSyncExternalStore } from "react";
 import { getAnalyticsIdentity, getAttributionUtm, trackAnalyticsEvent } from "@/components/analytics-events";
 import { site } from "@/lib/data";
+import { inquiryFileLimit, inquiryFileLimitLabel, inquiryUploadAccept } from "@/lib/inquiry-upload";
 
 const customerTypes = [
   "End User",
@@ -69,6 +70,8 @@ export function InquiryForm() {
   const router = useRouter();
   const [status, setStatus] = useState<"idle" | "sending" | "error">("idle");
   const submitting = useRef(false);
+  const submissionId = useRef("");
+  const [submissionError, setSubmissionError] = useState("");
   const [fileName, setFileName] = useState("No file selected");
   const search = useSyncExternalStore(subscribeToLocation, getLocationSearch, getServerLocationSearch);
   const params = new URLSearchParams(search);
@@ -95,9 +98,12 @@ export function InquiryForm() {
         if (submitting.current) return;
         submitting.current = true;
         setStatus("sending");
+        setSubmissionError("");
 
         try {
           const formData = new FormData(event.currentTarget);
+          submissionId.current ||= globalThis.crypto?.randomUUID?.() || "";
+          if (submissionId.current) formData.set("submission_id", submissionId.current);
           formData.set("page", window.location.href);
           const identity = getAnalyticsIdentity();
           formData.set("visitor_id", identity.visitorKey);
@@ -110,9 +116,16 @@ export function InquiryForm() {
             body: formData,
           });
           if (response.ok) {
-            trackAnalyticsEvent("form_submit", { request_type: String(formData.get("requestType") || "") });
+            const result = await response.json().catch(() => ({}));
+            if (!result.duplicate) trackAnalyticsEvent("form_submit", { request_type: String(formData.get("requestType") || "") });
             router.push("/thank-you");
             return;
+          }
+          if (response.status === 413) {
+            setSubmissionError(`The attachment is too large. Choose a file no larger than ${inquiryFileLimitLabel}.`);
+          } else if (response.status === 400) {
+            const result = await response.json().catch(() => ({}));
+            if (typeof result.error === "string") setSubmissionError(result.error);
           }
         } catch {
           // Keep the fields available for retry after network errors.
@@ -235,15 +248,15 @@ export function InquiryForm() {
           className="file-upload-input"
           name="file"
           type="file"
-          accept=".pdf,.docx,.xlsx,.jpg,.jpeg,.png"
+          accept={inquiryUploadAccept}
           onChange={(event) => {
             const file = event.currentTarget.files?.[0];
             setFileName(file?.name || "No file selected");
-            event.currentTarget.setCustomValidity(file && file.size > 5 * 1024 * 1024 ? "Choose a file no larger than 5 MB." : "");
+            event.currentTarget.setCustomValidity(file && file.size > inquiryFileLimit ? `Choose a file no larger than ${inquiryFileLimitLabel}.` : "");
             event.currentTarget.reportValidity();
           }}
         />
-        <small>PDF, DOCX, XLSX, JPG or PNG. Maximum 5 MB.</small>
+        <small>PDF, DOCX, XLSX, JPG or PNG. Maximum {inquiryFileLimitLabel}.</small>
       </label>
 
       <label className="checkbox-row">
@@ -260,7 +273,7 @@ export function InquiryForm() {
       </button>
       {status === "error" ? (
         <p className="form-error" role="alert">
-          The enquiry could not be sent. Try again or email <a href={`mailto:${site.email}`}>{site.email}</a>.
+          {submissionError || "The inquiry could not be saved."} Try again or email <a href={`mailto:${site.email}`}>{site.email}</a>.
         </p>
       ) : null}
     </form>

@@ -1,19 +1,26 @@
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { BlogCover } from "@/components/blog-cover";
 import { InteriorHeading, InteriorLink, InteriorPage } from "@/components/interior";
 import { EditorialCard } from "@/components/interior-editorial";
 import { Pagination } from "@/components/pagination";
 import { getPublishedBlogPage } from "@/lib/blog/store";
+import { blogDisplayTitle } from "@/lib/editorial-titles";
 import { createPageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
 type BlogPageProps = { searchParams: Promise<{ page?: string }> };
+const pageSize = 9;
+const getPage = cache(async (page: number) => {
+  const result = await getPublishedBlogPage({ page, pageSize });
+  if (page > Math.max(1, Math.ceil(result.total / pageSize))) notFound();
+  return result;
+});
 
 export async function generateMetadata({ searchParams }: BlogPageProps) {
   const page = validPage((await searchParams).page);
-  const { total } = await getPublishedBlogPage({ page: 1, pageSize: 1 });
-  if (page > Math.max(1, Math.ceil(total / 9))) notFound();
+  const { total } = await getPage(page);
   return createPageMetadata({
     title: page > 1 ? `Aerogel Technical Blog - Page ${page} | Cowin Materials` : "Aerogel Technical Blog | Cowin Materials",
     description: "Technical articles about silica aerogel insulation, fire protection, waterproofing and thermal-management applications.",
@@ -25,8 +32,7 @@ export async function generateMetadata({ searchParams }: BlogPageProps) {
 
 export default async function BlogPage({ searchParams }: BlogPageProps) {
   const page = validPage((await searchParams).page);
-  const result = await getPublishedBlogPage({ page, pageSize: 9 });
-  if (page > Math.max(1, Math.ceil(result.total / result.pageSize))) notFound();
+  const result = await getPage(page);
   return (
     <InteriorPage>
       <InteriorHeading title="Technical blog" crumbs={[{ label: "Blog" }]} description="Application notes, specification guidance and material selection for industrial projects." />
@@ -38,7 +44,7 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
                 <EditorialCard
                   key={article.id}
                   href={`/blog/${article.slug}`}
-                  title={article.title}
+                  title={blogDisplayTitle(article.slug, article.title)}
                   label={article.authorId}
                   publishedAt={article.publishedAt}
                   excerpt={article.excerpt}
