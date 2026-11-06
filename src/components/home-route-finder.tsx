@@ -95,10 +95,10 @@ export function HomeRouteFinder() {
       </div>
 
       <div className="home-route-actions">
-        <Link className="home-route-primary" href={href}>
+        <Link className="home-route-primary" href={href} prefetch={false}>
           Request material guidance <ArrowRight size={17} aria-hidden="true" />
         </Link>
-        <Link className="home-route-secondary" href="/products">Compare products</Link>
+        <Link className="home-route-secondary" href="/products" prefetch={false}>Compare products</Link>
       </div>
     </section>
   );

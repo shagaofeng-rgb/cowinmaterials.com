@@ -85,11 +85,16 @@ const pathwayCardCopy = [
 export default function Home() {
   return (
     <>
+      <link rel="preload" as="image" href="/images/home/lab-hero-mobile-v1.webp" media="(max-width: 720px)" fetchPriority="high" />
+      <link rel="preload" as="image" href="/images/home/lab-hero-desktop-v1.webp" media="(min-width: 721px)" fetchPriority="high" />
       <Header />
       <main className="home-navigator">
         <section className="home-hero">
           <div className="home-hero-media" aria-hidden="true">
-            <Image src="/images/fire-test-lab.jpg" alt="" fill preload quality={65} sizes="100vw" />
+            <picture>
+              <source media="(max-width: 720px)" srcSet="/images/home/lab-hero-mobile-v1.webp" />
+              <img src="/images/home/lab-hero-desktop-v1.webp" width={1800} height={820} alt="" fetchPriority="high" decoding="async" />
+            </picture>
           </div>
           <div className="home-hero-shell">
             <div className="home-hero-copy">
@@ -117,8 +122,8 @@ export default function Home() {
               const visual = applicationVisuals[application.slug];
               const copy = applicationCardCopy[application.slug];
               return (
-                <Link className="home-application-card" href={`/applications/${application.slug}`} key={application.slug}>
-                  <Image src={visual.src} alt={visual.alt} fill sizes="(max-width: 720px) 100vw, (max-width: 1120px) 50vw, 33vw" />
+                <Link className="home-application-card" href={`/applications/${application.slug}`} key={application.slug} prefetch={false}>
+                  <Image src={visual.src} alt={visual.alt} fill fetchPriority="low" sizes="(max-width: 720px) 100vw, (max-width: 1120px) 50vw, 33vw" />
                   <span className="home-application-shade" aria-hidden="true" />
                   <span className="home-application-content">
                     <strong>{copy.title}</strong>

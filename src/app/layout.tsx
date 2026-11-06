@@ -15,6 +15,7 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  preload: false,
 });
 
 const configuredGaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID?.trim();
