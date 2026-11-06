@@ -1,26 +1,9 @@
-"use client";
-
 import Link from "next/link";
 import { ArrowRight, FileText, Layers3, MoveVertical, Thermometer } from "lucide-react";
-import { useMemo, useState } from "react";
-
-type RouteConditions = {
-  temperature: string;
-  substrate: string;
-  thickness: string;
-  standard: string;
-};
-
-const initialConditions: RouteConditions = {
-  temperature: "",
-  substrate: "",
-  thickness: "",
-  standard: "",
-};
 
 const routeFields = [
   {
-    key: "temperature",
+    key: "operatingTemperature",
     label: "Operating temperature",
     placeholder: "Select temperature range",
     Icon: Thermometer,
@@ -41,7 +24,7 @@ const routeFields = [
     options: ["Thin build or constrained space", "Up to 20 mm", "More than 20 mm", "To be evaluated"],
   },
   {
-    key: "standard",
+    key: "requiredStandard",
     label: "Validation standard",
     placeholder: "Select a standard",
     Icon: FileText,
@@ -49,31 +32,11 @@ const routeFields = [
   },
 ] as const;
 
-function conditionHref(conditions: RouteConditions) {
-  const params = new URLSearchParams({ request: "Ask for Product Selection" });
-  if (conditions.temperature) params.set("operatingTemperature", conditions.temperature);
-  if (conditions.substrate) params.set("substrate", conditions.substrate);
-  if (conditions.standard) params.set("requiredStandard", conditions.standard);
-
-  const notes = [
-    conditions.thickness ? `Available thickness: ${conditions.thickness}` : "",
-    "Submitted from the homepage material-route finder.",
-  ].filter(Boolean);
-  if (notes.length) params.set("message", notes.join(" "));
-
-  return `/request-quote?${params.toString()}`;
-}
-
 export function HomeRouteFinder() {
-  const [conditions, setConditions] = useState<RouteConditions>(initialConditions);
-  const href = useMemo(() => conditionHref(conditions), [conditions]);
-
-  const updateCondition = (key: keyof RouteConditions, value: string) => {
-    setConditions((current) => ({ ...current, [key]: value }));
-  };
-
   return (
-    <section className="home-route-finder" aria-labelledby="material-route-title">
+    <form className="home-route-finder" action="/request-quote" method="get" aria-labelledby="material-route-title" data-analytics-quote>
+      <input type="hidden" name="request" value="Ask for Product Selection" />
+      <input type="hidden" name="message" value="Submitted from the homepage material-route finder." />
       <div className="home-route-finder-heading">
         <h2 id="material-route-title">Project conditions</h2>
         <p>Share what you know for a material recommendation.</p>
@@ -85,7 +48,7 @@ export function HomeRouteFinder() {
             <Icon size={20} aria-hidden="true" />
             <span>
               <strong>{label}</strong>
-              <select value={conditions[key]} onChange={(event) => updateCondition(key, event.target.value)} aria-label={label}>
+              <select name={key} defaultValue="" aria-label={label}>
                 <option value="">{placeholder}</option>
                 {options.map((option) => <option value={option} key={option}>{option}</option>)}
               </select>
@@ -95,11 +58,11 @@ export function HomeRouteFinder() {
       </div>
 
       <div className="home-route-actions">
-        <Link className="home-route-primary" href={href} prefetch={false}>
+        <button className="home-route-primary" type="submit">
           Request material guidance <ArrowRight size={17} aria-hidden="true" />
-        </Link>
+        </button>
         <Link className="home-route-secondary" href="/products" prefetch={false}>Compare products</Link>
       </div>
-    </section>
+    </form>
   );
 }

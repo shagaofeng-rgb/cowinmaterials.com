@@ -357,6 +357,13 @@ function eventWindow(parts: AnalyticsQueryParts) {
   return parts.clauses.length ? `and ${parts.clauses.join(" and ")}` : "";
 }
 
+const contactEvents = "('whatsapp_click', 'form_submit', 'email_click', 'phone_click', 'request_tds', 'request_sample', 'request_quote')";
+const eventUtm = "nullif(e.metadata->'utm'->>'utm_source', '')";
+const eventHost = "nullif(e.referrer_host, '')";
+const sessionUtm = "nullif(s.utm->>'utm_source', '')";
+const sessionHost = "nullif(s.referrer_host, '')";
+const sourceLabel = `coalesce(${eventUtm}, ${eventHost}, ${sessionUtm}, ${sessionHost})`;
+
 export async function getAdminAnalyticsOverview(filters: AdminAnalyticsFilters = {}) {
   const activePool = getPool();
   const range = getAdminDateRange(filters);
@@ -366,99 +373,102 @@ export async function getAdminAnalyticsOverview(filters: AdminAnalyticsFilters =
 
   const metricsParts = analyticsQueryParts(range);
   const metricsQuery = activePool.query<{
-    page_views: string; visitors: string; sessions: string; form_submits: string; whatsapp_clicks: string; contact_actions: string; geolocated_views: string; attributed_views: string; latest: Date | null;
+    page_views: string; visitors: string; sessions: string; form_submits: string; whatsapp_clicks: string; contact_actions: string;
+    geolocated_views: string; attributed_views: string; latest: Date | null; inquiries: string;
+    countries: Array<{ country: string | null; views: number }>;
+    sources: Array<{ label: string; kind: string; views: number }>;
   }>(
-    `select
-      count(*) filter (where e.event_name = 'page_view')::text as page_views,
-      count(distinct e.visitor_id)::text as visitors,
-      count(distinct e.session_id)::text as sessions,
-      count(*) filter (where e.event_name = 'form_submit')::text as form_submits,
-      count(*) filter (where e.event_name = 'whatsapp_click')::text as whatsapp_clicks,
-      count(*) filter (where e.event_name = 'page_view' and e.country is not null)::text as geolocated_views,
-      count(*) filter (where e.event_name = 'page_view' and (e.referrer_host is not null or nullif(e.metadata->'utm'->>'utm_source', '') is not null))::text as attributed_views,
-      count(*) filter (where e.event_name in ('whatsapp_click', 'form_submit', 'email_click', 'phone_click', 'request_tds', 'request_sample', 'request_quote'))::text as contact_actions,
-      max(e.occurred_at) as latest
-    from analytics_events e where true ${eventWindow(metricsParts)}`,
+    `with events as (
+      select e.event_name, e.visitor_id, e.session_id, e.occurred_at, nullif(e.country, '') as country,
+        ${sourceLabel} as label,
+        case when ${eventUtm} is not null then 'utm' when ${eventHost} is not null then 'referrer'
+          when ${sessionUtm} is not null then 'utm' when ${sessionHost} is not null then 'referrer'
+          else 'unknown' end as kind
+      from analytics_events e left join analytics_sessions s on s.id = e.session_id
+      where true ${eventWindow(metricsParts)}
+    ), countries as (
+      select country, count(*) as views from events where event_name = 'page_view' and country is not null
+      group by country order by views desc, country limit 10
+    ), sources as (
+      select coalesce(label, 'unknown') as label, kind, count(*) as views from events where event_name = 'page_view'
+      group by 1, 2 order by views desc, 1, kind limit 10
+    )
+    select
+      count(*) filter (where event_name = 'page_view')::text as page_views,
+      count(distinct visitor_id)::text as visitors,
+      count(distinct session_id)::text as sessions,
+      count(*) filter (where event_name = 'form_submit')::text as form_submits,
+      count(*) filter (where event_name = 'whatsapp_click')::text as whatsapp_clicks,
+      count(*) filter (where event_name = 'page_view' and country is not null)::text as geolocated_views,
+      count(*) filter (where event_name = 'page_view' and kind <> 'unknown')::text as attributed_views,
+      count(*) filter (where event_name in ${contactEvents})::text as contact_actions,
+      max(occurred_at) as latest,
+      (select count(*)::text from inquiries where deleted_at is null and status <> 'spam' and not is_spam
+        and created_at >= $1 and created_at < $2) as inquiries,
+      (select coalesce(jsonb_agg(countries order by views desc, country), '[]'::jsonb) from countries) as countries,
+      (select coalesce(jsonb_agg(sources order by views desc, label, kind), '[]'::jsonb) from sources) as sources
+    from events`,
     metricsParts.values,
-  );
-
-  const countryParts = analyticsQueryParts(range);
-  const countriesQuery = activePool.query<{ country: string; views: string }>(
-    `select e.country, count(*)::text as views from analytics_events e
-     where e.event_name = 'page_view' and e.country is not null ${eventWindow(countryParts)}
-     group by e.country order by count(*) desc, e.country asc limit 10`,
-    countryParts.values,
-  );
-  const sourcesQuery = activePool.query<{ label: string; kind: string; views: string }>(
-    `select coalesce(nullif(e.metadata->'utm'->>'utm_source', ''), e.referrer_host, 'unknown') as label,
-      case when nullif(e.metadata->'utm'->>'utm_source', '') is not null then 'utm'
-        when e.referrer_host is not null then 'referrer' else 'unknown' end as kind, count(*)::text as views
-     from analytics_events e where e.event_name = 'page_view' ${eventWindow(metricsParts)}
-     group by 1, 2 order by count(*) desc, 1 limit 10`,
-    metricsParts.values,
-  );
-  const inquiriesQuery = activePool.query<{ count: string }>(
-    `select count(*)::text as count from inquiries where deleted_at is null and status <> 'spam'
-      and created_at >= $1 and created_at < $2`,
-    [range.start, range.end],
   );
 
   const visitorParts = analyticsQueryParts(range);
-  const query = filters.q?.trim();
-  const visitorClauses = [
-    `exists (select 1 from analytics_events e where e.visitor_id = v.id ${eventWindow(visitorParts)})`,
-  ];
-  if (query) {
-    const value = visitorParts.bind(`%${query}%`);
-    visitorClauses.push(`(
+  const query = typeof filters.q === "string" ? filters.q.trim().slice(0, 160) : "";
+  const value = query ? visitorParts.bind(`%${query}%`) : null;
+  const visitorFilter = value ? `and (
       v.visitor_key::text ilike ${value}
       or exists (
         select 1 from inquiries i
         where i.customer_identity_id = v.customer_id and i.deleted_at is null
           and (i.name ilike ${value} or i.company ilike ${value} or i.email ilike ${value})
       )
-    )`);
-  }
-  const where = visitorClauses.join(" and ");
-  const countQuery = activePool.query<{ count: string }>(`select count(*)::text as count from analytics_visitors v where ${where}`, visitorParts.values);
-  const [metrics, countries, count, sources, inquiries] = await Promise.all([metricsQuery, countriesQuery, countQuery, sourcesQuery, inquiriesQuery]);
-  const total = Number(count.rows[0]?.count || 0);
-  const pages = Math.max(1, Math.ceil(total / pageSize));
-  const page = Math.min(requestedPage, pages);
-  const limit = visitorParts.bind(pageSize);
-  const offset = visitorParts.bind((page - 1) * pageSize);
-  const rows = await activePool.query<{
+    )` : "";
+  const countQuery = query ? activePool.query<{ count: string }>(
+    `select count(*)::text as count from analytics_visitors v
+     where exists (select 1 from analytics_events e where e.visitor_id = v.id ${eventWindow(visitorParts)}) ${visitorFilter}`,
+    visitorParts.values,
+  ) : null;
+  const listVisitors = (page: number) => activePool.query<{
     id: string; visitor_key: string; first_seen_at: Date; last_seen_at: Date; first_landing_path: string | null; last_path: string | null; first_referrer_host: string | null; last_referrer_host: string | null;
     contact_name: string | null; contact_company: string | null; contact_email: string | null; sessions: string; events: string; contact_actions: string;
   }>(
-    `select v.id, v.visitor_key, v.first_seen_at, v.last_seen_at, v.first_landing_path, v.last_path, v.first_referrer_host, v.last_referrer_host,
-      contact.name as contact_name, contact.company as contact_company, contact.email as contact_email,
-      (select count(*) from analytics_sessions s where s.visitor_id = v.id ${range.start ? `and s.last_seen_at >= ${visitorParts.bind(range.start)}` : ""} ${range.end ? `and s.last_seen_at < ${visitorParts.bind(range.end)}` : ""})::text as sessions,
-      (select count(*) from analytics_events e where e.visitor_id = v.id ${eventWindow(visitorParts)})::text as events,
-      (select count(*) from analytics_events e where e.visitor_id = v.id and e.event_name in ('whatsapp_click', 'form_submit', 'email_click', 'phone_click', 'request_tds', 'request_sample', 'request_quote') ${eventWindow(visitorParts)})::text as contact_actions
-    from analytics_visitors v
+    `with activity as (
+      select e.visitor_id, max(e.occurred_at) as last_seen_at, count(distinct e.session_id)::text as sessions,
+        count(*)::text as events, count(*) filter (where e.event_name in ${contactEvents})::text as contact_actions
+      from analytics_events e where e.visitor_id is not null ${eventWindow(visitorParts)} group by e.visitor_id
+    ), page_visitors as (
+      select v.id, v.customer_id, v.visitor_key, v.first_seen_at, a.last_seen_at, v.first_landing_path, v.last_path,
+        v.first_referrer_host, v.last_referrer_host, a.sessions, a.events, a.contact_actions
+      from activity a join analytics_visitors v on v.id = a.visitor_id
+      where true ${visitorFilter}
+      order by a.last_seen_at desc, v.id desc
+      limit $${visitorParts.values.length + 1} offset $${visitorParts.values.length + 2}
+    )
+    select v.*, contact.name as contact_name, contact.company as contact_company, contact.email as contact_email
+    from page_visitors v
     left join lateral (
       select i.name, i.company, i.email from inquiries i
       where i.customer_identity_id = v.customer_id and i.deleted_at is null
       order by i.created_at desc limit 1
     ) contact on true
-    where ${where}
-    order by v.last_seen_at desc, v.id desc
-    limit ${limit} offset ${offset}`,
-    visitorParts.values,
+    order by v.last_seen_at desc, v.id desc`,
+    [...visitorParts.values, pageSize, (page - 1) * pageSize],
   );
-
+  const [metrics, count, firstPage] = await Promise.all([metricsQuery, countQuery, requestedPage === 1 ? listVisitors(1) : null]);
   const metric = metrics.rows[0];
+  const total = Number(count?.rows[0]?.count ?? metric.visitors);
+  const pages = Math.max(1, Math.ceil(total / pageSize));
+  const page = Math.min(requestedPage, pages);
+  const visitors = firstPage?.rows ?? (total ? (await listVisitors(page)).rows : []);
   return {
     range,
     metrics: {
       pageViews: Number(metric.page_views), visitors: Number(metric.visitors), sessions: Number(metric.sessions), formSubmits: Number(metric.form_submits),
       whatsappClicks: Number(metric.whatsapp_clicks), geolocatedViews: Number(metric.geolocated_views), contactActions: Number(metric.contact_actions), latest: metric.latest?.toISOString() || null,
-      attributedViews: Number(metric.attributed_views), inquiries: Number(inquiries.rows[0].count),
+      attributedViews: Number(metric.attributed_views), inquiries: Number(metric.inquiries),
     },
-    countries: countries.rows.map((row) => ({ code: row.country, pageViews: Number(row.views) })),
-    sources: sources.rows.map((row) => ({ label: row.label, kind: row.kind, pageViews: Number(row.views) })),
-    visitors: rows.rows.map((row) => ({
+    countries: metric.countries.map((row) => ({ code: row.country || "", pageViews: row.views })),
+    sources: metric.sources.map((row) => ({ label: row.label, kind: row.kind, pageViews: row.views })),
+    visitors: visitors.map((row) => ({
       id: row.id,
       label: row.contact_name || `匿名访客 ${row.visitor_key.slice(0, 8)}`,
       company: row.contact_company,
@@ -481,7 +491,7 @@ export type AdminVisitorJourney = {
   lastPath: string | null;
   referrerHost: string | null;
   sessions: Array<{ id: string; startedAt: string; lastSeenAt: string; landingPath: string | null; exitPath: string | null; referrer: string | null; events: number }>;
-  events: Array<{ id: string; name: string; path: string | null; occurredAt: string; source: string | null }>;
+  events: Array<{ id: string; name: string; path: string | null; occurredAt: string; source: string | null; previousPath: string | null; country: string | null }>;
   inquiries: Array<{ id: string; name: string; company: string | null; email: string; createdAt: string }>;
   relatedVisitors: Array<{ id: string; label: string; lastSeenAt: string }>;
   totalEvents: number;
@@ -519,41 +529,42 @@ export async function getAdminVisitorJourney(id: string, filters: AdminAnalytics
   const offsetClauses = (clauses: string[], offset: number) => clauses.map((clause) => clause.replace(/\$(\d+)/g, (_, value) => `$${Number(value) + offset}`));
   const eventWhere = ["e.visitor_id = $1", ...offsetClauses(eventParts.clauses, 1)].join(" and ");
   const eventValues = [id, ...eventParts.values];
-  const count = await activePool.query<{ count: string }>(`select count(*)::text as count from analytics_events e where ${eventWhere}`, eventValues);
-  const totalEvents = Number(count.rows[0]?.count || 0);
-  const pages = Math.max(1, Math.ceil(totalEvents / pageSize));
-  const page = Math.min(requestedPage, pages);
-  eventValues.push(pageSize, (page - 1) * pageSize);
-  const events = await activePool.query<{ id: string; event_name: string; page_path: string | null; occurred_at: Date; source: string | null }>(
-    `select e.id, e.event_name, e.page_path, e.occurred_at,
-       coalesce(nullif(e.metadata->'utm'->>'utm_source', ''), e.referrer_host, e.referrer_path) as source
-     from analytics_events e
-     where ${eventWhere} order by e.occurred_at desc limit $${eventValues.length - 1} offset $${eventValues.length}`,
+  const countQuery = activePool.query<{ count: string }>(`select count(*)::text as count from analytics_events e where ${eventWhere}`, eventValues);
+  const readEvents = (page: number) => activePool.query<{ id: string; event_name: string; page_path: string | null; occurred_at: Date; source: string | null; referrer_path: string | null; country: string | null }>(
+    `select e.id, e.event_name, e.page_path, e.occurred_at, e.referrer_path, e.country, ${sourceLabel} as source
+     from analytics_events e left join analytics_sessions s on s.id = e.session_id
+     where ${eventWhere} order by e.occurred_at desc, e.id desc limit $${eventValues.length + 1} offset $${eventValues.length + 2}`,
+    [...eventValues, pageSize, (page - 1) * pageSize],
+  );
+  const sessionsQuery = activePool.query<{ id: string; started_at: Date; last_seen_at: Date; landing_path: string | null; exit_path: string | null; referrer: string | null; event_count: number }>(
+    `select s.id, s.started_at, s.last_seen_at, s.landing_path, s.exit_path,
+       coalesce(${sessionUtm}, ${sessionHost}) as referrer, activity.event_count
+     from (select e.session_id, count(*)::int as event_count, max(e.occurred_at) as latest
+       from analytics_events e where ${eventWhere} and e.session_id is not null group by e.session_id) activity
+     join analytics_sessions s on s.id = activity.session_id
+     order by activity.latest desc, s.id desc limit 20`,
     eventValues,
   );
-  const sessionParts = analyticsQueryParts(range);
-  const sessionClauses = offsetClauses(sessionParts.clauses.map((clause) => clause.replace(/e\.occurred_at/g, "s.last_seen_at")), 1);
-  const sessions = await activePool.query<{ id: string; started_at: Date; last_seen_at: Date; landing_path: string | null; exit_path: string | null; referrer_path: string | null; referrer_host: string | null; event_count: number }>(
-    `select s.id, s.started_at, s.last_seen_at, s.landing_path, s.exit_path, s.referrer_path, s.referrer_host, s.event_count
-     from analytics_sessions s where s.visitor_id = $1 ${sessionClauses.length ? `and ${sessionClauses.join(" and ")}` : ""}
-     order by s.last_seen_at desc limit 20`,
-    [id, ...sessionParts.values],
-  );
-  const inquiries = await activePool.query<{ id: string; name: string; company: string | null; email: string; created_at: Date }>(
+  const inquiriesQuery = row.customer_id ? activePool.query<{ id: string; name: string; company: string | null; email: string; created_at: Date }>(
     `select i.id, i.name, i.company, i.email, i.created_at from inquiries i
      where i.customer_identity_id = $1 and i.deleted_at is null order by i.created_at desc limit 50`,
     [row.customer_id],
-  );
-  const related = row.customer_id ? await activePool.query<{ id: string; visitor_key: string; last_seen_at: Date }>(
+  ) : { rows: [] };
+  const relatedQuery = row.customer_id ? activePool.query<{ id: string; visitor_key: string; last_seen_at: Date }>(
     "select id, visitor_key, last_seen_at from analytics_visitors where customer_id = $1 and id <> $2 order by last_seen_at desc limit 20",
     [row.customer_id, id],
   ) : { rows: [] };
+  const [count, sessions, inquiries, related, firstPage] = await Promise.all([countQuery, sessionsQuery, inquiriesQuery, relatedQuery, requestedPage === 1 ? readEvents(1) : null]);
+  const totalEvents = Number(count.rows[0]?.count || 0);
+  const pages = Math.max(1, Math.ceil(totalEvents / pageSize));
+  const page = Math.min(requestedPage, pages);
+  const events = firstPage?.rows ?? (totalEvents ? (await readEvents(page)).rows : []);
 
   return {
     id: row.id, label: row.contact_name || `匿名访客 ${row.visitor_key.slice(0, 8)}`, company: row.contact_company, email: row.contact_email,
     firstSeenAt: row.first_seen_at.toISOString(), lastSeenAt: row.last_seen_at.toISOString(), landingPath: row.first_landing_path, lastPath: row.last_path, referrerHost: row.last_referrer_host,
-    sessions: sessions.rows.map((session) => ({ id: session.id, startedAt: session.started_at.toISOString(), lastSeenAt: session.last_seen_at.toISOString(), landingPath: session.landing_path, exitPath: session.exit_path, referrer: session.referrer_host || session.referrer_path, events: session.event_count })),
-    events: events.rows.map((event) => ({ id: event.id, name: event.event_name, path: event.page_path, occurredAt: event.occurred_at.toISOString(), source: event.source })),
+    sessions: sessions.rows.map((session) => ({ id: session.id, startedAt: session.started_at.toISOString(), lastSeenAt: session.last_seen_at.toISOString(), landingPath: session.landing_path, exitPath: session.exit_path, referrer: session.referrer, events: session.event_count })),
+    events: events.map((event) => ({ id: event.id, name: event.event_name, path: event.page_path, occurredAt: event.occurred_at.toISOString(), source: event.source, previousPath: event.referrer_path, country: event.country })),
     inquiries: inquiries.rows.map((inquiry) => ({ id: inquiry.id, name: inquiry.name, company: inquiry.company, email: inquiry.email, createdAt: inquiry.created_at.toISOString() })),
     relatedVisitors: related.rows.map((relatedVisitor) => ({ id: relatedVisitor.id, label: `匿名访客 ${relatedVisitor.visitor_key.slice(0, 8)}`, lastSeenAt: relatedVisitor.last_seen_at.toISOString() })),
     totalEvents, page, pages, pageSize, range,
@@ -681,6 +692,7 @@ export async function getAdminInquiryList(filters: AdminInquiryFilters = {}) {
 }
 
 export async function getAdminInquiry(id: string): Promise<AdminInquiry | null> {
+  if (!isUuid(id)) return null;
   if (!isUuid(id)) return null;
   const activePool = getPool();
   if (!activePool) return null;

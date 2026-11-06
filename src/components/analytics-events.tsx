@@ -203,8 +203,17 @@ export function AnalyticsEvents() {
       const eventData = eventForLink(link);
       if (eventData) trackAnalyticsEvent(eventData.eventName, eventData.params);
     };
+    const handleSubmit = (event: SubmitEvent) => {
+      if (event.target instanceof HTMLFormElement && event.target.hasAttribute("data-analytics-quote")) {
+        trackAnalyticsEvent("request_quote");
+      }
+    };
     document.addEventListener("click", handleClick, true);
-    return () => document.removeEventListener("click", handleClick, true);
+    document.addEventListener("submit", handleSubmit, true);
+    return () => {
+      document.removeEventListener("click", handleClick, true);
+      document.removeEventListener("submit", handleSubmit, true);
+    };
   }, []);
 
   return null;

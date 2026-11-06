@@ -21,8 +21,9 @@ export type AdminDateRange = {
 
 const pageSizes = [10, 20, 50, 100];
 const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+const regionNames = new Intl.DisplayNames("zh-CN", { type: "region" });
 
-function shanghaiDate(date: Date) {
+export function shanghaiDate(date: Date) {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Shanghai",
     year: "numeric",
@@ -31,6 +32,12 @@ function shanghaiDate(date: Date) {
   }).formatToParts(date);
   const value = Object.fromEntries(parts.filter((part) => part.type !== "literal").map((part) => [part.type, part.value]));
   return `${value.year}-${value.month}-${value.day}`;
+}
+
+export function formatAdminRegion(code: string | null) {
+  if (!code || !/^[A-Z]{2}$/.test(code)) return "未记录";
+  const name = regionNames.of(code);
+  return name && name !== code ? `${name} (${code})` : code;
 }
 
 function addDays(date: string, days: number) {
@@ -44,7 +51,7 @@ function shanghaiStart(date: string) {
 
 export function parsePage(value?: string) {
   const page = Number(value || "1");
-  return Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
+  return Number.isSafeInteger(page) && page >= 1 ? page : 1;
 }
 
 export function parsePageSize(value?: string) {

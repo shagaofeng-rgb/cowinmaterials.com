@@ -5,6 +5,7 @@ import { AdminEmpty, AdminNotice, AdminShell } from "@/components/admin-shell";
 import { AdminSyncStatus } from "@/components/admin-sync-status";
 import { getAdminAnalyticsOverview } from "@/lib/database";
 import { requireAdminSession } from "@/lib/admin-auth";
+import { formatAdminRegion } from "@/lib/admin-listing";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "访问与转化 | Cowin Materials 后台", robots: { index: false, follow: false } };
@@ -41,16 +42,16 @@ export default async function AdminAnalyticsPage({ searchParams }: { searchParam
       <article className="admin-metric"><span>已入库询盘</span><strong>{data.metrics.inquiries}</strong><small><Link href={{ pathname: "/admin/inquiries", query: { range: query.range, from: query.from, to: query.to } }}>查看线索</Link> · 不含垃圾记录</small></article>
     </section>
     <div className="admin-overview-work">
-      <section className="admin-panel"><h2>页面访问来源</h2><p className="admin-muted">覆盖 {data.metrics.attributedViews} / {data.metrics.pageViews} 次浏览（{coverage(data.metrics.attributedViews)}），按 UTM 或外部域名统计前 10 项。未记录不等于直接访问。</p>
+      <section className="admin-panel"><h2>页面访问来源</h2><p className="admin-muted">覆盖 {data.metrics.attributedViews} / {data.metrics.pageViews} 次浏览（{coverage(data.metrics.attributedViews)}）。按本次浏览或同一会话已记录的 UTM / 外部域名统计前 10 项。未记录不等于直接访问。</p>
         {data.sources.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>来源</th><th>页面访问</th></tr></thead><tbody>{data.sources.map((item) => <tr key={`${item.kind}:${item.label}`}><td>{item.kind === "unknown" ? "直接或未记录" : item.label}<small>{item.kind === "utm" ? "UTM" : item.kind === "referrer" ? "外部域名" : "无可用归因"}</small></td><td>{item.pageViews}</td></tr>)}</tbody></table></div> : <AdminEmpty text="当前范围内没有页面访问记录。" />}
       </section>
       <section className="admin-panel"><h2>访客国家/地区</h2><p className="admin-muted">覆盖 {data.metrics.geolocatedViews} / {data.metrics.pageViews} 次浏览（{coverage(data.metrics.geolocatedViews)}），显示前 10 个地区，不代表客户注册地。</p>
-        {data.countries.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>国家/地区代码</th><th>页面访问</th></tr></thead><tbody>{data.countries.map((item) => <tr key={item.code}><td>{item.code}</td><td>{item.pageViews}</td></tr>)}</tbody></table></div> : <AdminEmpty text="当前范围内没有已识别地区的浏览。" />}
+        {data.countries.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>国家/地区</th><th>页面访问</th></tr></thead><tbody>{data.countries.map((item) => <tr key={item.code}><td>{formatAdminRegion(item.code)}</td><td>{item.pageViews}</td></tr>)}</tbody></table></div> : <AdminEmpty text="当前范围内没有已识别地区的浏览。" />}
       </section>
     </div>
     <section className="admin-panel">
       <div className="admin-panel-heading"><div><h2>访客路径与归属</h2><p>同一浏览器的访问会归属到同一个匿名访客；提交表单后可从线索和访客两端回看完整路径。</p></div></div>
-      {data.visitors.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>访客归属</th><th>首次入口 / 最近页面</th><th>首次来源 / 最近来源</th><th>会话 / 事件</th><th>联系行为</th><th>最近访问</th><th>操作</th></tr></thead><tbody>{data.visitors.map((visitor) => <tr key={visitor.id}><td><strong>{visitor.label}</strong><small>{visitor.company || "匿名访客"}{visitor.email ? ` · ${visitor.email}` : ""}</small></td><td>{visitor.landingPath || "未记录"}<small>{visitor.lastPath || "未记录"}</small></td><td>{visitor.firstReferrerHost || "直接访问或未知"}<small>{visitor.referrerHost || "最近来源未记录"}</small></td><td>{visitor.sessions} / {visitor.events}</td><td>{visitor.contactActions}</td><td>{displayTime(visitor.lastSeenAt)}</td><td><Link href={`/admin/visitors/${visitor.id}?${new URLSearchParams({ range: data.range.key, from: data.range.from || "", to: data.range.to || "" }).toString()}`}>查看路径</Link></td></tr>)}</tbody></table></div> : <AdminEmpty text="当前时间范围内还没有可归属的访客。历史匿名事件仍保留在数据库中，但不会被虚构关联。" />}
+      {data.visitors.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>访客归属</th><th>首次入口 / 历史最近页面</th><th>首次 / 最近已知外部域名</th><th>区间会话 / 事件</th><th>联系行为</th><th>区间最近事件</th><th>操作</th></tr></thead><tbody>{data.visitors.map((visitor) => <tr key={visitor.id}><td><strong>{visitor.label}</strong><small>{visitor.company || "匿名访客"}{visitor.email ? ` · ${visitor.email}` : ""}</small></td><td>{visitor.landingPath || "未记录"}<small>{visitor.lastPath || "未记录"}</small></td><td>{visitor.firstReferrerHost || "未记录"}<small>{visitor.referrerHost || "未记录"}</small></td><td>{visitor.sessions} / {visitor.events}</td><td>{visitor.contactActions}</td><td>{displayTime(visitor.lastSeenAt)}</td><td><Link href={`/admin/visitors/${visitor.id}?${new URLSearchParams({ range: data.range.key, from: data.range.from || "", to: data.range.to || "" }).toString()}`}>查看路径</Link></td></tr>)}</tbody></table></div> : <AdminEmpty text="当前时间范围内还没有可归属的访客。历史匿名事件仍保留在数据库中，但不会被虚构关联。" />}
       <AdminPagination pathname="/admin/analytics" page={data.page} pages={data.pages} pageSize={data.pageSize} total={data.total} query={query} />
     </section>
   </AdminShell>;

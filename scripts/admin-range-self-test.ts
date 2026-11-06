@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { getAdminDateRange, parsePageSize, paginate } from "../src/lib/admin-listing.ts";
+import { getAdminDateRange, parsePage, parsePageSize, paginate } from "../src/lib/admin-listing.ts";
 
 const now = new Date("2026-10-10T06:00:00Z");
 test("five ranges use inclusive Shanghai dates and exclusive end bounds", () => {
@@ -29,4 +29,6 @@ test("old all/invalid ranges cannot accidentally perform unbounded queries", () 
 test("pagination stays bounded", () => {
   assert.equal(parsePageSize("99999"), 20);
   assert.equal(paginate([1,2], {page:"999"}).page, 1);
+  assert.equal(parsePage("2"), 2);
+  for (const value of ["0.5", "-1", "1e100", "Infinity", "invalid"]) assert.equal(parsePage(value), 1);
 });

@@ -4,6 +4,7 @@ import { AdminDateRangeFields, AdminPagination } from "@/components/admin-list-c
 import { AdminEmpty, AdminNotice, AdminShell } from "@/components/admin-shell";
 import { AdminSyncStatus } from "@/components/admin-sync-status";
 import { requireAdminSession } from "@/lib/admin-auth";
+import { formatAdminDate } from "@/lib/admin-data";
 import { getAdminInquiryList } from "@/lib/database";
 
 export const dynamic = "force-dynamic";
@@ -48,7 +49,7 @@ export default async function AdminInquiriesPage({
           <button className="admin-primary-button" type="submit">筛选线索</button>
           <Link href="/admin/inquiries">重置</Link>
         </form>
-        {items.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>客户 / 公司</th><th>需求</th><th>优先级</th><th>销售阶段</th><th>访问归属</th><th>下次跟进</th><th>提交时间</th><th>操作</th></tr></thead><tbody>{items.map((item) => <tr key={item.id}><td><strong>{item.name}</strong><small>{item.company || item.email} · {item.country || "未填写国家"}</small></td><td>{item.requestType || "未填写需求"}<small>{item.product || "未指定产品"}</small></td><td><span className={`admin-badge admin-badge-${item.priority}`}>{item.priority}</span></td><td><span className="admin-badge">{stageLabels[item.leadStage] || item.leadStage}</span></td><td>{item.visitorId ? <Link href={`/admin/visitors/${item.visitorId}`}>查看路径</Link> : <span className="admin-muted">历史记录未归属</span>}</td><td>{item.nextFollowUpAt ? new Date(item.nextFollowUpAt).toLocaleDateString("zh-CN") : "未安排"}</td><td>{new Date(item.createdAt).toLocaleString("zh-CN")}</td><td><Link href={`/admin/inquiries/${item.id}`}>打开线索</Link></td></tr>)}</tbody></table></div> : <AdminEmpty text="没有匹配的客户线索" />}
+        {items.length ? <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>客户 / 公司</th><th>需求</th><th>优先级</th><th>销售阶段</th><th>访问归属</th><th>下次跟进</th><th>提交时间</th><th>操作</th></tr></thead><tbody>{items.map((item) => <tr key={item.id}><td><strong>{item.name}</strong><small>{item.company || item.email} · {item.country || "未填写国家"}</small></td><td>{item.requestType || "未填写需求"}<small>{item.product || "未指定产品"}</small></td><td><span className={`admin-badge admin-badge-${item.priority}`}>{item.priority}</span></td><td><span className="admin-badge">{stageLabels[item.leadStage] || item.leadStage}</span></td><td>{item.visitorId ? <Link href={`/admin/visitors/${item.visitorId}`}>查看路径</Link> : <span className="admin-muted">历史记录未归属</span>}</td><td>{item.nextFollowUpAt ? new Date(item.nextFollowUpAt).toLocaleDateString("zh-CN", { timeZone: "Asia/Shanghai" }) : "未安排"}</td><td>{formatAdminDate(item.createdAt)}</td><td><Link href={`/admin/inquiries/${item.id}`}>打开线索</Link></td></tr>)}</tbody></table></div> : <AdminEmpty text="没有匹配的客户线索" />}
         <AdminPagination pathname="/admin/inquiries" page={result.page} pages={result.pages} pageSize={result.pageSize} total={result.total} query={filters} />
       </section>
     </AdminShell>

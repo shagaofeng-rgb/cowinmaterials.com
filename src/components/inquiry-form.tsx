@@ -75,6 +75,7 @@ export function InquiryForm() {
   const [fileName, setFileName] = useState("No file selected");
   const search = useSyncExternalStore(subscribeToLocation, getLocationSearch, getServerLocationSearch);
   const params = new URLSearchParams(search);
+  const thickness = params.get("thickness")?.trim().slice(0, 140);
   const defaults = {
     request: getRequestType(params.get("request")),
     product: params.get("product") || "",
@@ -82,7 +83,7 @@ export function InquiryForm() {
     substrate: params.get("substrate") || "",
     operatingTemperature: params.get("operatingTemperature") || "",
     requiredStandard: params.get("requiredStandard") || "",
-    message: params.get("message") || "",
+    message: [thickness ? `Available thickness: ${thickness}` : "", params.get("message") || ""].filter(Boolean).join(" "),
   };
 
   return (

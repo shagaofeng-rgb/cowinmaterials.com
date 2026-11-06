@@ -17,27 +17,27 @@ export const metadata = createPageMetadata({
 
 const applicationVisuals: Record<string, { src: string; alt: string }> = {
   "building-energy-retrofit": {
-    src: "/images/home/building-retrofit-editorial.jpg",
+    src: "/images/home/app-card-building-v1.webp",
     alt: "Building-envelope retrofit context with layered facade materials",
   },
   "industrial-pipe-equipment-insulation": {
-    src: "/images/home/industrial-insulation-editorial.jpg",
+    src: "/images/home/app-card-industrial-v1.webp",
     alt: "Insulated industrial pipe and valve assembly",
   },
   "ev-ess-thermal-barriers": {
-    src: "/images/home/ev-ess-thermal-barrier-editorial.jpg",
+    src: "/images/home/app-card-battery-v1.webp",
     alt: "Battery-module engineering context with a thin thermal barrier layer",
   },
   "lng-cryogenic-insulation": {
-    src: "/images/home/lng-cryogenic-editorial.jpg",
+    src: "/images/home/app-card-cryogenic-v1.webp",
     alt: "Cryogenic pipework and insulated valve assembly",
   },
   "steel-fire-protection": {
-    src: "/images/fire-char-layer.jpg",
+    src: "/images/home/app-card-steel-v1.webp",
     alt: "Coating char layer from a controlled steel fire-protection test",
   },
   "concrete-masonry-waterproofing": {
-    src: "/images/waterproof-droplets.png",
+    src: "/images/home/app-card-waterproof-v1.webp",
     alt: "Water droplets on a treated mineral substrate",
   },
 };
@@ -123,7 +123,7 @@ export default function Home() {
               const copy = applicationCardCopy[application.slug];
               return (
                 <Link className="home-application-card" href={`/applications/${application.slug}`} key={application.slug} prefetch={false}>
-                  <Image src={visual.src} alt={visual.alt} fill fetchPriority="low" sizes="(max-width: 720px) 100vw, (max-width: 1120px) 50vw, 33vw" />
+                  <Image src={visual.src} alt={visual.alt} fill unoptimized loading="lazy" fetchPriority="low" />
                   <span className="home-application-shade" aria-hidden="true" />
                   <span className="home-application-content">
                     <strong>{copy.title}</strong>

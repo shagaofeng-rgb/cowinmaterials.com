@@ -242,14 +242,21 @@ export async function getAdminBlogArticles(filters: AdminListParams & { status?:
   const page = Math.min(requestedPage, pages);
   const limit = bind(pageSize);
   const offset = bind((page - 1) * pageSize);
-  const result = await pool.query<BlogRow>(
-    `${articleSelect}
+  const result = await pool.query<Pick<BlogRow, "id" | "slug" | "title_en" | "author_id" | "status" | "published_at" | "category_name">>(
+    `select a.id, a.slug, a.title_en, a.author_id, a.status, a.published_at, coalesce(c.name, 'Blog') as category_name
+     from articles a left join article_categories c on c.id = a.category_id
      where ${where}
-     order by a.created_at desc
+     order by a.created_at desc, a.id desc
      limit ${limit} offset ${offset}`,
     values,
   );
-  return { articles: result.rows.map((row) => ({ ...rowToArticle(row), status: row.status, categoryName: row.category_name })), total, page, pages, pageSize, range };
+  return {
+    articles: result.rows.map((row) => ({
+      id: row.id, slug: row.slug, title: row.title_en, authorId: row.author_id, status: row.status,
+      categoryName: row.category_name, publishedAt: row.published_at ? new Date(row.published_at).toISOString() : null,
+    })),
+    total, page, pages, pageSize, range,
+  };
 }
 
 export async function getAdminBlogArticle(id: string) {

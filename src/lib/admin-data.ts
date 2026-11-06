@@ -1,5 +1,5 @@
 import { applications, products, resourceSections, site } from "@/lib/data";
-import { getDatabaseHealth, getPool } from "@/lib/database";
+import { getDatabaseHealth, getPool, hasDatabaseUrl } from "@/lib/database";
 import { getAdminDateRange, paginate as paginateItems, parsePage, parsePageSize, type AdminDateRange, type AdminListParams as SharedAdminListParams } from "@/lib/admin-listing";
 
 export const adminNav = [
@@ -110,7 +110,7 @@ export async function getAdminDashboard(params: AdminListParams = {}) {
   const rangeQuery = new URLSearchParams({ range: range.key, from: range.from || "", to: range.to || "" }).toString();
   const within = (column: string) => ` and ${column} >= $1 and ${column} < $2`;
   const dates = [range.start, range.end];
-  const database = await getDatabaseHealth();
+  const database = { configured: hasDatabaseUrl(), connected: true, message: "PostgreSQL 业务数据已读取。", checkedAt: new Date().toISOString() };
   const staticCards = [
     { label: "已发布产品", value: products.length, note: "Git 版本化官网目录", href: "/admin/products" },
     { label: "应用场景", value: applications.length, note: "官网应用页面", href: "/applications" },
@@ -136,7 +136,7 @@ export async function getAdminDashboard(params: AdminListParams = {}) {
     };
   };
 
-  if (!database.connected) return unavailable(database.message);
+  if (!database.configured) return unavailable("数据库未配置。");
 
   let blogPublished: number;
   let blogDraft: number;
@@ -185,6 +185,7 @@ export async function getAdminDashboard(params: AdminListParams = {}) {
     console.error("Admin dashboard query failed", error instanceof Error ? error.name : "UnknownError");
     return unavailable("业务统计读取失败，请稍后重试。");
   }
+  database.checkedAt = new Date().toISOString();
 
   const activity = latestAudit.map((row) => ({
     id: row.id,
@@ -226,8 +227,6 @@ export async function getAdminDashboard(params: AdminListParams = {}) {
 }
 
 export async function getAdminModuleData(module: string, params: AdminListParams = {}): Promise<AdminModuleData | null> {
-  const database = await getDatabaseHealth();
-  const databaseSource = database.connected ? "PostgreSQL 实时查询" : "数据库未连接";
   const directory = (title: string, description: string, source: string, rows: AdminModuleRow[]): AdminModuleData => {
     const q = (params.q || "").trim().toLowerCase();
     const result = paginate(rows.filter((row) => !q || `${row.name} ${row.value}`.toLowerCase().includes(q)), params);
@@ -252,6 +251,8 @@ export async function getAdminModuleData(module: string, params: AdminListParams
     };
   }
 
+  const database = await getDatabaseHealth();
+  const databaseSource = database.connected ? "PostgreSQL 实时查询" : "数据库未连接";
   if (!database.connected) {
     const titles: Record<string, [string, string]> = {
       inquiries: ["客户表单", "客户询盘由 PostgreSQL 保存，数据库不可用时不显示缓存或模拟记录。"],

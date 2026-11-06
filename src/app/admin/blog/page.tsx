@@ -4,6 +4,7 @@ import { AdminDateRangeFields, AdminPagination } from "@/components/admin-list-c
 import { AdminEmpty, AdminNotice, AdminShell } from "@/components/admin-shell";
 import { requireAdminSession } from "@/lib/admin-auth";
 import { getAdminBlogArticles } from "@/lib/blog/store";
+import { formatAdminDate } from "@/lib/admin-data";
 import { updateBlogStatusAction } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -36,7 +37,7 @@ export default async function AdminBlogPage({ searchParams }: { searchParams: Pr
                     <td><strong>{article.title}</strong><small>{article.slug}</small></td>
                     <td>{article.categoryName}<small>{article.authorId}</small></td>
                     <td><span className="admin-badge">{article.status}</span></td>
-                    <td>{new Date(article.publishedAt).toLocaleString("zh-CN")}</td>
+                    <td>{article.publishedAt ? formatAdminDate(article.publishedAt) : "未发布"}</td>
                     <td><small>详情页可核对 SEO 与官网发布状态</small></td>
                     <td>
                       <div className="admin-row-actions">
