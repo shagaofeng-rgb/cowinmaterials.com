@@ -1,12 +1,9 @@
-import Image from "next/image";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRight, CheckCircle2, FileText } from "lucide-react";
-import { Footer } from "@/components/footer";
-import { Header } from "@/components/header";
-import { Breadcrumbs } from "@/components/breadcrumbs";
 import { ContentPanel, ContentPanels } from "@/components/content-panels";
-import { applicationPages, applicationTechnicalProfiles, getProductPath, products } from "@/lib/data";
+import { EvidenceTable, InteriorBreadcrumb, InteriorCTA, InteriorFaq, InteriorLink, InteriorPage, MaterialFigure, ScopeNote } from "@/components/interior";
+import { ProductCatalog } from "@/components/product-catalog";
+import { applicationPages, applicationTechnicalProfiles, products } from "@/lib/data";
+import { applicationDetailVisuals, quoteHref } from "@/lib/interior-content";
 import { absoluteUrl, createPageMetadata } from "@/lib/seo";
 
 type ApplicationPageProps = { params: Promise<{ slug: string }> };
@@ -26,6 +23,8 @@ export default async function ApplicationDetailPage({ params }: ApplicationPageP
   const profile = page ? applicationTechnicalProfiles[page.slug] : undefined;
   if (!page || !profile) notFound();
   const recommendedProducts = products.filter((item) => profile.recommendedProductSlugs.includes(item.slug));
+  const projectContext = { application: page.shortTitle };
+  const reviewHref = quoteHref("Ask for Product Selection", projectContext);
   const breadcrumbJsonLd = {
     "@context": "https://schema.org", "@type": "BreadcrumbList",
     itemListElement: [
@@ -35,22 +34,57 @@ export default async function ApplicationDetailPage({ params }: ApplicationPageP
     ],
   };
 
-  return <><Header /><main>
-    <div className="detail-breadcrumb-wrap"><Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Applications", href: "/applications" }, { label: page.shortTitle }]} /></div>
-    <section className="product-hero">
-      <div className="product-hero-copy"><span className="eyebrow">Application Guide</span><h1>{page.title}</h1><p>{page.intro}</p><div className="hero-actions"><Link className="primary-button" href={`/request-quote?application=${encodeURIComponent(page.shortTitle)}`}>Request a project review<ArrowRight size={18} /></Link><Link className="secondary-button" href="/resources">View resources</Link></div></div>
-      <div className="product-visual" aria-label={`${page.shortTitle} project context`}>
-        {page.image ? <Image src={page.image} alt={`${page.shortTitle} material evaluation`} width={1100} height={760} priority /> : <div className="technical-visual"><span>Application</span><strong>{page.shortTitle}</strong><p>Selection begins with actual project conditions.</p><div className="technical-visual-facts">{profile.evidence.slice(0, 2).map((fact) => <div key={fact.label}><small>{fact.label}</small><b>{fact.value}</b></div>)}</div></div>}
+  return (
+    <InteriorPage className="cw-application-detail">
+      <div className="cw-shell cw-detail">
+        <InteriorBreadcrumb items={[{ label: "Applications", href: "/applications" }, { label: page.shortTitle }]} />
+        <div className="cw-detail-hero">
+          <div className="cw-detail-copy">
+            <h1>{page.title}</h1>
+            <p>{page.intro}</p>
+            <div className="cw-actions">
+              <InteriorLink href={reviewHref} variant="primary">Request a project review</InteriorLink>
+              <InteriorLink href="/resources" variant="secondary">View resources</InteriorLink>
+            </div>
+          </div>
+          <MaterialFigure visual={applicationDetailVisuals[page.slug]} eager />
+        </div>
+        <ContentPanels label="Application sections">
+          <ContentPanel id="conditions" label="Project conditions">
+            <div className="cw-pair">
+              <section className="cw-stack"><h2>Project challenge</h2><p>{profile.projectChallenge}</p></section>
+              <section className="cw-stack"><h2>Information to collect</h2><ul className="cw-text-list">{page.requiredInfo.map((item) => <li key={item}>{item}</li>)}</ul></section>
+            </div>
+            <section className="cw-related">
+              <div className="cw-section-heading"><h2>Candidate materials</h2></div>
+              <ProductCatalog products={recommendedProducts} />
+            </section>
+          </ContentPanel>
+          <ContentPanel id="technical-data" label="Technical data">
+            <h2>Applicable technical data</h2>
+            <EvidenceTable caption={`${page.shortTitle} data and scope`} columns={["Property", "Reported value", "Basis"]} rows={profile.evidence.map(({ label, value, scope }) => [label, value, scope])} />
+            <ScopeNote>Values apply to the stated grade and test conditions. They do not transfer across assemblies or operating environments.</ScopeNote>
+          </ContentPanel>
+          <ContentPanel id="systems" label="Systems & limits">
+            <div className="cw-pair">
+              <section className="cw-stack"><h2>Verification steps</h2><ol className="cw-text-list">{profile.validationSteps.map((item) => <li key={item}>{item}</li>)}</ol></section>
+              <section className="cw-stack"><h2>System limits</h2><ul className="cw-text-list">{profile.systemLimits.map((item) => <li key={item}>{item}</li>)}</ul></section>
+            </div>
+          </ContentPanel>
+          <ContentPanel id="documents" label="Documents">
+            <h2>Documentation and project review</h2>
+            <p>Match the document set to the selected grade, substrate, test method and complete system build.</p>
+            <InteriorLink href={quoteHref("Request Technical Data", projectContext)}>Request applicable documentation</InteriorLink>
+            <p className="cw-muted">Last reviewed: {profile.lastReviewed}.</p>
+          </ContentPanel>
+          <ContentPanel id="faq" label="FAQ">
+            <h2>Application FAQ</h2>
+            <InteriorFaq items={profile.faq} />
+          </ContentPanel>
+        </ContentPanels>
       </div>
-    </section>
-    <ContentPanels label={`${page.shortTitle} content sections`}>
-      <ContentPanel id="conditions" label="Project conditions"><div className="panel-section product-detail-grid"><article><h2>Project challenge</h2><p>{profile.projectChallenge}</p></article><article><h2>Information to collect</h2><ul className="metric-list">{page.requiredInfo.map((item) => <li key={item}><CheckCircle2 size={16} /><span>{item}</span></li>)}</ul></article><article><h2>Last reviewed</h2><p>{profile.lastReviewed}</p><p className="proof-note">Selection remains subject to the complete system and project validation.</p></article></div></ContentPanel>
-      <ContentPanel id="technical-data" label="Technical data"><div className="panel-section muted"><div className="data-scope-heading"><span className="eyebrow">Evidence and scope</span><h2>Applicable technical data</h2><p>Listed values are specific to the stated source and are not transferred between products, assemblies or field conditions.</p></div><div className="technical-fact-grid">{profile.evidence.map((fact) => <article key={fact.label}><span>{fact.label}</span><strong>{fact.value}</strong><p>{fact.scope}</p></article>)}</div></div></ContentPanel>
-      <ContentPanel id="systems" label="Systems & limits"><div className="panel-section product-detail-grid"><article><h2>Suitable products</h2><div className="chip-row">{recommendedProducts.map((product) => <Link className="chip" key={product.slug} href={getProductPath(product)}>{product.name}</Link>)}</div></article><article><h2>System limits</h2><ul className="metric-list">{profile.systemLimits.map((item) => <li key={item}><CheckCircle2 size={16} /><span>{item}</span></li>)}</ul></article><article><h2>Verification steps</h2><ol className="step-list">{profile.validationSteps.map((item) => <li key={item}>{item}</li>)}</ol></article></div></ContentPanel>
-      <ContentPanel id="documents" label="Documents"><div className="panel-section muted"><div className="qualification-panel"><FileText size={22} /><h2>Documentation and project review</h2><p>Request the technical document set for the selected product grade, then verify it against the substrate, test method, system build and operating conditions.</p><Link className="text-link" href={`/request-quote?request=Request%20Technical%20Data&application=${encodeURIComponent(page.shortTitle)}`}>Request applicable documentation<ArrowRight size={16} /></Link></div></div></ContentPanel>
-      <ContentPanel id="faq" label="FAQ"><div className="panel-section"><h2>Application FAQ</h2><div className="faq-list">{profile.faq.map(([question, answer]) => <article key={question}><h3>{question}</h3><p>{answer}</p></article>)}</div></div></ContentPanel>
-    </ContentPanels>
-    <section className="cta-section"><div><span className="eyebrow">Technical Review</span><h2>Share the operating conditions before selecting a system.</h2></div><Link className="primary-button" href="/contact">Send Project Details<ArrowRight size={18} /></Link></section>
-    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
-  </main><Footer /></>;
+      <InteriorCTA title="Review your operating conditions" href={reviewHref} label="Send project details" />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
+    </InteriorPage>
+  );
 }

@@ -1,6 +1,4 @@
-import { Footer } from "@/components/footer";
-import { Header } from "@/components/header";
-import { SectionHeading } from "@/components/section-heading";
+import { LegalPage } from "@/components/legal-page";
 import { site } from "@/lib/data";
 import { createPageMetadata } from "@/lib/seo";
 
@@ -12,24 +10,15 @@ export const metadata = createPageMetadata({
 
 export default function TermsOfUsePage() {
   return (
-    <>
-      <Header />
-      <main>
-        <section className="page-hero compact">
-          <SectionHeading level={1} eyebrow="Terms" title="Terms of Use" intro="Please review these terms before using the Cowin Materials website." />
-        </section>
-        <section className="section legal-copy">
-          <h2>Website information</h2>
-          <p>Product information is provided for initial business and technical evaluation. It is not a project guarantee or final specification.</p>
-          <h2>Technical values</h2>
-          <p>Technical values depend on product grade, test method, sample configuration and operating conditions. Confirm applicable documents before project use.</p>
-          <h2>Intellectual property</h2>
-          <p>Website text, images and materials belong to Cowin Materials or are used for Cowin Materials website communication. Do not reproduce them without permission.</p>
-          <h2>Contact</h2>
-          <p>For questions about these terms, contact {site.email}.</p>
-        </section>
-      </main>
-      <Footer />
-    </>
+    <LegalPage
+      title="Terms of Use"
+      description="Please review these terms before using the Cowin Materials website."
+      sections={[
+        { id: "website-information", label: "Website information", body: <><p>Product information is provided for initial business and technical evaluation. It is not a project guarantee or final specification.</p></> },
+        { id: "technical-values", label: "Technical values", body: <><p>Technical values depend on product grade, test method, sample configuration and operating conditions. Confirm applicable documents before project use.</p></> },
+        { id: "intellectual-property", label: "Intellectual property", body: <><p>Website text, images and materials belong to Cowin Materials or are used for Cowin Materials website communication. Do not reproduce them without permission.</p></> },
+        { id: "contact", label: "Contact", body: <><p>For questions about these terms, contact <a href={`mailto:${site.email}`}>{site.email}</a>.</p></> },
+      ]}
+    />
   );
 }

@@ -1,8 +1,5 @@
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
-import { Footer } from "@/components/footer";
-import { Header } from "@/components/header";
-import { SectionHeading } from "@/components/section-heading";
+import { InteriorCTA, InteriorHeading, InteriorLink, InteriorPage, ProcessList } from "@/components/interior";
+import { evaluationSteps } from "@/lib/data";
 import { createPageMetadata } from "@/lib/seo";
 
 export const metadata = createPageMetadata({
@@ -16,33 +13,18 @@ export const metadata = createPageMetadata({
 
 export default function CaseStudiesPage() {
   return (
-    <>
-      <Header />
-      <main>
-        <section className="page-hero compact">
-          <SectionHeading
-            level={1}
-            eyebrow="Technical References"
-            title="Technical References and Project Evaluation"
-            intro="Project-specific technical references are reviewed during evaluation when the documentation and disclosure scope are clear."
-          />
-        </section>
-        <section className="section">
-          <div className="qualification-panel">
-            <h2>No public case studies are displayed without confirmed project permission.</h2>
-            <p>
-              Cowin Materials does not publish customer names, project locations, photos,
-              energy-saving results or performance claims unless they are verified and
-              cleared for public use.
-            </p>
-            <Link className="primary-button" href="/contact?request=Ask%20for%20Product%20Selection">
-              Discuss Your Application
-              <ArrowRight size={18} />
-            </Link>
-          </div>
-        </section>
-      </main>
-      <Footer />
-    </>
+    <InteriorPage>
+      <InteriorHeading title="Technical references and project evaluation" crumbs={[{ label: "Technical references" }]} description="Project-specific references can be discussed when their documentation and disclosure scope are clear." />
+      <div className="cw-shell cw-pair cw-section">
+        <section className="cw-stack"><h2>Evaluate a material for your project</h2><ProcessList steps={evaluationSteps.slice(0, 4)} /></section>
+        <aside className="cw-side-note cw-stack">
+          <h2>Available references</h2>
+          <p>Customer names, project locations, photos and results are shared only when verified and cleared for public use.</p>
+          <InteriorLink href="/applications">Find an application</InteriorLink>
+          <InteriorLink href="/resources">Explore technical resources</InteriorLink>
+        </aside>
+      </div>
+      <InteriorCTA title="Review your application" href="/contact?request=Ask%20for%20Product%20Selection" label="Discuss your application" />
+    </InteriorPage>
   );
 }

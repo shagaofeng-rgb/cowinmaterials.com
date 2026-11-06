@@ -1,7 +1,5 @@
-import Link from "next/link";
 import { Search } from "lucide-react";
-import { Footer } from "@/components/footer";
-import { Header } from "@/components/header";
+import { InteriorHeading, InteriorLink, InteriorPage } from "@/components/interior";
 import { Pagination } from "@/components/pagination";
 import { notFound } from "next/navigation";
 import { applicationPages, getProductPath, products } from "@/lib/data";
@@ -20,7 +18,7 @@ export const metadata = createPageMetadata({
 
 export default async function SearchPage({ searchParams }: { searchParams: Promise<{ q?: string; page?: string }> }) {
   const { q = "", page: rawPage } = await searchParams;
-  if (rawPage !== undefined && !/^[1-9]\d*$/.test(rawPage)) notFound();
+  if (typeof q !== "string" || (rawPage !== undefined && (typeof rawPage !== "string" || !/^[1-9]\d*$/.test(rawPage)))) notFound();
   const page = rawPage ? Number(rawPage) : 1;
   if (!Number.isSafeInteger(page)) notFound();
   const query = q.trim().toLowerCase();
@@ -46,41 +44,38 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   const visibleResults = results.slice((page - 1) * pageSize, page * pageSize);
 
   return (
-    <>
-      <Header />
-      <main>
-        <section className="subpage-hero compact-hero">
-          <span className="eyebrow">Search</span>
-          <h1>Find product and industry information</h1>
-          <form className="search-form" action="/search">
-            <Search size={18} />
-            <input name="q" defaultValue={q} placeholder="Search aerogel coating, battery pads, fire protection..." />
-            <button type="submit">Search</button>
-          </form>
-        </section>
-        <section className="section">
-          {!query ? (
-            <div className="empty-state-panel">
-              <h2>Start with a material, application or product code.</h2>
-              <p>Examples: aerogel coating, CW-FTHL, EV thermal barrier, penetrating water repellent.</p>
-            </div>
-          ) : (
-            <div className="search-results">
-              <h2>Results for “{q}”</h2>
+    <InteriorPage>
+      <InteriorHeading title="Search Cowin Materials" crumbs={[{ label: "Search" }]} />
+      <div className="cw-shell cw-search">
+        <form className="cw-search-form" action="/search" role="search">
+          <label htmlFor="site-query">Material, application or product code</label>
+          <div>
+            <input id="site-query" name="q" type="search" defaultValue={q} placeholder="e.g. aerogel blanket or CW-FTHL" />
+            <button className="cw-button cw-button--primary" type="submit"><Search size={17} aria-hidden="true" />Search</button>
+          </div>
+        </form>
+        {query && <h2 className="cw-search-count">{results.length} {results.length === 1 ? "result" : "results"} for &ldquo;{q}&rdquo;</h2>}
+        {visibleResults.length ? (
+          <>
+            <ul className="cw-result-list">
               {visibleResults.map((item) => (
-                <Link href={item.href} key={item.href} className="search-result-card">
-                  <span>{item.label}</span>
-                  <strong>{item.title}</strong>
+                <li key={item.href}>
+                  <span className="cw-label">{item.label}</span>
+                  <h3><InteriorLink href={item.href}>{item.title}</InteriorLink></h3>
                   <p>{item.text}</p>
-                </Link>
+                </li>
               ))}
-              {!results.length ? <p>No matching published result was found.</p> : null}
-              <Pagination currentPage={page} totalItems={results.length} pageSize={pageSize} pathname="/search" label="Search results" query={{ q }} />
-            </div>
-          )}
-        </section>
-      </main>
-      <Footer />
-    </>
+            </ul>
+            <Pagination currentPage={page} totalItems={results.length} pageSize={pageSize} pathname="/search" label="Search results" query={{ q }} />
+          </>
+        ) : (
+          <section className="cw-empty">
+            <h2>{query ? "No matching pages" : "Explore the material catalog"}</h2>
+            <p>{query ? "Try a material name or a shorter term." : "Browse products by material type or choose an application."}</p>
+            <div className="cw-inline-links"><InteriorLink href="/products">Browse products</InteriorLink><InteriorLink href="/applications">Explore applications</InteriorLink></div>
+          </section>
+        )}
+      </div>
+    </InteriorPage>
   );
 }

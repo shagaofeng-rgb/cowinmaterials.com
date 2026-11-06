@@ -1,10 +1,7 @@
-import { Mail, MapPin, Phone } from "lucide-react";
-import { Footer } from "@/components/footer";
-import { Header } from "@/components/header";
 import { InquiryForm } from "@/components/inquiry-form";
+import { InteriorHeading, InteriorPage } from "@/components/interior";
+import { ContactDetails } from "@/components/interior-contact";
 import { OfficeMap } from "@/components/office-map";
-import { SectionHeading } from "@/components/section-heading";
-import { site } from "@/lib/data";
 import { createPageMetadata } from "@/lib/seo";
 
 export const metadata = createPageMetadata({
@@ -17,48 +14,16 @@ export const metadata = createPageMetadata({
 
 export default function ContactPage() {
   return (
-    <>
-      <Header />
-      <main>
-        <section className="page-hero compact">
-          <SectionHeading
-            level={1}
-            eyebrow="Contact"
-            title="Request a Quote or Technical Review"
-            intro="Provide as much technical information as possible. This helps us identify the appropriate product, document or next evaluation step."
-          />
-        </section>
-
-        <section className="section contact-layout">
-          <div className="contact-panel">
-            <h2>Global Project Contact</h2>
-            <ul className="contact-list large">
-              <li>
-                <Phone size={18} />
-                <a href={site.whatsappUrl} target="_blank" rel="noopener noreferrer" data-analytics-whatsapp-placement="contact_phone">{site.phone}</a>
-              </li>
-              <li>
-                <Mail size={18} />
-                <a href={`mailto:${site.email}`}>{site.email}</a>
-              </li>
-              <li>
-                <MapPin size={18} />
-                <a href={site.officeMapUrl} target="_blank" rel="noopener noreferrer"><strong>Office:</strong> {site.officeAddress}</a>
-              </li>
-            </ul>
-            <div className="contact-note">
-              <strong>Useful information to include</strong>
-              <p>
-                Application, substrate, temperature, target thickness, area, indoor/outdoor
-                exposure, required test standard, delivery schedule and target market.
-              </p>
-            </div>
-          </div>
+    <InteriorPage>
+      <InteriorHeading title="Contact Cowin Materials" crumbs={[{ label: "Contact" }]} description="Talk to us about material selection, technical documents, samples or quotations." />
+      <div className="cw-shell cw-contact-layout">
+        <ContactDetails title="Project contact" />
+        <section className="cw-contact-form" aria-labelledby="enquiry-heading">
+          <h2 id="enquiry-heading">Send a project enquiry</h2>
           <InquiryForm />
-          <OfficeMap />
         </section>
-      </main>
-      <Footer />
-    </>
+      </div>
+      <div className="cw-shell cw-section"><OfficeMap /></div>
+    </InteriorPage>
   );
 }

@@ -1,17 +1,17 @@
-import { Footer } from "@/components/footer";
-import { Header } from "@/components/header";
-import { ProductFilter } from "@/components/product-filter";
-import { SectionHeading } from "@/components/section-heading";
+import { InteriorHeading, InteriorLink, InteriorPage } from "@/components/interior";
+import { Pagination } from "@/components/pagination";
+import { ProductCatalog, ProductFamilyCards } from "@/components/product-catalog";
 import { notFound } from "next/navigation";
 import { products } from "@/lib/data";
 import { productListJsonLd, createPageMetadata } from "@/lib/seo";
 
 type ProductsPageProps = { searchParams: Promise<{ page?: string }> };
-const pageCount = Math.ceil(products.length / 6);
+const pageSize = 6;
+const pageCount = Math.ceil(products.length / pageSize);
 
 function validPage(value?: string) {
   if (value === undefined) return 1;
-  if (!/^[1-9]\d*$/.test(value)) notFound();
+  if (typeof value !== "string" || !/^[1-9]\d*$/.test(value)) notFound();
   const page = Number(value);
   if (!Number.isSafeInteger(page) || page > pageCount) notFound();
   return page;
@@ -29,24 +29,28 @@ export async function generateMetadata({ searchParams }: ProductsPageProps) {
 
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
   const page = validPage((await searchParams).page);
+  const offset = (page - 1) * pageSize;
+  const entries = products.slice(offset, offset + pageSize);
   return (
-    <>
-      <Header />
-      <main>
-        <section className="page-hero compact">
-          <SectionHeading
-            level={1}
-            eyebrow="Products"
-            title="Explore aerogel material categories"
-            intro="Start with a product form, then review the named grade, its documented scope and the conditions that matter for your application."
-          />
+    <InteriorPage>
+      <InteriorHeading
+        title="Aerogel products"
+        crumbs={[{ label: "Products" }]}
+        description="Silica aerogel materials and functional coatings by product form."
+        action={<InteriorLink href="/applications">Browse applications</InteriorLink>}
+      />
+      <div className="cw-shell cw-catalog">
+        <ProductFamilyCards />
+        <section id="product-selection" aria-labelledby="product-grades">
+          <div className="cw-section-heading">
+            <h2 id="product-grades">All product grades</h2>
+            <span className="cw-muted">{offset + 1}-{offset + entries.length} of {products.length} products</span>
+          </div>
+          <ProductCatalog products={entries} />
+          <Pagination currentPage={page} totalItems={products.length} pageSize={pageSize} pathname="/products" label="Products" />
         </section>
-        <section className="section">
-          <ProductFilter page={page} />
-        </section>
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productListJsonLd) }} />
-      </main>
-      <Footer />
-    </>
+      </div>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productListJsonLd) }} />
+    </InteriorPage>
   );
 }

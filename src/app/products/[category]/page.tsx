@@ -1,16 +1,17 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Footer } from "@/components/footer";
-import { Header } from "@/components/header";
-import { Breadcrumbs } from "@/components/breadcrumbs";
-import { ProductFilter } from "@/components/product-filter";
-import { getProductFamily } from "@/lib/data";
+import { EvidenceTable, InteriorCTA, InteriorHeading, InteriorLink, InteriorPage } from "@/components/interior";
+import { CategoryNavigation, ProductCatalog } from "@/components/product-catalog";
+import { MaterialIcon } from "@/components/material-icons";
+import { getProductFamily, getProductPath, getProductsForFamily, productFamilies, products } from "@/lib/data";
 import { getProductFamilyPreview } from "@/lib/product-family-content";
+import { quoteHref } from "@/lib/interior-content";
 import { createPageMetadata } from "@/lib/seo";
 
 type CategoryPageProps = { params: Promise<{ category: string }> };
 
 export function generateStaticParams() {
-  return ["aerogel-powders-granules", "aerogel-blankets-felts-mats", "aerogel-slurries-coatings-paste", "fireproof-waterproof-solutions"].map((category) => ({ category }));
+  return productFamilies.map(({ slug }) => ({ category: slug }));
 }
 
 export async function generateMetadata({ params }: CategoryPageProps) {
@@ -25,18 +26,47 @@ export default async function ProductCategoryPage({ params }: CategoryPageProps)
   const family = getProductFamily(category);
   if (!family) notFound();
   const preview = getProductFamilyPreview(family.slug);
+  const grades = getProductsForFamily(family.slug);
+  const powder = products.find((product) => product.slug === "aerogel-powder-and-slurry");
+  const fireAndWater = category === "fireproof-waterproof-solutions";
 
   return (
-    <>
-      <Header />
-      <main>
-        <div className="detail-breadcrumb-wrap"><Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Products", href: "/products" }, { label: family.title }]} /></div>
-        <section className="page-hero compact"><div className="section-heading"><span className="eyebrow">Product category</span><h1>{family.title}</h1><p>{family.description} Review the named product and supporting documentation before applying any value to a project.</p></div></section>
-        {preview ? <section className="section family-evaluation-section"><div className="family-evaluation-heading"><h2>What to confirm before selecting a grade</h2><p>{preview.sourceNote}</p></div><dl className="family-evaluation-facts">{preview.highlights.map((highlight) => <div key={highlight.label}><dt>{highlight.label}</dt><dd>{highlight.value}</dd></div>)}</dl></section> : null}
-        {preview?.comparison ? <section className="section muted family-comparison-section"><div className="family-evaluation-heading"><h2>{preview.comparison.title}</h2><p>{preview.comparison.intro}</p></div><div className="family-comparison-table" role="region" aria-label={preview.comparison.title} tabIndex={0}><table><thead><tr><th scope="col">Evaluation point</th><th scope="col">CW-AT-H</th><th scope="col">CW-AT-L</th><th scope="col">Data scope</th></tr></thead><tbody>{preview.comparison.rows.map((row) => <tr key={row.label}><th scope="row">{row.label}</th><td>{row.highTemperature}</td><td>{row.cryogenic}</td><td>{row.scope}</td></tr>)}</tbody></table></div></section> : null}
-        <section className="section"><ProductFilter familySlug={family.slug} includeFamilyOverview={false} /></section>
-      </main>
-      <Footer />
-    </>
+    <InteriorPage>
+      <InteriorHeading
+        title={family.title}
+        description={family.description}
+        crumbs={[{ label: "Products", href: "/products" }, { label: family.title }]}
+        action={<InteriorLink href="/products">All product categories</InteriorLink>}
+      />
+      <div className="cw-shell">
+        <CategoryNavigation selected={family.slug} />
+        <div className="cw-category-layout">
+          {fireAndWater ? <>
+            <section>
+              <div className="cw-section-heading"><h2><MaterialIcon name="fire" size={21} /> Structural steel fire protection</h2></div>
+              <ProductCatalog products={grades.filter((product) => product.category === "Fire Protection Coatings")} />
+            </section>
+            <section>
+              <div className="cw-section-heading"><h2><MaterialIcon name="water" size={21} /> Mineral-substrate water repellents</h2></div>
+              <ProductCatalog products={grades.filter((product) => product.category === "Waterproofing")} />
+            </section>
+          </> : <section>
+            <div className="cw-section-heading"><h2>Product grades</h2></div>
+            <ProductCatalog products={grades} />
+            {category === "aerogel-slurries-coatings-paste" && powder && <p>For pre-dispersed raw material, see <Link className="cw-inline" href={getProductPath(powder)}>CW-AP-W waterborne slurry</Link>.</p>}
+          </section>}
+          {preview?.comparison ? <section>
+            <h2>{preview.comparison.title}</h2>
+            <p>{preview.comparison.intro}</p>
+            <EvidenceTable caption={preview.comparison.title} columns={["Evaluation point", "CW-AT-H", "CW-AT-L", "Data scope"]} rows={preview.comparison.rows.map((row) => [row.label, row.highTemperature, row.cryogenic, row.scope])} />
+          </section> : preview ? <section>
+            <h2>Grade-specific reference data</h2>
+            <p>{preview.sourceNote}</p>
+            <EvidenceTable caption="Grade-specific reference data" columns={["Property", "Reported value"]} rows={preview.highlights.map(({ label, value }) => [label, value])} />
+          </section> : null}
+        </div>
+      </div>
+      <InteriorCTA title="Review a grade for your application" description="Share the operating conditions and required technical documents." href={quoteHref("Ask for Product Selection")} label="Request a product review" />
+    </InteriorPage>
   );
 }

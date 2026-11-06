@@ -24,15 +24,15 @@ function sectionId(label: string, index: number, used: Set<string>) {
   return id;
 }
 
-export function splitArticleSections(contentHtml: string): ArticleSection[] {
+export function splitArticleSections(contentHtml: string, reservedIds: readonly string[] = []): ArticleSection[] {
   const headingPattern = /<h2\b[^>]*>([\s\S]*?)<\/h2>/gi;
   const headings = Array.from(contentHtml.matchAll(headingPattern));
   if (!headings.length) return [{ id: "article", label: "Article", html: contentHtml }];
 
-  const used = new Set<string>();
+  const used = new Set(reservedIds);
   const sections: ArticleSection[] = [];
   const lead = contentHtml.slice(0, headings[0].index).trim();
-  if (lead) sections.push({ id: "overview", label: "Overview", html: lead });
+  if (lead) sections.push({ id: sectionId("Overview", 0, used), label: "Overview", html: lead });
 
   headings.forEach((heading, index) => {
     const nextStart = headings[index + 1]?.index ?? contentHtml.length;
@@ -40,7 +40,7 @@ export function splitArticleSections(contentHtml: string): ArticleSection[] {
     const headingEnd = (heading.index || 0) + headingHtml.length;
     const label = textFromHtml(heading[1]) || `Section ${index + 1}`;
     const body = contentHtml.slice(headingEnd, nextStart).trim();
-    sections.push({ id: sectionId(label, index, used), label, html: body || `<p>${label}</p>` });
+    sections.push({ id: sectionId(label, index, used), label, html: body });
   });
 
   return sections.length ? sections : [{ id: "article", label: "Article", html: contentHtml }];

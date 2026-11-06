@@ -5,6 +5,7 @@ import { AnalyticsEvents } from "@/components/analytics-events";
 import { WhatsAppFloat } from "@/components/whatsapp-float";
 import { organizationJsonLd, siteUrl, websiteJsonLd } from "@/lib/seo";
 import "./globals.css";
+import "./interior.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

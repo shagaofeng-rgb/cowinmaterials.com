@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Send } from "lucide-react";
-import { useState, useSyncExternalStore } from "react";
+import { ChevronDown, Paperclip, Send } from "lucide-react";
+import { useRef, useState, useSyncExternalStore } from "react";
 import { getAnalyticsIdentity, getAttributionUtm, trackAnalyticsEvent } from "@/components/analytics-events";
 import { site } from "@/lib/data";
 
@@ -67,7 +67,8 @@ const applications = [
 
 export function InquiryForm() {
   const router = useRouter();
-  const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "sending" | "error">("idle");
+  const submitting = useRef(false);
   const [fileName, setFileName] = useState("No file selected");
   const search = useSyncExternalStore(subscribeToLocation, getLocationSearch, getServerLocationSearch);
   const params = new URLSearchParams(search);
@@ -84,22 +85,26 @@ export function InquiryForm() {
   return (
     <form
       key={`${defaults.request}:${defaults.product}:${defaults.application}`}
-      className="inquiry-form"
+      className="inquiry-form cw-inquiry"
+      aria-busy={status === "sending"}
+      action="/api/inquiry"
+      method="post"
+      encType="multipart/form-data"
       onSubmit={async (event) => {
         event.preventDefault();
+        if (submitting.current) return;
+        submitting.current = true;
         setStatus("sending");
 
-        const form = event.currentTarget;
-        const formData = new FormData(form);
-        formData.set("page", window.location.href);
-        const identity = getAnalyticsIdentity();
-        formData.set("visitor_id", identity.visitorKey);
-        formData.set("session_id", identity.sessionKey);
-        for (const [key, value] of Object.entries(getAttributionUtm())) {
-          if (value) formData.set(key, value);
-        }
-
         try {
+          const formData = new FormData(event.currentTarget);
+          formData.set("page", window.location.href);
+          const identity = getAnalyticsIdentity();
+          formData.set("visitor_id", identity.visitorKey);
+          formData.set("session_id", identity.sessionKey);
+          for (const [key, value] of Object.entries(getAttributionUtm())) {
+            if (value) formData.set(key, value);
+          }
           const response = await fetch("/api/inquiry", {
             method: "POST",
             body: formData,
@@ -109,54 +114,18 @@ export function InquiryForm() {
             router.push("/thank-you");
             return;
           }
-          setStatus("error");
         } catch {
-          setStatus("error");
+          // Keep the fields available for retry after network errors.
         }
+        submitting.current = false;
+        setStatus("error");
       }}
     >
       <input aria-hidden="true" className="honeypot" name="website" tabIndex={-1} type="text" />
 
       <div className="form-grid">
         <label>
-          Full Name *
-          <input name="name" placeholder="Your full name" required />
-        </label>
-        <label>
-          Company Name *
-          <input name="company" placeholder="Company name" required />
-        </label>
-      </div>
-
-      <div className="form-grid">
-        <label>
-          Business Email *
-          <input name="email" type="email" placeholder="name@company.com" required />
-        </label>
-        <label>
-          Phone or WhatsApp
-          <input name="phone" placeholder="+1..." />
-        </label>
-      </div>
-
-      <div className="form-grid">
-        <label>
-          Country / Region *
-          <input name="country" placeholder="United States, Germany, UAE..." required />
-        </label>
-        <label>
-          Customer Type
-          <select name="customerType" defaultValue={customerTypes[0]}>
-            {customerTypes.map((option) => (
-              <option key={option}>{option}</option>
-            ))}
-          </select>
-        </label>
-      </div>
-
-      <div className="form-grid">
-        <label>
-          Request Type
+          Request type
           <select name="requestType" defaultValue={defaults.request}>
             {requestTypes.map((option) => (
               <option key={option}>{option}</option>
@@ -164,67 +133,102 @@ export function InquiryForm() {
           </select>
         </label>
         <label>
-          Product of Interest
-          <input name="product" defaultValue={defaults.product} placeholder="Product name or model" />
+          Product of interest
+          <textarea className="cw-product-field" name="product" rows={2} defaultValue={defaults.product} placeholder="Product name or model" />
         </label>
       </div>
 
-      <div className="form-grid">
-        <label>
-          Application
-          <select name="application" defaultValue={defaults.application}>
-            {applications.map((option) => (
-              <option key={option}>{option}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Substrate
-          <input name="substrate" defaultValue={defaults.substrate} placeholder="Steel, concrete, masonry, battery module..." />
-        </label>
-      </div>
+      <fieldset>
+        <legend>Contact details</legend>
+        <div className="form-grid">
+          <label>
+            Full name *
+            <input name="name" autoComplete="name" placeholder="Your full name" required />
+          </label>
+          <label>
+            Company name *
+            <input name="company" autoComplete="organization" placeholder="Company name" required />
+          </label>
+          <label>
+            Business email *
+            <input name="email" type="email" autoComplete="email" placeholder="name@company.com" required />
+          </label>
+          <label>
+            Country / region *
+            <input name="country" autoComplete="country-name" placeholder="Country or region" required />
+          </label>
+        </div>
+        <details className="cw-inquiry-optional">
+          <summary>Additional contact details <ChevronDown size={15} aria-hidden="true" /></summary>
+          <div className="form-grid">
+            <label>
+              Phone or WhatsApp
+              <input name="phone" type="tel" autoComplete="tel" placeholder="+1..." />
+            </label>
+            <label>
+              Customer type
+              <select name="customerType" defaultValue={customerTypes[0]}>
+                {customerTypes.map((option) => (
+                  <option key={option}>{option}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+        </details>
+      </fieldset>
 
-      <div className="form-grid">
-        <label>
-          Operating Temperature
-          <input name="operatingTemperature" defaultValue={defaults.operatingTemperature} placeholder="e.g. 180 °C, -160 °C" />
-        </label>
-        <label>
-          Target Performance
-          <input name="targetPerformance" placeholder="Thermal, fire, waterproofing or other target" />
-        </label>
-      </div>
+      <fieldset>
+        <legend>Project details</legend>
+        <div className="form-grid">
+          <label>
+            Application
+            <select name="application" defaultValue={defaults.application}>
+              {applications.map((option) => (
+                <option key={option}>{option}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Substrate
+            <input name="substrate" defaultValue={defaults.substrate} placeholder="Steel, concrete, masonry, battery module..." />
+          </label>
+          <label>
+            Operating temperature
+            <input name="operatingTemperature" defaultValue={defaults.operatingTemperature} placeholder="e.g. 180 °C, -160 °C" />
+          </label>
+          <label>
+            Target performance
+            <input name="targetPerformance" placeholder="Thermal, fire, waterproofing or other target" />
+          </label>
+          <label>
+            Project area or quantity
+            <input name="quantity" placeholder="m², kg, rolls, sample quantity..." />
+          </label>
+          <label>
+            Required standard
+            <input name="requiredStandard" defaultValue={defaults.requiredStandard} placeholder="ASTM, EN, GB, project specification..." />
+          </label>
+          <label>
+            Estimated purchase time
+            <input name="purchaseTime" placeholder="Immediate, this quarter, trial stage..." />
+          </label>
+        </div>
 
-      <div className="form-grid">
-        <label>
-          Project Area or Quantity
-          <input name="quantity" placeholder="m², kg, rolls, sample quantity..." />
+        <label className="cw-inquiry-message">
+          Message
+          <textarea
+            name="message"
+            rows={4}
+            defaultValue={defaults.message}
+            placeholder="Add any required thickness, exposure conditions, timeline or test details."
+          />
         </label>
-        <label>
-          Required Standard
-          <input name="requiredStandard" defaultValue={defaults.requiredStandard} placeholder="ASTM, EN, GB, project specification..." />
-        </label>
-      </div>
-
-      <label>
-        Estimated Purchase Time
-        <input name="purchaseTime" placeholder="Immediate, this quarter, trial stage..." />
-      </label>
-
-      <label>
-        Message
-        <textarea
-          name="message"
-          rows={6}
-          defaultValue={defaults.message}
-          placeholder="Tell us the operating conditions, substrate, target thickness, required standard and evaluation plan."
-        />
-      </label>
+      </fieldset>
 
       <label className="file-upload-field">
-        File Upload
+        File upload
         <span className="file-upload-control">
-          <span className="file-upload-button">Choose file</span>
+          <span className="file-upload-button"><Paperclip size={16} aria-hidden="true" />Choose file</span>
           <span className="file-upload-name">{fileName}</span>
         </span>
         <input
@@ -232,7 +236,12 @@ export function InquiryForm() {
           name="file"
           type="file"
           accept=".pdf,.docx,.xlsx,.jpg,.jpeg,.png"
-          onChange={(event) => setFileName(event.currentTarget.files?.[0]?.name || "No file selected")}
+          onChange={(event) => {
+            const file = event.currentTarget.files?.[0];
+            setFileName(file?.name || "No file selected");
+            event.currentTarget.setCustomValidity(file && file.size > 5 * 1024 * 1024 ? "Choose a file no larger than 5 MB." : "");
+            event.currentTarget.reportValidity();
+          }}
         />
         <small>PDF, DOCX, XLSX, JPG or PNG. Maximum 5 MB.</small>
       </label>
@@ -245,13 +254,13 @@ export function InquiryForm() {
         </span>
       </label>
 
-      <button className="primary-button" disabled={status === "sending"} type="submit">
-        <Send size={18} />
+      <button className="cw-button cw-button--primary" disabled={status === "sending"} type="submit">
         {status === "sending" ? "Sending..." : "Send Enquiry"}
+        <Send size={17} aria-hidden="true" />
       </button>
       {status === "error" ? (
-        <p className="form-error">
-          The message could not be sent right now. Please email {site.email} directly.
+        <p className="form-error" role="alert">
+          The enquiry could not be sent. Try again or email <a href={`mailto:${site.email}`}>{site.email}</a>.
         </p>
       ) : null}
     </form>

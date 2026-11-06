@@ -1,9 +1,8 @@
+import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Layers3 } from "lucide-react";
-import { Footer } from "@/components/footer";
-import { Header } from "@/components/header";
-import { SectionHeading } from "@/components/section-heading";
+import { InteriorHeading, InteriorLink, InteriorPage } from "@/components/interior";
 import { applicationPages, applicationTechnicalProfiles, getProductPath, products } from "@/lib/data";
+import { applicationVisuals } from "@/lib/interior-content";
 import { createPageMetadata } from "@/lib/seo";
 
 export const metadata = createPageMetadata({
@@ -16,39 +15,34 @@ export const metadata = createPageMetadata({
 
 export default function ApplicationsPage() {
   return (
-    <>
-      <Header />
-      <main>
-        <section className="page-hero compact">
-          <SectionHeading
-            level={1}
-            eyebrow="Applications"
-            title="Start with the engineering conditions"
-            intro="Each solution path identifies the project challenge, material families to consider and the conditions needed for a responsible evaluation."
-          />
-        </section>
-        <section className="section">
-          <div className="application-cards">
-            {applicationPages.map((item) => {
-              const profile = applicationTechnicalProfiles[item.slug];
-              const productRoutes = products.filter((product) => profile?.recommendedProductSlugs.includes(product.slug));
-              return (
-              <article className="application-card" key={item.slug}>
-                <Layers3 size={22} aria-hidden="true" />
-                <h2>{item.shortTitle}</h2>
+    <InteriorPage>
+      <InteriorHeading title="Applications" description="Explore aerogel material options by project conditions, operating environment and validation needs." action={<InteriorLink href="/products">Browse materials</InteriorLink>} />
+      <div className="cw-shell cw-tile-grid">
+        {applicationPages.map((item) => {
+          const visual = applicationVisuals[item.slug];
+          const profile = applicationTechnicalProfiles[item.slug];
+          const productRoutes = products.filter((product) => profile?.recommendedProductSlugs.includes(product.slug));
+          return (
+            <article className="cw-tile" key={item.slug}>
+              <figure>
+                <div className={`cw-tile-media${visual.fit === "cover" ? "" : " cw-tile-media--contain"}`}>
+                  <Image src={visual.src} alt={visual.alt} fill sizes="(max-width: 640px) 100vw, (max-width: 1023px) 50vw, 33vw" />
+                </div>
+                <figcaption>{visual.caption}</figcaption>
+              </figure>
+              <div className="cw-tile-body">
+                <h2><Link href={`/applications/${item.slug}`}>{item.shortTitle}</Link></h2>
                 <p>{item.challenges.slice(0, 3).join(" · ")}</p>
-                <div className="application-card-routes"><strong>Relevant products</strong>{productRoutes.map((product) => <Link href={getProductPath(product)} key={product.slug}>{product.code}</Link>)}</div>
-                <small className="application-card-requirements">Start with: {item.requiredInfo.slice(0, 2).join(" · ")}</small>
-                <span className="text-link">
-                  <Link href={`/applications/${item.slug}`}>Explore solution</Link>
-                  <ArrowRight size={16} />
-                </span>
-              </article>
-            )})}
-          </div>
-        </section>
-      </main>
-      <Footer />
-    </>
+                <p className="cw-muted"><strong>Project inputs:</strong> {item.requiredInfo.slice(0, 2).join(", ")}</p>
+                <div className="cw-tile-links" aria-label="Relevant product grades">
+                  {productRoutes.map((product) => <Link className="cw-inline" href={getProductPath(product)} key={product.slug}>{product.code}</Link>)}
+                </div>
+                <InteriorLink href={`/applications/${item.slug}`}>Explore application<span className="sr-only">: {item.shortTitle}</span></InteriorLink>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    </InteriorPage>
   );
 }

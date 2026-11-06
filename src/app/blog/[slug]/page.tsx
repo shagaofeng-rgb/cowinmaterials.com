@@ -1,9 +1,7 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
-import { Footer } from "@/components/footer";
-import { Header } from "@/components/header";
-import { ContentPanel, ContentPanels } from "@/components/content-panels";
+import { BlogCover } from "@/components/blog-cover";
+import { InteriorBreadcrumb, InteriorPage } from "@/components/interior";
+import { ArticleByline, ArticleReading, EditorialMedia, RelatedReading } from "@/components/interior-editorial";
 import { getBlogArticle } from "@/lib/blog/store";
 import { getBlogTechnicalPaths } from "@/lib/blog/related";
 import { splitArticleSections } from "@/lib/article-sections";
@@ -23,7 +21,7 @@ export default async function BlogDetailPage({ params }: BlogDetailProps) {
   const article = await getBlogArticle((await params).slug);
   if (!article) notFound();
   const technicalPaths = getBlogTechnicalPaths(article);
-  const sections = splitArticleSections(article.contentHtml);
+  const sections = splitArticleSections(article.contentHtml, ["related-paths"]);
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "TechArticle",
@@ -46,33 +44,20 @@ export default async function BlogDetailPage({ params }: BlogDetailProps) {
     ],
   };
   return (
-    <>
-      <Header />
-      <main>
-        <article className="article-layout">
-          <Link className="back-link" href="/blog"><ArrowLeft size={16} />Back to blog</Link>
-          <header className="article-header">
-            <span className="eyebrow">Technical Blog</span>
-            <h1>{article.title}</h1>
-            <p>{article.excerpt}</p>
-            <div className="news-meta"><span>{article.authorId}</span><span>{new Intl.DateTimeFormat("en", { dateStyle: "long" }).format(new Date(article.publishedAt))}</span></div>
-          </header>
-          {article.imageUrl ? (
-            <figure className="article-cover">
-              {/* The publishing API accepts arbitrary HTTPS image hosts, so Next Image cannot use a fixed allowlist. */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={article.imageUrl} alt={`${article.title} cover`} />
-            </figure>
-          ) : null}
-          <ContentPanels label="Article sections">
-            {sections.map((section) => <ContentPanel id={section.id} label={section.label} key={section.id}><h2 className="content-panel-title">{section.label}</h2><div className="article-body" dangerouslySetInnerHTML={{ __html: section.html }} /></ContentPanel>)}
-            <ContentPanel id="related-paths" label="Related paths"><section className="article-related"><h2>Related technical paths</h2><p>Use the linked material and application pages to compare this topic against documented product scope and project conditions.</p><div className="related-news-products">{technicalPaths.map((path) => <Link href={path.href} key={path.href}><strong>{path.label}</strong><span>{path.note}</span></Link>)}</div></section></ContentPanel>
-          </ContentPanels>
-        </article>
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
-      </main>
-      <Footer />
-    </>
+    <InteriorPage>
+      <article className="cw-shell cw-article">
+        <InteriorBreadcrumb items={[{ label: "Blog", href: "/blog" }, { label: article.title }]} />
+        <header className="cw-article-head">
+          <span className="cw-label">Technical blog</span>
+          <h1>{article.title}</h1>
+          <p>{article.excerpt}</p>
+          <ArticleByline label={article.authorId} publishedAt={article.publishedAt} long />
+        </header>
+        {article.imageUrl && <EditorialMedia><BlogCover key={article.imageUrl} src={article.imageUrl} alt={`Cover for ${article.title}`} eager /></EditorialMedia>}
+        <ArticleReading sections={sections} supplements={[{ id: "related-paths", label: "Related technical paths", body: <RelatedReading items={technicalPaths} /> }]} />
+      </article>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd).replace(/</g, "\\u003c") }} />
+    </InteriorPage>
   );
 }
